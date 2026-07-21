@@ -11,3 +11,70 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum Role {
+  USER
+  SUPER_ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  BANNED
+}
+
+model User {
+  id String @id @default(cuid())
+
+  // Identity
+  fullName String @db.VarChar(100)
+  username String @unique @db.VarChar(30)
+  email    String @unique @db.VarChar(255)
+
+  // Authentication
+  passwordHash      String    @db.VarChar(255)
+  emailVerified     Boolean   @default(false)
+  emailVerifiedAt   DateTime?
+  passwordChangedAt DateTime?
+
+  // Refresh Tokens
+  refreshTokens RefreshToken[]
+
+  // Authorization
+  role Role @default(USER)
+
+  // Account Status
+  status UserStatus @default(ACTIVE)
+
+  // Brute-force protection
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+
+  // Audit
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id     String @id @default(cuid())
+  userId String
+
+  tokenHash String @unique @db.VarChar(255)
+
+  replacedByTokenId String? @unique
+
+  expiresAt DateTime
+  revokedAt DateTime?
+
+  userAgent String? @db.VarChar(255)
+  ipAddress String? @db.VarChar(45)
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
