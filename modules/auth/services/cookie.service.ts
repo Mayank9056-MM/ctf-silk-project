@@ -1,13 +1,17 @@
 import { cookies } from "next/headers";
 
 import { env } from "@/config/env";
+import { AUTH_CONSTANTS } from "../constants/auth.constants";
 
 class CookieService {
-  private readonly accessTokenCookieName = "ctf_access_token";
-  private readonly refreshTokenCookieName = "ctf_refresh_token";
+  private readonly accessTokenCookieName =
+    AUTH_CONSTANTS.ACCESS_TOKEN_COOKIE_NAME;
+  private readonly refreshTokenCookieName =
+    AUTH_CONSTANTS.REFRESH_TOKEN_COOKIE_NAME;
 
-  private readonly accessTokenMaxAge = 60 * 15; // 15 minutes
-  private readonly refreshTokenMaxAge = 60 * 60 * 24 * 30; // 30 days
+  private readonly accessTokenMaxAge = AUTH_CONSTANTS.ACCESS_TOKEN_TTL_SECONDS;
+  private readonly refreshTokenMaxAge =
+    AUTH_CONSTANTS.REFRESH_TOKEN_TTL_SECONDS;
 
   private readonly baseCookieOptions = {
     httpOnly: true,
@@ -48,6 +52,14 @@ class CookieService {
 
     cookieStore.delete(this.accessTokenCookieName);
     cookieStore.delete(this.refreshTokenCookieName);
+  }
+
+  /**
+   * Read the raw refresh token from the incoming request cookies.
+   */
+  async getRefreshToken(): Promise<string | undefined> {
+    const cookieStore = await cookies();
+    return cookieStore.get(this.refreshTokenCookieName)?.value;
   }
 }
 
