@@ -5,26 +5,12 @@ import { redirect } from "next/navigation";
 import { authService } from "@/modules/auth/services/auth.service";
 import { registerSchema } from "@/modules/auth/validations/register.schema";
 import { ApiError } from "@/lib/errors/ApiError";
-
-export interface RegisterActionState {
-  success: boolean;
-  message?: string;
-  fieldErrors?: Record<string, string[] | undefined>;
-}
-
-export const INITIAL_REGISTER_ACTION_STATE: RegisterActionState = {
-  success: false,
-};
+import type { RegisterActionState } from "@/modules/auth/types/action-state";
 
 /**
- * Server Action for the registration form. Same useActionState-compatible
- * shape as loginAction — works with progressive enhancement and surfaces
- * field-level Zod errors (including the confirmPassword mismatch refine)
- * back to the client.
- *
- * Registration deliberately does not establish a session — authService
- * .register only creates the account, it never sets cookies. The user is
- * sent to the login page afterward rather than being auto-signed-in.
+ * See login.ts's comment — a "use server" file may only export async
+ * functions, so RegisterActionState/INITIAL_REGISTER_ACTION_STATE live in
+ * modules/auth/types/action-state.ts.
  */
 export async function registerAction(
   _prevState: RegisterActionState,
@@ -50,8 +36,6 @@ export async function registerAction(
     await authService.register(parsed.data);
   } catch (error) {
     if (error instanceof ApiError) {
-      // EMAIL_ALREADY_EXISTS / USERNAME_ALREADY_EXISTS messages from
-      // auth.service are already written to be shown to the user directly.
       return { success: false, message: error.message };
     }
 

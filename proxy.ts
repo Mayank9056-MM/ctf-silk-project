@@ -3,7 +3,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { TokenExpiredError, JsonWebTokenError } from "jsonwebtoken";
 
-import { tokenService } from "@/modules/auth/services/access-token.service";
+import { accessTokenService } from "@/modules/auth/services/access-token.service";
 import { AUTH_CONSTANTS } from "@/modules/auth/constants/auth.constants";
 
 const GUEST_ROUTES = ["/login", "/register"];
@@ -44,7 +44,7 @@ function hasValidAccessToken(request: NextRequest): boolean {
   if (!accessToken) return false;
 
   try {
-    tokenService.verifyAccessToken(accessToken);
+    accessTokenService.verifyAccessToken(accessToken);
     return true;
   } catch (error) {
     if (error instanceof TokenExpiredError || error instanceof JsonWebTokenError) {

@@ -11,7 +11,7 @@ import { cookieService } from "./cookie.service";
 import { refreshTokenRepository } from "../repositories/refresh-token.repository";
 import { refreshTokenService } from "./refresh-token.service";
 import { AUTH_CONSTANTS } from "../constants/auth.constants";
-import { tokenService } from "./access-token.service";
+import { accessTokenService } from "./access-token.service";
 
 export type PublicUser = Omit<
   User,
@@ -351,7 +351,7 @@ class AuthService {
     role: Role,
     rawRefreshToken: string,
   ): Promise<void> {
-    const accessToken = tokenService.generateAccessToken({ userId, role });
+    const accessToken = accessTokenService.generateAccessToken({ userId, role });
     await cookieService.setAccessToken(accessToken);
     await cookieService.setRefreshToken(rawRefreshToken);
   }

@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { TokenExpiredError, JsonWebTokenError } from "jsonwebtoken";
 
 import { Role } from "@/app/generated/prisma/enums";
-import { tokenService } from "@/modules/auth/services/access-token.service";
+import { accessTokenService } from "@/modules/auth/services/access-token.service";
 import { AUTH_CONSTANTS } from "@/modules/auth/constants/auth.constants";
 import { ApiError } from "@/lib/errors/ApiError";
 import { ErrorCode } from "@/lib/errors/ErrorCode";
@@ -56,7 +56,7 @@ export async function requireAuth(): Promise<AuthenticatedUser> {
   }
 
   try {
-    const payload = tokenService.verifyAccessToken(accessToken);
+    const payload = accessTokenService.verifyAccessToken(accessToken);
     return { userId: payload.userId, role: payload.role };
   } catch (error) {
     // Both branches map to INVALID_ACCESS_TOKEN: from the caller's

@@ -9,7 +9,7 @@ export interface AccessTokenPayload extends JwtPayload {
   role: Role;
 }
 
-class TokenService {
+class AccessTokenService {
   /**
    * Generate a short-lived access token.
    */
@@ -27,4 +27,4 @@ class TokenService {
   }
 }
 
-export const tokenService = new TokenService();
+export const accessTokenService = new AccessTokenService();
