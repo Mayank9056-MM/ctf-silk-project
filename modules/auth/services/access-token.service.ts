@@ -2,6 +2,7 @@ import jwt, { JwtPayload, SignOptions } from "jsonwebtoken";
 
 import { env } from "@/config/env";
 import { Role } from "@/app/generated/prisma/enums";
+import { AUTH_CONSTANTS } from "../constants/auth.constants";
 
 export interface AccessTokenPayload extends JwtPayload {
   userId: string;
@@ -14,7 +15,7 @@ class TokenService {
    */
   generateAccessToken(payload: AccessTokenPayload): string {
     return jwt.sign(payload, env.JWT_ACCESS_SECRET, {
-      expiresIn: env.JWT_ACCESS_EXPIRES_IN as SignOptions["expiresIn"],
+      expiresIn: AUTH_CONSTANTS.ACCESS_TOKEN_TTL_SECONDS as SignOptions["expiresIn"],
     });
   }
 
