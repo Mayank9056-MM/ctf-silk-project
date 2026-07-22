@@ -104,7 +104,7 @@ class UserRepository {
   /**
    * Reset failed login attempts.
    */
-  async resetFailedLoginAttemtpts(id: string): Promise<User> {
+  async resetFailedLoginAttempts(id: string): Promise<User> {
     return prisma.user.update({
       where: {
         id,
