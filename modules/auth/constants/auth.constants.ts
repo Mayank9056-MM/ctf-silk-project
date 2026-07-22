@@ -1,0 +1,13 @@
+export const AUTH_CONSTANTS = {
+  ACCESS_TOKEN_COOKIE_NAME: "ctf_access_token",
+
+  REFRESH_TOKEN_COOKIE_NAME: "ctf_refresh_token",
+
+  ACCESS_TOKEN_TTL_SECONDS: 60 * 15,
+
+  REFRESH_TOKEN_TTL_SECONDS: 60 * 60 * 24 * 30,
+
+  MAX_FAILED_LOGIN_ATTEMPTS: 5,
+
+  ACCOUNT_LOCK_DURATION_MS: 15 * 60 * 1000,
+} as const;
