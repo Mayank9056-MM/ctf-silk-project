@@ -94,6 +94,17 @@ class RefreshTokenRepository {
   async deleteAllForUser(userId: string): Promise<Prisma.BatchPayload> {
     return prisma.refreshToken.deleteMany({
       where: {
+        userId,
+      },
+    });
+  }
+
+  /**
+   * Delete all expired refresh tokens
+   */
+  async deleteExpired(): Promise<Prisma.BatchPayload> {
+    return prisma.refreshToken.deleteMany({
+      where: {
         expiresAt: {
           lt: new Date(),
         },
