@@ -14,14 +14,19 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ redirectTo, justRegistered }: LoginFormProps) {
-  const [state, formAction] = useActionState(loginAction, INITIAL_LOGIN_ACTION_STATE);
+  const [state, formAction] = useActionState(
+    loginAction,
+    INITIAL_LOGIN_ACTION_STATE,
+  );
 
   return (
     <>
       <h1 className="sr-title">
         Agent <span>Access</span>
       </h1>
-      <p className="sr-subtitle">Some cases close on paper. Sign in to pick up where you left off.</p>
+      <p className="sr-subtitle">
+        Some cases close on paper. Sign in to pick up where you left off.
+      </p>
 
       {justRegistered && !state.message && (
         <div className="sr-form-message sr-success">
@@ -36,7 +41,9 @@ export function LoginForm({ redirectTo, justRegistered }: LoginFormProps) {
       )}
 
       <form action={formAction} noValidate>
-        {redirectTo && <input type="hidden" name="redirectTo" value={redirectTo} />}
+        {redirectTo && (
+          <input type="hidden" name="redirectTo" value={redirectTo} />
+        )}
 
         <FormField
           label="Email"
