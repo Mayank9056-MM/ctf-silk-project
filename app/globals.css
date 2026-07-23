@@ -152,7 +152,9 @@
   color: var(--sr-dim);
 }
 
-.sr-eyebrow-accent { color: var(--sr-accent); }
+.sr-eyebrow-accent {
+  color: var(--sr-accent);
+}
 
 .sr-title {
   font-family: var(--sr-font-display);
@@ -182,7 +184,9 @@
   margin: 0 0 26px;
 }
 
-.sr-field { margin-bottom: 16px; }
+.sr-field {
+  margin-bottom: 16px;
+}
 
 .sr-label {
   display: block;
@@ -207,9 +211,15 @@
   transition: border-color 0.15s ease;
 }
 
-.sr-input::placeholder { color: var(--sr-dimmer); }
-.sr-input:focus { border-color: var(--sr-teal); }
-.sr-input.sr-input-error { border-color: var(--sr-accent); }
+.sr-input::placeholder {
+  color: var(--sr-dimmer);
+}
+.sr-input:focus {
+  border-color: var(--sr-teal);
+}
+.sr-input.sr-input-error {
+  border-color: var(--sr-accent);
+}
 
 .sr-error-text {
   margin-top: 6px;
@@ -250,11 +260,22 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: filter 0.15s ease, opacity 0.15s ease;
+  transition:
+    filter 0.15s ease,
+    opacity 0.15s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.sr-button:hover:not(:disabled) { filter: brightness(1.15); }
-.sr-button:disabled { opacity: 0.6; cursor: not-allowed; }
+.sr-button:hover:not(:disabled) {
+  filter: brightness(1.15);
+}
+.sr-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
 .sr-footer-link {
   margin-top: 22px;
@@ -263,8 +284,14 @@
   color: var(--sr-dim);
 }
 
-.sr-footer-link a { color: var(--sr-teal); text-decoration: none; font-weight: 500; }
-.sr-footer-link a:hover { text-decoration: underline; }
+.sr-footer-link a {
+  color: var(--sr-teal);
+  text-decoration: none;
+  font-weight: 500;
+}
+.sr-footer-link a:hover {
+  text-decoration: underline;
+}
 
 .sr-checklist {
   display: flex;
@@ -276,22 +303,48 @@
   color: var(--sr-dimmer);
 }
 
-.sr-checklist-item { display: flex; align-items: center; gap: 6px; }
-.sr-checklist-item.sr-met { color: var(--sr-teal); }
-.sr-checklist-dot { width: 5px; height: 5px; border-radius: 999px; background: currentColor; flex: none; }
+.sr-checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sr-checklist-item.sr-met {
+  color: var(--sr-teal);
+}
+.sr-checklist-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: currentColor;
+  flex: none;
+}
 
 @keyframes sr-rise-in {
-  from { opacity: 0; transform: translateY(14px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes sr-pulse-dot {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.35; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sr-card, .sr-hud-dot { animation-duration: 0.001s !important; }
+  .sr-card,
+  .sr-hud-dot {
+    animation-duration: 0.001s !important;
+  }
 }
 
 @theme inline {
@@ -381,4 +434,189 @@
   html {
     @apply font-sans;
   }
+}
+
+/* ================================================================
+   OPERATION SILK ROAD — System Screens (loading / error / not-found)
+   ================================================================ */
+.sr-system-card {
+  width: 100%;
+  max-width: 520px;
+  text-align: center;
+}
+
+.sr-status-code {
+  font-family: var(--sr-font-display);
+  font-weight: 800;
+  font-size: clamp(64px, 12vw, 128px);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  margin: 6px 0 14px;
+  background: linear-gradient(180deg, #fff 0%, #d8dade 55%, #8b9096 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  position: relative;
+  display: inline-block;
+}
+
+.sr-status-code::after {
+  content: attr(data-glitch);
+  position: absolute;
+  inset: 0;
+  color: var(--sr-accent);
+  -webkit-text-fill-color: var(--sr-accent);
+  opacity: 0;
+  animation: sr-glitch 5s steps(1) infinite;
+}
+
+@keyframes sr-glitch {
+  0%,
+  92%,
+  100% {
+    opacity: 0;
+    transform: translate(0, 0);
+    clip-path: inset(0 0 100% 0);
+  }
+  93% {
+    opacity: 0.7;
+    transform: translate(-2px, 1px);
+    clip-path: inset(10% 0 60% 0);
+  }
+  95% {
+    opacity: 0.7;
+    transform: translate(2px, -1px);
+    clip-path: inset(70% 0 5% 0);
+  }
+  97% {
+    opacity: 0;
+    transform: translate(0, 0);
+    clip-path: inset(0 0 100% 0);
+  }
+}
+
+.sr-redacted-line {
+  height: 11px;
+  border-radius: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    #1a1c21 0 90%,
+    transparent 90% 100%
+  );
+  margin: 6px auto;
+}
+
+.sr-file-block {
+  text-align: left;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--sr-hairline);
+  border-left: 3px solid var(--sr-accent);
+  border-radius: 6px;
+  padding: 16px 18px;
+  margin: 22px 0 26px;
+  font-family: var(--sr-font-mono);
+}
+
+.sr-status-ring {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 22px;
+  border-radius: 999px;
+  border: 2px solid var(--sr-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--sr-accent);
+  box-shadow:
+    0 0 0 4px rgba(196, 39, 42, 0.15),
+    0 0 24px var(--sr-accent-glow);
+  animation: sr-ring-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes sr-ring-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 4px rgba(196, 39, 42, 0.15),
+      0 0 18px var(--sr-accent-glow);
+  }
+  50% {
+    box-shadow:
+      0 0 0 8px rgba(196, 39, 42, 0.06),
+      0 0 30px var(--sr-accent-glow);
+  }
+}
+
+.sr-button-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 22px;
+}
+
+.sr-button-row .sr-button {
+  width: auto;
+  min-width: 180px;
+}
+
+.sr-button-secondary {
+  background: transparent;
+  border: 1px solid var(--sr-hairline);
+  color: var(--sr-dim);
+}
+
+.sr-button-secondary:hover {
+  border-color: var(--sr-teal);
+  color: var(--sr-text);
+}
+
+/* loading.tsx is the cheapest screen in the theme on purpose — it can
+   flash on every navigation, so no particle canvas here (SystemShell's
+   showParticles={false}), just CSS. */
+.sr-loading-lines {
+  font-family: var(--sr-font-mono);
+  font-size: 13px;
+  color: var(--sr-teal);
+  text-align: left;
+  display: inline-block;
+}
+
+.sr-loading-lines span {
+  display: block;
+  opacity: 0;
+  animation: sr-loading-line 2.4s ease-in-out infinite;
+}
+
+.sr-loading-lines span:nth-child(1) {
+  animation-delay: 0s;
+}
+.sr-loading-lines span:nth-child(2) {
+  animation-delay: 0.6s;
+}
+.sr-loading-lines span:nth-child(3) {
+  animation-delay: 1.2s;
+}
+
+@keyframes sr-loading-line {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  15%,
+  70% {
+    opacity: 1;
+  }
+}
+
+.sr-loading-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--sr-teal);
+  box-shadow: 0 0 10px var(--sr-teal-glow);
+  margin-right: 10px;
+  vertical-align: middle;
+  animation: sr-pulse-dot 1.2s ease-in-out infinite;
 }
