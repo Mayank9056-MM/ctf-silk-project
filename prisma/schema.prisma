@@ -78,3 +78,37 @@ model RefreshToken {
   @@index([userId])
   @@map("refresh_tokens")
 }
+
+enum EventStatus {
+  DRAFT
+  EVENT_SOON
+  EVENT_LIVE
+  EVENT_PAUSED
+  EVENT_ENDED
+}
+
+model Event {
+  id String @id @default(cuid())
+
+  // Ensures only one Event row exists
+  singleton Int @unique @default(1)
+
+  title       String  @db.VarChar(100)
+  description String? @db.Text
+
+  status EventStatus @default(DRAFT)
+
+  startsAt DateTime @db.Timestamptz(3)
+  endsAt   DateTime @db.Timestamptz(3)
+
+  pausedAt    DateTime? @db.Timestamptz(3)
+  pauseReason String?   @db.VarChar(255)
+
+  isPublished Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@map("events")
+}
