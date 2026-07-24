@@ -184,11 +184,12 @@ model ChallengePrerequisite {
 
   challenge Challenge @relation("ChallengePrerequisites", fields: [challengeId], references: [id], onDelete: Cascade)
 
-  prerequisite Challenge @relation("RequiredByChallenges", fields: [prerequisiteId], references: [id], onDelete: Restrict)
+  prerequisite Challenge @relation("RequiredByChallenges", fields: [prerequisiteId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
   @@id([challengeId, prerequisiteId])
   @@index([prerequisiteId])
+  @@index([challengeId])
   @@map("challenge_prerequisites")
 }
