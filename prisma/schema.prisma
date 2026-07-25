@@ -53,6 +53,9 @@ model User {
   failedLoginAttempts Int       @default(0)
   lockedUntil         DateTime?
 
+  submissions     Submission[]
+  challengeSolves ChallengeSolve[]
+
   // Audit
   lastLoginAt DateTime?
   createdAt   DateTime  @default(now())
@@ -130,16 +133,18 @@ model Challenge {
   slug  String @unique @db.VarChar(160)
 
   // Organization
-  chapter Int
-  displayOrder   Int
+  chapter      Int
+  displayOrder Int
 
   // Gameplay
   difficulty Int @default(1)
 
   xpReward Int @default(100)
 
-  flagHash    String                @db.VarChar(255)
-  attachments ChallengeAttachment[]
+  flagHash        String                @db.VarChar(255)
+  attachments     ChallengeAttachment[]
+  submissions     Submission[]
+  challengeSolves ChallengeSolve[]
 
   prerequisites ChallengePrerequisite[] @relation("ChallengePrerequisites")
 
@@ -192,4 +197,61 @@ model ChallengePrerequisite {
   @@index([prerequisiteId])
   @@index([challengeId])
   @@map("challenge_prerequisites")
+}
+
+// ======================================================
+// Submission Module
+// ======================================================
+
+model Submission {
+  id String @id @default(cuid())
+
+  // Relations
+  userId      String
+  challengeId String
+
+  // Plaintext only on incorrect attempts (useful for typo/anti-cheat
+  // review, carries no secret value). A correct submission never stores
+  // the raw flag — see submittedFlagHash below.
+  submittedFlag     String? @db.VarChar(255)
+  submittedFlagHash String? @db.VarChar(255)
+
+  // Result
+  isCorrect Boolean
+
+  // Metadata
+  submittedAt DateTime @default(now())
+
+  // Relations
+  user           User            @relation(fields: [userId], references: [id], onDelete: Restrict)
+  challenge      Challenge       @relation(fields: [challengeId], references: [id], onDelete: Restrict)
+  challengeSolve ChallengeSolve?
+
+  @@index([userId, challengeId, isCorrect])
+  @@index([challengeId])
+  @@index([userId, submittedAt])
+  @@map("submissions")
+}
+
+/**
+ * The scoring source of truth — exactly one row per (userId, challengeId),
+ * enforced by the composite PK. A duplicate insert fails at the database
+ * level rather than relying on a prior SELECT still being accurate.
+ */
+model ChallengeSolve {
+  userId      String
+  challengeId String
+
+  submissionId String @unique
+
+  xpAwarded Int
+  solvedAt  DateTime @default(now())
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Restrict)
+  challenge  Challenge  @relation(fields: [challengeId], references: [id], onDelete: Restrict)
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@id([userId, challengeId])
+  @@index([challengeId])
+  @@map("challenge_solves")
 }
