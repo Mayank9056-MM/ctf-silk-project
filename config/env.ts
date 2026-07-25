@@ -13,6 +13,9 @@ const envSchema = z.object({
   // JWT
   JWT_ACCESS_SECRET: z.string().min(32),
 
+  // Flag Hash Secret
+  FLAG_HASH_SECRET: z.string().min(32),
+
   // Argon
   ARGON2_MEMORY_COST: z.coerce
     .number()
