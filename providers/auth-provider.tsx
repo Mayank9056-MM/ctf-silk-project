@@ -10,7 +10,7 @@ import {
   hasPermission,
   hasAnyPermission,
   hasAllPermissions,
-} from "@/modules/auth/authorization/has-pesmission";
+} from "@/modules/auth/authorization/has-permission";
 
 interface AuthContextValue {
   /** The verified identity resolved server-side by requireAuth/requirePermission. */
