@@ -11,15 +11,6 @@ export type ChallengeWithAttachments = Challenge & {
 };
 
 /**
- * Response returned after verifying a submitted flag.
- */
-export type SubmitFlagResult = {
-  isCorrect: boolean;
-  xpAwarded: number;
-  message: string;
-};
-
-/**
  * Public challenge data exposed to the client.
  * Does NOT expose sensitive fields like flagHash.
  */
