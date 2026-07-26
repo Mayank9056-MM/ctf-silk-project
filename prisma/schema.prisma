@@ -57,9 +57,10 @@ model User {
   challengeSolves ChallengeSolve[]
 
   // Audit
-  lastLoginAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  lastLoginAt        DateTime?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  leaderboardEntries LeaderboardEntry?
 
   @@map("users")
 }
@@ -105,6 +106,8 @@ model Event {
 
   startsAt DateTime @db.Timestamptz(3)
   endsAt   DateTime @db.Timestamptz(3)
+
+  leaderboardFrozenAt DateTime? @db.Timestamptz(3)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -254,4 +257,29 @@ model ChallengeSolve {
   @@id([userId, challengeId])
   @@index([challengeId])
   @@map("challenge_solves")
+}
+
+// ======================================================
+// Leaderboard Module
+// ======================================================
+
+model LeaderboardEntry {
+  userId  String @id
+  totalXp Int    @default(0)
+
+  solvedChallenges Int @default(0)
+
+  lastSolvedAt DateTime?
+
+  highestChapter Int @default(0)
+
+  highestDisplayOrder Int @default(0)
+
+  updatedAt DateTime @updatedAt
+
+  user    User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  version Int  @default(0)
+
+  @@index([totalXp(sort: Desc), solvedChallenges(sort: Desc), lastSolvedAt(sort: Asc)])
+  @@map("leaderboard_entries")
 }
