@@ -18,7 +18,7 @@ class RefreshTokenService {
 
   generateExpiryDate(): Date {
     return new Date(
-      Date.now() + AUTH_CONSTANTS.REFRESH_TOKEN_TTL_SECONDS * 24 * 60 * 60 * 1000,
+      Date.now() + AUTH_CONSTANTS.REFRESH_TOKEN_TTL_SECONDS * 1000,
     );
   }
 }

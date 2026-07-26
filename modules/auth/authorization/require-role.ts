@@ -3,7 +3,7 @@
 import { Role } from "@/app/generated/prisma/enums";
 import { requireAuth, AuthenticatedUser } from "./require-auth";
 import { Permission } from "./permission";
-import { hasAllPermissions, hasAnyPermission } from "./has-pesmission";
+import { hasAllPermissions, hasAnyPermission } from "./has-permission";
 import { ApiError } from "@/lib/errors/ApiError";
 import { ErrorCode } from "@/lib/errors/ErrorCode";
 

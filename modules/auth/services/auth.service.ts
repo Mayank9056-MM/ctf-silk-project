@@ -12,17 +12,8 @@ import { refreshTokenRepository } from "../repositories/refresh-token.repository
 import { refreshTokenService } from "./refresh-token.service";
 import { AUTH_CONSTANTS } from "../constants/auth.constants";
 import { accessTokenService } from "./access-token.service";
-
-export type PublicUser = Omit<
-  User,
-  "passwordHash" | "failedLoginAttempts" | "lockedUntil"
->;
-
-function toPublicUser(user: User): PublicUser {
-  const { passwordHash, failedLoginAttempts, lockedUntil, ...publicUser } =
-    user;
-  return publicUser;
-}
+import { PublicUser } from "../types/user.types";
+import { toPublicUser } from "../utils/user.mapper";
 
 interface RequestMetadata {
   userAgent?: string;
