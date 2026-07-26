@@ -1,5 +1,3 @@
-export const FLAG_PREFIX = "ctf{";
-
 export const SUBMISSION_CONSTANTS = {
   RATE_LIMIT_WINDOW_MS: 30_000,
   MAX_SUBMISSIONS_PER_WINDOW: 10,
