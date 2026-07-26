@@ -1,4 +1,4 @@
-// modules/auth/authorization/permissions.ts
+// modules/auth/authorization/permission.ts
 
 import { Role } from "@/app/generated/prisma/enums";
 
