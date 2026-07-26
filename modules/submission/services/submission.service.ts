@@ -58,7 +58,7 @@ class SubmissionService {
     }
 
     const isCorrect = await flagService.verify(input.flag, challenge.flagHash);
-    const submittedFlagHash = hashFlag(input.flag);
+    const submittedFlagHash = isCorrect ? hashFlag(input.flag) : null;
 
     return prisma.$transaction(async (tx) => {
       const submission = await submissionRepository.createSubmission(tx, {
