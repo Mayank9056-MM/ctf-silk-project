@@ -2,15 +2,12 @@
 
 import { ApiError } from "@/lib/errors/ApiError";
 import { challengeService } from "../services/challenge.service";
-import { ActionState } from "../types/action-state";
 import type { PublicChallenge } from "../types/challenge.types";
+import type { ActionState } from "@/lib/action-state";
 
-export async function getChallenges(): Promise<
-  ActionState<PublicChallenge[]>
-> {
+export async function getChallenges(): Promise<ActionState<PublicChallenge[]>> {
   try {
     const challenges = await challengeService.getChallenges();
-
     return {
       success: true,
       message: "Challenges fetched successfully.",
@@ -18,15 +15,8 @@ export async function getChallenges(): Promise<
     };
   } catch (error) {
     if (error instanceof ApiError) {
-      return {
-        success: false,
-        message: error.message,
-      };
+      return { success: false, message: error.message };
     }
-
-    return {
-      success: false,
-      message: "Failed to fetch challenges.",
-    };
+    return { success: false, message: "Failed to fetch challenges." };
   }
 }

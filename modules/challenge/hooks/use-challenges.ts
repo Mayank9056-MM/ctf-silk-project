@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getChallenges } from "../actions/get-challenges";
 import { challengeKeys } from "../constants/challenge.keys";
 
-export function useChalleneges() {
+export function useChallenges() {
   return useQuery({
     queryKey: challengeKeys.all,
     queryFn: async () => {
