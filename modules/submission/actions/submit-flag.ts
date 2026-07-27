@@ -2,11 +2,9 @@
 
 import { requirePermission } from "@/modules/auth/authorization/require-role";
 import { Permission } from "@/modules/auth/authorization/permission";
-import { getRequestMetadata } from "@/lib/get-request-metadata";
 import { checkRateLimit } from "@/lib/rate-limit/rate-limit";
 import { RATE_LIMITS } from "@/lib/rate-limit/rate-limit.constants";
 import { ApiError } from "@/lib/errors/ApiError";
-import { ErrorCode } from "@/lib/errors/ErrorCode";
 
 import { submissionService } from "../services/submission.service";
 import { submitFlagSchema } from "../validations/submit-flag.schema";
@@ -19,8 +17,6 @@ export async function submitFlag(
   flag: string,
 ): Promise<ActionState<SubmitFlagResultDTO>> {
   try {
-    const metadata = await getRequestMetadata();
-
  const globalLimit = await checkRateLimit({
     action: "submit-flag",
     identifier: "global",
