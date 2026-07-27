@@ -1,10 +1,10 @@
 "use server";
 
 import { authService } from "@/modules/auth/services/auth.service";
-import { getRequestMetadata } from "@/modules/auth/utils/get-request-metadata";
+import { getRequestMetadata } from "@/lib/get-request-metadata";
 import { ApiError } from "@/lib/errors/ApiError";
 import { ErrorCode } from "@/lib/errors/ErrorCode";
-import type { PublicUser } from "@/modules/auth/services/auth.service";
+import { PublicUser } from "../types/user.types";
 
 export type RefreshSessionResult =
   | { success: true; user: PublicUser }
