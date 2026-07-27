@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 
 import { authService } from "@/modules/auth/services/auth.service";
 import { registerSchema } from "@/modules/auth/validations/register.schema";
-import { getRequestMetadata } from "@/lib/get-request-metadata";
 import { checkRateLimit } from "@/lib/rate-limit/rate-limit";
 import { RATE_LIMITS } from "@/lib/rate-limit/rate-limit.constants";
 import { ApiError } from "@/lib/errors/ApiError";
@@ -14,9 +13,7 @@ export async function registerAction(
   _prevState: RegisterActionState,
   formData: FormData,
 ): Promise<RegisterActionState> {
-  const metadata = await getRequestMetadata();
-
- const globalLimit = await checkRateLimit({
+  const globalLimit = await checkRateLimit({
     action: "register",
     identifier: "global",
     ...RATE_LIMITS.REGISTER_GLOBAL,
