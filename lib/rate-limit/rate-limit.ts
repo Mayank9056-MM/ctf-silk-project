@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { hashIdentifier } from "./hash-identifier";
 
 export interface RateLimitConfig {
   action: string;
@@ -22,9 +23,12 @@ export interface RateLimitResult {
  * check (account lockout, unique constraints, flag hashing) — never the
  * sole thing standing between a request and a real problem.
  */
-export async function checkRateLimit(config: RateLimitConfig): Promise<RateLimitResult> {
+export async function checkRateLimit(
+  config: RateLimitConfig,
+): Promise<RateLimitResult> {
   const windowNumber = Math.floor(Date.now() / config.windowMs);
-  const key = `${config.action}:${config.identifier}:${windowNumber}`;
+  const hashedIdentifier = hashIdentifier(config.identifier);
+  const key = `${config.action}:${hashedIdentifier}:${windowNumber}`;
   const resetAt = new Date((windowNumber + 1) * config.windowMs);
 
   try {
@@ -44,10 +48,10 @@ export async function checkRateLimit(config: RateLimitConfig): Promise<RateLimit
       resetAt,
     };
   } catch (error) {
-    // Fail OPEN, not closed. A transient DB hiccup rejecting every
-    // request during a live event is a worse outcome than briefly
-    // losing this one defense-in-depth layer while it's investigated.
-    console.error(`[rate-limit] check failed for "${key}", failing open:`, error);
+    console.error(
+      `[rate-limit] check failed for "${key}", failing open:`,
+      error,
+    );
     return { allowed: true, remaining: config.limit, resetAt };
   }
 }
