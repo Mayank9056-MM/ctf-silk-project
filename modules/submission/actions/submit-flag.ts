@@ -21,21 +21,19 @@ export async function submitFlag(
   try {
     const metadata = await getRequestMetadata();
 
-    // Per-IP, layered on top of submissionService's own per-user attempt
-    // throttle — this one catches a script cycling through several
-    // accounts from one machine, which a purely per-user check can't see.
-    const ipLimit = await checkRateLimit({
-      action: "submit-flag:ip",
-      identifier: metadata.ipAddress ?? "unknown",
-      ...RATE_LIMITS.SUBMIT_FLAG_PER_IP,
-    });
+ const globalLimit = await checkRateLimit({
+    action: "submit-flag",
+    identifier: "global",
+    ...RATE_LIMITS.SUBMIT_FLAG_GLOBAL,
+  });
 
-    if (!ipLimit.allowed) {
-      throw ApiError.tooManyRequests(
-        ErrorCode.TOO_MANY_REQUESTS,
-        "Too many submissions from this network. Please slow down.",
-      );
-    }
+  if (!globalLimit.allowed) {
+    return {
+      success: false,
+      message:
+        "The system is experiencing high load. Please try again in a moment.",
+    };
+  }
 
     const user = await requirePermission(Permission.SUBMIT_FLAG);
 
