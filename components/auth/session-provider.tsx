@@ -8,9 +8,17 @@ import { refreshSessionAction } from "@/modules/auth/actions/refresh-session";
 import { AUTH_CONSTANTS } from "@/modules/auth/constants/auth.constants";
 
 const REFRESH_SAFETY_MARGIN_MS = 60_000;
-const REFRESH_INTERVAL_MS = AUTH_CONSTANTS.ACCESS_TOKEN_TTL_SECONDS * 1000 - REFRESH_SAFETY_MARGIN_MS;
+const REFRESH_INTERVAL_MS =
+  AUTH_CONSTANTS.ACCESS_TOKEN_TTL_SECONDS * 1000 - REFRESH_SAFETY_MARGIN_MS;
+const REFRESH_JITTER_MS = 45_000;
 const LOCK_NAME = "sr-session-refresh-lock";
 const CHANNEL_NAME = "sr-session-refresh-channel";
+
+function getJitteredDelay(): number {
+  const jitter = (Math.random() * 2 - 1) * REFRESH_JITTER_MS;
+
+  return Math.max(5_000, REFRESH_INTERVAL_MS + jitter);
+}
 
 /**
  * Silently rotates the refresh token shortly before each access token
@@ -34,10 +42,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const inFlight = useRef(false);
 
   useEffect(() => {
-    const channel = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel(CHANNEL_NAME) : null;
+    const channel =
+      typeof BroadcastChannel !== "undefined"
+        ? new BroadcastChannel(CHANNEL_NAME)
+        : null;
     let timeoutId: ReturnType<typeof setTimeout>;
 
-    function schedule(delay = REFRESH_INTERVAL_MS) {
+    function schedule(delay = getJitteredDelay()) {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(refresh, delay);
     }
