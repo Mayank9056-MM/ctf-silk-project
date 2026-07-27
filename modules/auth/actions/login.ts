@@ -4,11 +4,12 @@ import { redirect } from "next/navigation";
 
 import { authService } from "@/modules/auth/services/auth.service";
 import { loginSchema } from "@/modules/auth/validations/login.schema";
-import { getRequestMetadata } from "@/modules/auth/utils/get-request-metadata";
+import { getRequestMetadata } from "@/lib/get-request-metadata";
 import { ApiError } from "@/lib/errors/ApiError";
 import type { LoginActionState } from "@/modules/auth/types/action-state";
-
-const DEFAULT_REDIRECT_PATH = "/dashboard";
+import { AUTH_CONSTANTS } from "../constants/auth.constants";
+import { checkRateLimit } from "@/lib/rate-limit/rate-limit";
+import { RATE_LIMITS } from "@/lib/rate-limit/rate-limit.constants";
 
 function sanitizeRedirectPath(value: FormDataEntryValue | null): string {
   if (
@@ -16,7 +17,7 @@ function sanitizeRedirectPath(value: FormDataEntryValue | null): string {
     !value.startsWith("/") ||
     value.startsWith("//")
   ) {
-    return DEFAULT_REDIRECT_PATH;
+    return AUTH_CONSTANTS.DEFAULT_REDIRECT_PATH;
   }
   return value;
 }
@@ -31,6 +32,21 @@ export async function loginAction(
   formData: FormData,
 ): Promise<LoginActionState> {
   const redirectTo = sanitizeRedirectPath(formData.get("redirectTo"));
+  const metadata = await getRequestMetadata();
+
+  const globalLimit = await checkRateLimit({
+    action: "login",
+    identifier: "global",
+    ...RATE_LIMITS.LOGIN_GLOBAL,
+  });
+
+  if (!globalLimit.allowed) {
+    return {
+      success: false,
+      message:
+        "The system is experiencing high load. Please try again in a moment.",
+    };
+  }
 
   const parsed = loginSchema.safeParse({
     email: formData.get("email"),
@@ -45,13 +61,27 @@ export async function loginAction(
     };
   }
 
+  // Per-email, after validation — stops one targeted account being
+  // hammered across many rotating IPs, independent of the IP check above.
+  const emailLimit = await checkRateLimit({
+    action: "login:email",
+    identifier: parsed.data.email,
+    ...RATE_LIMITS.LOGIN_PER_EMAIL,
+  });
+
+  if (!emailLimit.allowed) {
+    return {
+      success: false,
+      message: "Too many attempts for this account. Please try again later.",
+    };
+  }
+
   try {
-    await authService.login(parsed.data, await getRequestMetadata());
+    await authService.login(parsed.data, metadata);
   } catch (error) {
     if (error instanceof ApiError) {
       return { success: false, message: error.message };
     }
-
     console.error("[loginAction] unexpected error:", error);
     return {
       success: false,

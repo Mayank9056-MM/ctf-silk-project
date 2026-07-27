@@ -10,4 +10,6 @@ export const AUTH_CONSTANTS = {
   MAX_FAILED_LOGIN_ATTEMPTS: 5,
 
   ACCOUNT_LOCK_DURATION_MS: 15 * 60 * 1000,
+  
+  DEFAULT_REDIRECT_PATH: "/dashboard",
 } as const;

@@ -13,6 +13,27 @@ datasource db {
 }
 
 // ======================================================
+// Rate Limiting
+// ======================================================
+
+model RateLimitBucket {
+  /**
+   * Encodes both what's being limited (e.g. "login:ip:1.2.3.4") and the
+   * current fixed window number — a single unique constraint is enough,
+   * no composite key needed.
+   */
+  key String @id @db.VarChar(300)
+
+  count Int @default(1)
+
+  /** Window end — used only for cleanup, never read by the check itself. */
+  expiresAt DateTime @db.Timestamptz(3)
+
+  @@index([expiresAt])
+  @@map("rate_limit_buckets")
+}
+
+// ======================================================
 // User Module
 // ======================================================
 

@@ -16,6 +16,9 @@ const envSchema = z.object({
   // Flag Hash Secret
   FLAG_HASH_SECRET: z.string().min(32),
 
+  // Rate Limit
+  RATE_LIMIT_HASH_SECRET: z.string().min(32),
+
   // Argon
   ARGON2_MEMORY_COST: z.coerce
     .number()

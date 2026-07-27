@@ -4,18 +4,29 @@ import { redirect } from "next/navigation";
 
 import { authService } from "@/modules/auth/services/auth.service";
 import { registerSchema } from "@/modules/auth/validations/register.schema";
+import { checkRateLimit } from "@/lib/rate-limit/rate-limit";
+import { RATE_LIMITS } from "@/lib/rate-limit/rate-limit.constants";
 import { ApiError } from "@/lib/errors/ApiError";
 import type { RegisterActionState } from "@/modules/auth/types/action-state";
 
-/**
- * See login.ts's comment — a "use server" file may only export async
- * functions, so RegisterActionState/INITIAL_REGISTER_ACTION_STATE live in
- * modules/auth/types/action-state.ts.
- */
 export async function registerAction(
   _prevState: RegisterActionState,
   formData: FormData,
 ): Promise<RegisterActionState> {
+  const globalLimit = await checkRateLimit({
+    action: "register",
+    identifier: "global",
+    ...RATE_LIMITS.REGISTER_GLOBAL,
+  });
+
+  if (!globalLimit.allowed) {
+    return {
+      success: false,
+      message:
+        "The system is experiencing high load. Please try again in a moment.",
+    };
+  }
+
   const parsed = registerSchema.safeParse({
     fullName: formData.get("fullName"),
     username: formData.get("username"),
@@ -38,7 +49,6 @@ export async function registerAction(
     if (error instanceof ApiError) {
       return { success: false, message: error.message };
     }
-
     console.error("[registerAction] unexpected error:", error);
     return {
       success: false,
