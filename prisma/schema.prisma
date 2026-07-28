@@ -17,16 +17,8 @@ datasource db {
 // ======================================================
 
 model RateLimitBucket {
-  /**
-   * Encodes both what's being limited (e.g. "login:ip:1.2.3.4") and the
-   * current fixed window number — a single unique constraint is enough,
-   * no composite key needed.
-   */
-  key String @id @db.VarChar(300)
-
-  count Int @default(1)
-
-  /** Window end — used only for cleanup, never read by the check itself. */
+  key       String   @id @db.VarChar(300)
+  count     Int      @default(1)
   expiresAt DateTime @db.Timestamptz(3)
 
   @@index([expiresAt])
@@ -77,6 +69,11 @@ model User {
   submissions     Submission[]
   challengeSolves ChallengeSolve[]
 
+  // Story
+  storyProgress    StoryProgress?
+  sceneCompletions SceneCompletion[]
+  choiceSelections ChoiceSelection[]
+
   // Audit
   lastLoginAt        DateTime?
   createdAt          DateTime          @default(now())
@@ -119,7 +116,6 @@ model RefreshToken {
 model Event {
   id String @id @default(cuid())
 
-  // Ensures only one Event row exists
   singleton Int @unique @default(1)
 
   title       String  @db.VarChar(100)
@@ -134,6 +130,43 @@ model Event {
   updatedAt DateTime @updatedAt
 
   @@map("events")
+}
+
+// ======================================================
+// Shared content lifecycle — Chapter, Scene, Evidence all use this
+// ======================================================
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+// ======================================================
+// Chapter Module
+// Formalizes what used to be Challenge.chapter (a bare Int) into a
+// real entity both Challenge and Story attach to. See the backfill
+// script below — this is NOT a drop-in replacement without a data
+// migration, since existing challenges already reference chapter
+// numbers 1-6.
+// ======================================================
+
+model Chapter {
+  id    String @id @default(cuid())
+  slug  String @unique @db.VarChar(160)
+  title String @db.VarChar(150)
+  order Int    @unique
+
+  status ContentStatus @default(DRAFT)
+
+  scenes     Scene[]
+  challenges Challenge[]
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  storyProgresses StoryProgress[]
+
+  @@map("chapters")
 }
 
 // ======================================================
@@ -156,8 +189,8 @@ model Challenge {
   title String @db.VarChar(150)
   slug  String @unique @db.VarChar(160)
 
-  // Organization
-  chapter      Int
+  // Organization — chapterId replaces the old bare `chapter Int`
+  chapterId    String
   displayOrder Int
 
   // Gameplay
@@ -171,13 +204,15 @@ model Challenge {
   challengeSolves ChallengeSolve[]
 
   prerequisites ChallengePrerequisite[] @relation("ChallengePrerequisites")
+  requiredBy    ChallengePrerequisite[] @relation("RequiredByChallenges")
 
-  requiredBy ChallengePrerequisite[] @relation("RequiredByChallenges")
+  chapter Chapter @relation(fields: [chapterId], references: [id], onDelete: Restrict)
+  scenes  Scene[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([chapter, displayOrder])
+  @@unique([chapterId, displayOrder])
   @@map("challenges")
 }
 
@@ -230,23 +265,16 @@ model ChallengePrerequisite {
 model Submission {
   id String @id @default(cuid())
 
-  // Relations
   userId      String
   challengeId String
 
-  // Plaintext only on incorrect attempts (useful for typo/anti-cheat
-  // review, carries no secret value). A correct submission never stores
-  // the raw flag — see submittedFlagHash below.
   submittedFlag     String? @db.VarChar(255)
   submittedFlagHash String? @db.VarChar(255)
 
-  // Result
   isCorrect Boolean
 
-  // Metadata
   submittedAt DateTime @default(now())
 
-  // Relations
   user           User            @relation(fields: [userId], references: [id], onDelete: Restrict)
   challenge      Challenge       @relation(fields: [challengeId], references: [id], onDelete: Restrict)
   challengeSolve ChallengeSolve?
@@ -257,11 +285,6 @@ model Submission {
   @@map("submissions")
 }
 
-/**
- * The scoring source of truth — exactly one row per (userId, challengeId),
- * enforced by the composite PK. A duplicate insert fails at the database
- * level rather than relying on a prior SELECT still being accurate.
- */
 model ChallengeSolve {
   userId      String
   challengeId String
@@ -292,6 +315,12 @@ model LeaderboardEntry {
 
   lastSolvedAt DateTime?
 
+  // NOTE: still plain Ints, not FKs — these track Chapter.order /
+  // Challenge.displayOrder for sort/tiebreak purposes, not a
+  // relationship. Once the backfill below runs, the write path
+  // (leaderboardRepository.upsertForSolve) needs to pass
+  // `challenge.chapter.order` here instead of the old raw `chapter`
+  // number — same field, same meaning, different source.
   highestChapter Int @default(0)
 
   highestDisplayOrder Int @default(0)
@@ -303,4 +332,240 @@ model LeaderboardEntry {
 
   @@index([totalXp(sort: Desc), solvedChallenges(sort: Desc), lastSolvedAt(sort: Asc)])
   @@map("leaderboard_entries")
+}
+
+// ======================================================
+// Story Module
+// ======================================================
+
+enum SceneType {
+  DIALOGUE
+  CUTSCENE
+  EVIDENCE_REVEAL
+  CHALLENGE_GATE
+  CHOICE
+}
+
+model Scene {
+  id        String  @id @default(cuid())
+  chapterId String
+  slug      String  @db.VarChar(160)
+  title     String? @db.VarChar(150)
+
+  type  SceneType
+  order Int
+
+  status ContentStatus @default(DRAFT)
+
+  // Only set when type = CHALLENGE_GATE.
+  challengeId String?
+  // Only set when type = EVIDENCE_REVEAL.
+  evidenceId  String?
+
+  // Cinematic/config data (cutscene asset key, background track,
+  // camera notes) — JSON rather than dedicated columns so new scene
+  // types and cinematic features never require a migration.
+  metadata Json?
+
+  chapter   Chapter    @relation(fields: [chapterId], references: [id], onDelete: Restrict)
+  challenge Challenge? @relation(fields: [challengeId], references: [id], onDelete: Restrict)
+  evidence  Evidence?  @relation(fields: [evidenceId], references: [id], onDelete: Restrict)
+
+  dialogueLines    DialogueLine[]
+  choices          Choice[]          @relation("SceneChoices")
+  incomingChoices  Choice[]          @relation("ChoiceDestination")
+  sceneCompletions SceneCompletion[]
+  choiceSelections ChoiceSelection[]
+  storyProgress    StoryProgress[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([chapterId, slug])
+  @@unique([chapterId, order])
+  @@index([challengeId])
+  @@index([evidenceId])
+  @@map("scenes")
+}
+
+model Character {
+  id          String  @id @default(cuid())
+  slug        String  @unique @db.VarChar(60)
+  displayName String  @db.VarChar(100)
+  portraitUrl String? @db.VarChar(500)
+
+  // Voice config / personality tags for a future Advisor system —
+  // kept flexible rather than adding columns speculatively.
+  metadata Json?
+
+  dialogueLines DialogueLine[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("characters")
+}
+
+model DialogueLine {
+  id          String  @id @default(cuid())
+  sceneId     String
+  characterId String?
+
+  order    Int
+  content  String  @db.Text
+  audioUrl String? @db.VarChar(500) // future voice acting — provisioned, unused today
+
+  scene     Scene      @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  character Character? @relation(fields: [characterId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([sceneId, order])
+  @@index([characterId])
+  @@map("dialogue_lines")
+}
+
+model Choice {
+  id      String @id @default(cuid())
+  sceneId String
+
+  order Int
+  label String @db.VarChar(200)
+
+  // Nullable only to allow authoring a choice before its destination
+  // exists yet — the service layer enforces that a PUBLISHED scene
+  // never has a choice with a null nextSceneId, not the schema.
+  nextSceneId String?
+
+  scene     Scene  @relation("SceneChoices", fields: [sceneId], references: [id], onDelete: Cascade)
+  nextScene Scene? @relation("ChoiceDestination", fields: [nextSceneId], references: [id], onDelete: Restrict)
+
+  choiceSelections ChoiceSelection[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([sceneId, order])
+  @@index([nextSceneId])
+  @@map("choices")
+}
+
+enum EvidenceType {
+  CHAT_LOG
+  WALLET_LEDGER
+  GPS_PIN
+  PHOTOGRAPH
+  SURVEILLANCE_FOOTAGE
+  FINGERPRINT
+  DOCUMENT
+  OTHER
+}
+
+model Evidence {
+  id    String @id @default(cuid())
+  slug  String @unique @db.VarChar(160)
+  title String @db.VarChar(150)
+
+  type    EvidenceType
+  content String       @db.Text
+
+  attachmentUrl String? @db.VarChar(500)
+
+  status ContentStatus @default(DRAFT)
+
+  scenes Scene[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("evidence")
+}
+
+enum UnlockTargetType {
+  CHAPTER
+  SCENE
+  EVIDENCE
+}
+
+enum UnlockConditionType {
+  CHALLENGE_SOLVED
+  CHAPTER_COMPLETED
+  SCENE_COMPLETED
+  CHOICE_SELECTED
+  EVENT_LIVE
+}
+
+model UnlockRule {
+  id String @id @default(cuid())
+
+  targetType UnlockTargetType
+  targetId   String
+
+  conditionType UnlockConditionType
+  // Not a typed FK — can point at a Challenge, Chapter, Scene, or
+  // Choice depending on conditionType. Referential integrity for this
+  // field is enforced at the service layer (validated before saving),
+  // not the database — see the Story domain design doc for the
+  // reasoning behind this one deliberate exception.
+  referenceId   String?
+
+  createdAt DateTime @default(now())
+
+  @@index([targetType, targetId])
+  @@map("unlock_rules")
+}
+
+enum StoryProgressStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+model StoryProgress {
+  userId String @id
+
+  currentChapterId String?
+  currentSceneId   String?
+
+  status StoryProgressStatus @default(IN_PROGRESS)
+
+  startedAt      DateTime  @default(now())
+  lastActivityAt DateTime  @updatedAt
+  completedAt    DateTime?
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currentChapter Chapter? @relation(fields: [currentChapterId], references: [id], onDelete: SetNull)
+  currentScene   Scene?   @relation(fields: [currentSceneId], references: [id], onDelete: SetNull)
+
+  @@map("story_progress")
+}
+
+model SceneCompletion {
+  userId  String
+  sceneId String
+
+  completedAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scene Scene @relation(fields: [sceneId], references: [id], onDelete: Restrict)
+
+  @@id([userId, sceneId])
+  @@index([sceneId])
+  @@map("scene_completions")
+}
+
+model ChoiceSelection {
+  userId   String
+  sceneId  String
+  choiceId String
+
+  selectedAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scene  Scene  @relation(fields: [sceneId], references: [id], onDelete: Restrict)
+  choice Choice @relation(fields: [choiceId], references: [id], onDelete: Restrict)
+
+  @@id([userId, sceneId])
+  @@index([choiceId])
+  @@map("choice_selections")
 }
