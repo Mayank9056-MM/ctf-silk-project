@@ -1,8 +1,18 @@
-import type { Evidence } from "@/app/generated/prisma/client";
+import type { Chapter, Evidence } from "@/app/generated/prisma/client";
 import type { ResolvedScene } from "../types/scene.types";
-import type { SceneDTO, ChoiceDTO, AdminSceneDTO, AdminChoiceDTO } from "../types/scene.dto";
-import { toDialogueLineDTO, toAdminDialogueLineDTOList } from "./dialogue.mapper";
-import { toEvidencePreviewDTO } from "./evidence.mapper";
+import type {
+  SceneDTO,
+  ChoiceDTO,
+  AdminSceneDTO,
+  AdminChoiceDTO,
+} from "../types/scene.dto";
+import {
+  toDialogueLineDTO,
+  toAdminDialogueLineDTOList,
+} from "./dialogue.mapper";
+import { EvidencePreviewDTO } from "../types/evidence.dto";
+import { ChapterMapDTO, ChapterMapEntryDTO, ChapterProgressState } from "../types/chapter.dto";
+import { toChapterDTO } from "./story.mapper";
 
 function toChoiceDTO(choice: ResolvedScene["choices"][number]): ChoiceDTO {
   return { id: choice.id, order: choice.order, label: choice.label };
@@ -22,7 +32,7 @@ interface ToSceneDTOOptions {
    * type, in which case `SceneDTO.evidence` comes out null regardless of
    * what's passed.
    */
-  evidence?: Evidence | null;
+  evidence?: EvidencePreviewDTO | null;
 }
 
 /**
@@ -31,7 +41,10 @@ interface ToSceneDTOOptions {
  * a player actually receives — same discipline as every other mapper in
  * this build.
  */
-export function toSceneDTO(resolved: ResolvedScene, options: ToSceneDTOOptions): SceneDTO {
+export function toSceneDTO(
+  resolved: ResolvedScene,
+  options: ToSceneDTOOptions,
+): SceneDTO {
   const { scene, choices } = resolved;
 
   return {
@@ -42,16 +55,25 @@ export function toSceneDTO(resolved: ResolvedScene, options: ToSceneDTOOptions):
     dialogueLines: scene.dialogueLines.map(toDialogueLineDTO),
     choices: toChoiceDTOList(choices),
     challengeId: scene.challengeId,
-    evidence: options.evidence ? toEvidencePreviewDTO(options.evidence) : null,
+    evidence: options.evidence ?? null,
     isCompleted: options.isCompleted,
   };
 }
 
-function toAdminChoiceDTO(choice: ResolvedScene["choices"][number]): AdminChoiceDTO {
-  return { id: choice.id, order: choice.order, label: choice.label, nextSceneId: choice.nextSceneId };
+function toAdminChoiceDTO(
+  choice: ResolvedScene["choices"][number],
+): AdminChoiceDTO {
+  return {
+    id: choice.id,
+    order: choice.order,
+    label: choice.label,
+    nextSceneId: choice.nextSceneId,
+  };
 }
 
-function toAdminChoiceDTOList(choices: ResolvedScene["choices"]): AdminChoiceDTO[] {
+function toAdminChoiceDTOList(
+  choices: ResolvedScene["choices"],
+): AdminChoiceDTO[] {
   return choices.map(toAdminChoiceDTO);
 }
 
@@ -86,5 +108,39 @@ export function toAdminSceneDTO(resolved: ResolvedScene): AdminSceneDTO {
     choices: toAdminChoiceDTOList(choices),
     createdAt: scene.createdAt,
     updatedAt: scene.updatedAt,
+  };
+}
+
+export function toChapterMapEntryDTO(
+  chapter: Chapter,
+  currentChapterId: string | null,
+  currentChapterOrder: number | null,
+  isCurrentChapterUnlocked: boolean,
+): ChapterMapEntryDTO {
+  const isCurrent = currentChapterId === chapter.id;
+  const isPast = currentChapterOrder !== null && chapter.order < currentChapterOrder;
+
+  let state: ChapterProgressState;
+  if (isCurrent && isCurrentChapterUnlocked) {
+    state = ChapterProgressState.ACTIVE;
+  } else if (isPast) {
+    state = ChapterProgressState.COMPLETED;
+  } else {
+    state = ChapterProgressState.LOCKED;
+  }
+
+  return { ...toChapterDTO(chapter), state };
+}
+
+export function toChapterMapDTO(
+  chapters: Chapter[],
+  currentChapterId: string | null,
+  currentChapterOrder: number | null,
+  isCurrentChapterUnlocked: boolean,
+): ChapterMapDTO {
+  return {
+    chapters: chapters.map((chapter) =>
+      toChapterMapEntryDTO(chapter, currentChapterId, currentChapterOrder, isCurrentChapterUnlocked),
+    ),
   };
 }

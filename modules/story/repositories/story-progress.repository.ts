@@ -28,7 +28,10 @@ class StoryProgressRepository {
   // StoryProgress
   // ============================================================
 
-  async findProgress(db: DbClient, userId: string): Promise<StoryProgress | null> {
+  async findProgress(
+    db: DbClient,
+    userId: string,
+  ): Promise<StoryProgress | null> {
     return db.storyProgress.findUnique({ where: { userId } });
   }
 
@@ -52,14 +55,22 @@ class StoryProgressRepository {
    * means a scene-to-scene advance within the same chapter is a single,
    * minimal write.
    */
-  async updateCurrentScene(db: DbClient, userId: string, sceneId: string): Promise<StoryProgress> {
+  async updateCurrentScene(
+    db: DbClient,
+    userId: string,
+    sceneId: string,
+  ): Promise<StoryProgress> {
     return db.storyProgress.update({
       where: { userId },
       data: { currentSceneId: sceneId },
     });
   }
 
-  async updateCurrentChapter(db: DbClient, userId: string, chapterId: string): Promise<StoryProgress> {
+  async updateCurrentChapter(
+    db: DbClient,
+    userId: string,
+    chapterId: string,
+  ): Promise<StoryProgress> {
     return db.storyProgress.update({
       where: { userId },
       data: { currentChapterId: chapterId },
@@ -80,7 +91,10 @@ class StoryProgressRepository {
    * is `@updatedAt`, so Prisma sets it on every update() call regardless
    * of what else is in the payload.
    */
-  async touchLastActivity(db: DbClient, userId: string): Promise<StoryProgress> {
+  async touchLastActivity(
+    db: DbClient,
+    userId: string,
+  ): Promise<StoryProgress> {
     return db.storyProgress.update({ where: { userId }, data: {} });
   }
 
@@ -109,11 +123,19 @@ class StoryProgressRepository {
    * here (per the "no custom domain errors" constraint). The caller
    * decides what a duplicate means (idempotent no-op vs. a real error).
    */
-  async completeScene(db: DbClient, userId: string, sceneId: string): Promise<SceneCompletion> {
+  async completeScene(
+    db: DbClient,
+    userId: string,
+    sceneId: string,
+  ): Promise<SceneCompletion> {
     return db.sceneCompletion.create({ data: { userId, sceneId } });
   }
 
-  async hasCompletedScene(db: DbClient, userId: string, sceneId: string): Promise<boolean> {
+  async hasCompletedScene(
+    db: DbClient,
+    userId: string,
+    sceneId: string,
+  ): Promise<boolean> {
     const completion = await db.sceneCompletion.findUnique({
       where: { userId_sceneId: { userId, sceneId } },
       select: { userId: true },
@@ -122,7 +144,10 @@ class StoryProgressRepository {
   }
 
   /** Full completion history, oldest first — the raw data behind a progress/analytics view. */
-  async getCompletedScenes(db: DbClient, userId: string): Promise<SceneCompletion[]> {
+  async getCompletedScenes(
+    db: DbClient,
+    userId: string,
+  ): Promise<SceneCompletion[]> {
     return db.sceneCompletion.findMany({
       where: { userId },
       orderBy: { completedAt: "asc" },
@@ -149,10 +174,34 @@ class StoryProgressRepository {
     return db.choiceSelection.create({ data: { userId, sceneId, choiceId } });
   }
 
-  async findChoice(db: DbClient, userId: string, sceneId: string): Promise<ChoiceSelection | null> {
+  async findChoice(
+    db: DbClient,
+    userId: string,
+    sceneId: string,
+  ): Promise<ChoiceSelection | null> {
     return db.choiceSelection.findUnique({
       where: { userId_sceneId: { userId, sceneId } },
     });
+  }
+
+  /**
+   * Whether a user has ever selected a specific choice, by choiceId rather
+   * than sceneId — needed for CHOICE_SELECTED unlock rules, which
+   * reference a choice directly without knowing which scene it belonged
+   * to. Distinct from findChoice(userId, sceneId), which answers "what did
+   * this user pick for this scene"; this answers "did they ever pick THIS
+   * specific choice."
+   */
+  async existsChoiceSelectionByChoiceId(
+    db: DbClient,
+    userId: string,
+    choiceId: string,
+  ): Promise<boolean> {
+    const selection = await db.choiceSelection.findFirst({
+      where: { userId, choiceId },
+      select: { userId: true },
+    });
+    return selection != null;
   }
 }
 
