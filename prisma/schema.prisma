@@ -512,7 +512,7 @@ model UnlockRule {
 
   createdAt DateTime @default(now())
 
-  @@index([targetType, targetId])
+  @@index([targetType, targetId, createdAt])
   @@map("unlock_rules")
 }
 
