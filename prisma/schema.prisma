@@ -13,6 +13,129 @@ datasource db {
 }
 
 // ======================================================
+// Audit
+// ======================================================
+
+enum AuditActorType {
+  USER
+  ADMIN
+  SYSTEM
+}
+
+enum AuditAction {
+  // Auth
+  LOGIN
+  LOGOUT
+  REGISTER
+
+  // User moderation
+  USER_BANNED
+  USER_UNBANNED
+  USER_ROLE_CHANGED
+
+  // Challenge CMS
+  CHALLENGE_CREATED
+  CHALLENGE_UPDATED
+  CHALLENGE_DELETED
+  CHALLENGE_PUBLISHED
+  CHALLENGE_UNPUBLISHED
+  ATTACHMENT_UPLOADED
+  ATTACHMENT_DELETED
+
+  // Story CMS — mirrors Challenge's actions above. No service method
+  // fires these yet (the CMS write layer isn't built) — vocabulary
+  // defined ahead of the feature, same status as everywhere else this
+  // pattern shows up in this build.
+  CHAPTER_CREATED
+  CHAPTER_UPDATED
+  CHAPTER_DELETED
+  CHAPTER_PUBLISHED
+  CHAPTER_UNPUBLISHED
+  SCENE_CREATED
+  SCENE_UPDATED
+  SCENE_DELETED
+  SCENE_PUBLISHED
+  SCENE_UNPUBLISHED
+
+  // Rare, deliberate, destructive player action — not routine telemetry.
+  STORY_RESTARTED
+
+  // Once-per-challenge milestone, not a per-attempt event.
+  FIRST_BLOOD
+
+  // Leaderboard / Event admin
+  LEADERBOARD_FROZEN
+  LEADERBOARD_UNFROZEN
+  EVENT_UPDATED
+
+  // Exports — not built yet, but closely tied to prize resolution for
+  // an event with a real prize, unlike the fully speculative modules
+  // trimmed below.
+  EXPORT_LEADERBOARD
+  EXPORT_SUBMISSIONS
+  EXPORT_AUDIT
+}
+
+enum AuditResourceType {
+  USER
+  EVENT
+  CHALLENGE
+  SUBMISSION
+  CHAPTER
+  SCENE
+  LEADERBOARD
+  /**
+   * For actions with no single targeted row — exports, system-level admin actions.
+   */
+  SYSTEM
+}
+
+model AuditLog {
+  id String @id @default(cuid())
+
+  occurredAt DateTime @default(now())
+
+  // Who performed it
+  actorType     AuditActorType
+  actorId       String?
+  actorUsername String?        @db.VarChar(30)
+  actorRole     Role?
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  // Action
+  action  AuditAction
+  success Boolean
+  reason  String?     @db.VarChar(255)
+
+  // Resource — untyped reference, same trade-off as UnlockRule.referenceId.
+  resourceType AuditResourceType
+  resourceId   String?
+  resourceName String?           @db.VarChar(200)
+
+  // Context — requestId/sessionId provisioned, currently always null
+  // until request-id propagation exists; cheap to have now, no schema
+  // churn later.
+  ipAddress String? @db.VarChar(45)
+  userAgent String? @db.VarChar(255)
+  requestId String? @db.VarChar(100)
+  sessionId String? @db.VarChar(100)
+
+  // Structured payload — MUST be passed through redact() (lib/logger/redact.ts)
+  // before being written; see the note above this schema.
+  before   Json?
+  after    Json?
+  metadata Json?
+
+  @@index([occurredAt(sort: Desc)])
+  @@index([actorId])
+  @@index([action])
+  @@index([resourceType])
+  @@index([resourceId])
+  @@map("audit_logs")
+}
+
+// ======================================================
 // Rate Limiting
 // ======================================================
 
@@ -79,6 +202,7 @@ model User {
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt
   leaderboardEntries LeaderboardEntry?
+  auditLogs          AuditLog[]
 
   @@map("users")
 }
