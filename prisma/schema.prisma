@@ -28,6 +28,16 @@ enum AuditAction {
   LOGOUT
   REGISTER
 
+  ACCOUNT_LOCKED
+  ACCOUNT_UNLOCKED
+
+  PASSWORD_CHANGED
+  PASSWORD_RESET_REQUESTED
+  PASSWORD_RESET_COMPLETED
+
+  REFRESH_TOKEN_REUSE_DETECTED
+  PERMISSION_DENIED
+
   // User moderation
   USER_BANNED
   USER_UNBANNED
@@ -39,38 +49,52 @@ enum AuditAction {
   CHALLENGE_DELETED
   CHALLENGE_PUBLISHED
   CHALLENGE_UNPUBLISHED
+
+  CHALLENGE_FLAG_CHANGED
+
   ATTACHMENT_UPLOADED
   ATTACHMENT_DELETED
 
-  // Story CMS — mirrors Challenge's actions above. No service method
-  // fires these yet (the CMS write layer isn't built) — vocabulary
-  // defined ahead of the feature, same status as everywhere else this
-  // pattern shows up in this build.
+  // chapter CMS
   CHAPTER_CREATED
   CHAPTER_UPDATED
   CHAPTER_DELETED
   CHAPTER_PUBLISHED
   CHAPTER_UNPUBLISHED
+
+  // Scene CMS
   SCENE_CREATED
   SCENE_UPDATED
   SCENE_DELETED
   SCENE_PUBLISHED
   SCENE_UNPUBLISHED
 
-  // Rare, deliberate, destructive player action — not routine telemetry.
+  // Evidence CMS
+  EVIDENCE_CREATED
+  EVIDENCE_UPDATED
+  EVIDENCE_DELETED
+  EVIDENCE_PUBLISHED
+  EVIDENCE_UNPUBLISHED
+
+  // Unlock Rule CMS
+  UNLOCK_RULE_CREATED
+  UNLOCK_RULE_UPDATED
+  UNLOCK_RULE_DELETED
+
+  // Story
   STORY_RESTARTED
 
-  // Once-per-challenge milestone, not a per-attempt event.
-  FIRST_BLOOD
-
-  // Leaderboard / Event admin
+  // Leaderboard
   LEADERBOARD_FROZEN
   LEADERBOARD_UNFROZEN
+  LEADERBOARD_RECALCULATED
+
+  SCORE_ADJUSTED
+
+  // Event
   EVENT_UPDATED
 
-  // Exports — not built yet, but closely tied to prize resolution for
-  // an event with a real prize, unlike the fully speculative modules
-  // trimmed below.
+  // Export
   EXPORT_LEADERBOARD
   EXPORT_SUBMISSIONS
   EXPORT_AUDIT
@@ -84,10 +108,9 @@ enum AuditResourceType {
   CHAPTER
   SCENE
   LEADERBOARD
-  /**
-   * For actions with no single targeted row — exports, system-level admin actions.
-   */
   SYSTEM
+  EVIDENCE
+  UNLOCK_RULE
 }
 
 model AuditLog {
