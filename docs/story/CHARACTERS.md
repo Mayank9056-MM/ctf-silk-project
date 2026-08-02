@@ -10,6 +10,9 @@ This document is the single source of truth for every character in *The Silk Roa
 > [!NOTE]
 > If a fact is not yet confirmed by the story source material, it is marked `TODO` rather than invented. Do not fill in `TODO` fields with guesses — flag them to the narrative lead instead.
 
+> [!WARNING]
+> This document now contains items marked **🧩 Proposed (Unconfirmed)** — material introduced by the [`PROLOGUE.md`](./PROLOGUE.md) revision pass that has not been reconciled with previously confirmed facts below. Most notably: `PROLOGUE.md` proposes Ethan is 22–23, while this document's confirmed Quick Reference lists him as **26**. Do not treat proposed items as canon until the conflict is resolved by the narrative lead.
+
 ---
 
 ## Table of Contents
@@ -36,6 +39,7 @@ This document is the single source of truth for every character in *The Silk Roa
 | 🎭 | Compromised / Living a double life |
 | 🕵️ | Hidden identity / Unknown to other characters |
 | 🧩 | TODO — awaiting narrative input |
+| ⚠️ | Proposed but unconfirmed / conflicts with existing canon |
 
 ---
 
@@ -48,6 +52,8 @@ This document is the single source of truth for every character in *The Silk Roa
 | [Olivia Reed](#olivia-reed-ghost) | Ghost | Hidden Ally / Anonymous Informant | Independent (Former Gray-Hat Hacker) | 🕵️ Hidden Identity |
 | [Robert](#robert) | — | Primary Antagonist | Leader of the underground marketplace | 🧩 TODO |
 | [Noah Carter](#noah-carter-deceased) | — | Inciting Incident / Victim | Civilian | ⚰️ Deceased |
+| [Ethan & Noah's Mother](#unnamed--minor-characters) | — | Deceased Parent | — | ⚰️🧩 Proposed (Unconfirmed) |
+| [Ethan & Noah's Father](#unnamed--minor-characters) | — | Deceased Parent, FBI Agent | FBI (unconfirmed) | ⚰️🧩 Proposed (Unconfirmed) |
 
 ---
 
@@ -65,7 +71,7 @@ Protagonist and playable investigator. The player experiences the mystery of the
 
 | Field | Value |
 |---|---|
-| Age | 26 |
+| Age | 26 ⚠️ *`PROLOGUE.md` proposes 22–23 — unresolved conflict, see note below* |
 | Occupation | Special Agent, FBI |
 | Rank | Junior Special Agent |
 | Division | Cyber Intelligence Support |
@@ -74,7 +80,10 @@ Protagonist and playable investigator. The player experiences the mystery of the
 | Reputation | 12/100 (at story start) |
 | Organization | Federal Bureau of Investigation (FBI) |
 | Status | ✅ Active |
-| First Appearance | Prologue — "The Beginning" |
+| First Appearance | Prologue — "The Beginning" (see `PROLOGUE.md` Scene 1) |
+
+> [!WARNING]
+> **Open conflict:** `PROLOGUE.md`'s revision pass proposes Ethan is 22–23 (to support a tighter guardian/sibling age gap with Noah). This document's confirmed age is 26. **Do not implement either value in age-dependent content (ID cards, dialogue, VO) until the narrative lead resolves this.** See `PROLOGUE.md` → Open Conflicts / TODO.
 
 ### Appearance
 
@@ -91,6 +100,9 @@ Ethan is calm under pressure, naturally curious, highly analytical, persistent, 
 - **Empathetic** — Noah's death changed him. Every victim reminds him of his brother. He investigates not for recognition, but to stop more families from suffering.
 - **Humble** — He's the newest agent in the office and knows he isn't the smartest person in the room. He asks questions, listens, and learns — this makes him relatable.
 - **Slightly Introverted** — He prefers evidence over conversation. Small talk isn't his strength. Computers make more sense to him than people.
+
+> [!NOTE]
+> `PROLOGUE.md` reinforces this personality directly in staging terms: Scene 10 (Noah's grave) is deliberately written as *restrained* — no breakdown, no raised voice — and Scene 7 (Brooks) has Ethan quietly laying out evidence rather than arguing his case. Preserve this restraint in any new dialogue.
 
 ### Core Traits
 
@@ -130,7 +142,7 @@ Because he's in Cyber Intelligence, Ethan is skilled at:
 - Research
 
 > [!IMPORTANT]
-> Ethan is **not** an elite hacker and does not "hack into systems in seconds." His method is always publicly available information plus investigative reasoning. Challenge and dialogue writers should preserve this — puzzles built around Ethan should reward OSINT and deduction, not instant exploit-style hacking.
+> Ethan is **not** an elite hacker and does not "hack into systems in seconds." His method is always publicly available information plus investigative reasoning. Challenge and dialogue writers should preserve this — puzzles built around Ethan should reward OSINT and deduction, not instant exploit-style hacking. `PROLOGUE.md` Scene 5 ("The Pattern") is the concrete gameplay template for this: the player performs the report/metadata matching directly rather than being told the result.
 
 ### Habits
 
@@ -139,6 +151,9 @@ Because he's in Cyber Intelligence, Ethan is skilled at:
 - Keeps Noah's old keychain in his pocket as a reminder of why he's fighting.
 - Writes timelines and evidence on a whiteboard, connecting clues with strings or markers.
 - Reads every report from beginning to end, including the footnotes.
+
+> [!NOTE]
+> The keychain habit now has a confirmed in-fiction origin scene: `PROLOGUE.md` Scene 2 (introduced at the crime scene) and Scene 10 (Ethan chooses to pocket it rather than leave it at Noah's grave). See `EVIDENCE.md` → EVID-006.
 
 ### Motivation
 
@@ -156,6 +171,9 @@ Ethan must balance his personal grief and obsession with the discipline required
 
 > "People lie. Evidence doesn't."
 
+> [!NOTE]
+> `PROLOGUE.md` establishes this line's first in-fiction appearance as the Prologue's closing text card (Final Scene), rather than only as a recurring UI motif. Preserve that as the canonical origin point.
+
 ### Relationships
 
 | Character | Relationship |
@@ -164,10 +182,17 @@ Ethan must balance his personal grief and obsession with the discipline required
 | Daniel Brooks | Senior agent Ethan admires and trusts early on; Brooks discourages his investigation while secretly reporting on him. |
 | Olivia Reed / Ghost | University friend and CTF rival, whom Ethan remembers as brilliant and competitive. He does not know that his old friend Olivia and the anonymous hacker "Ghost" guiding his investigation are the same person. |
 | Robert | Unaware of each other directly at story start; Robert is monitoring Ethan's progress from the shadows. |
+| Mother (unnamed) | 🧩 **Proposed (Unconfirmed):** Per `PROLOGUE.md`, deceased — proposed to have died during Noah's birth. Not present in any previously confirmed material. |
+| Father (unnamed) | 🧩 **Proposed (Unconfirmed):** Per `PROLOGUE.md`, proposed as a "respected FBI agent" killed in an encounter when Ethan was ~17–18 and Noah was ~12, after which Ethan became Noah's guardian. Not present in any previously confirmed material; also the source of the age conflict noted above. |
 
 ### Story Arc (Spoilers)
 
 Ethan begins as an unremarkable rookie processing digital evidence. Reviewing old overdose reports in his own time, he detects a pattern across cities, suppliers, and investigations that others have dismissed as coincidence — anonymous cryptocurrency transactions, encrypted communications, disappearing evidence, vanished witnesses, and cases quietly closed without explanation. His request for access to archived intelligence files is denied by his supervisor. He then turns to Senior Agent Daniel Brooks, whom he trusts and admires, only to be told there is no organization, no marketplace, no evidence — that he has been "chasing ghosts." Unknown to Ethan, Brooks immediately reports his progress to Robert, the man behind the marketplace, marking Ethan as someone to watch.
+
+`PROLOGUE.md` extends this arc with two additional confirmed beats not previously documented here:
+
+- A near-belief moment with Brooks (Scene 7) — Brooks visibly weighs Ethan's evidence in silence before dismissing it, deepening the sense of betrayal once revealed.
+- A private grave-side scene (Scene 10) in which Ethan makes his vow directly to Noah rather than only internally, and chooses to keep Noah's keychain rather than leave it behind — the definitive origin of his signature habit.
 
 > 🧩 **TODO** — Further chapters/acts of Ethan's arc have not yet been provided.
 
@@ -175,7 +200,7 @@ Ethan begins as an unremarkable rookie processing digital evidence. Reviewing ol
 
 **How this character affects:**
 
-- **Challenges** — Ethan is the player-character lens; challenges he encounters should be OSINT/forensics/reasoning-based, consistent with his stated skill set, not instant "hollywood hacking."
+- **Challenges** — Ethan is the player-character lens; challenges he encounters should be OSINT/forensics/reasoning-based, consistent with his stated skill set, not instant "hollywood hacking." `PROLOGUE.md` Scene 5 is the reference implementation for this.
 - **Evidence** — Player-collected evidence is filtered through Ethan's whiteboard/notebook habit — consider a UI element themed around this (corkboard, red string, notebook).
 - **Dialogue** — Ethan should read as humble and inquisitive, not commanding; he asks questions more than he makes declarations, especially with senior characters.
 - **Choices** — Ethan's obsessive/trusting flaws are strong hooks for dilemma-style choices (e.g., pursuing a lead against orders; trusting an anonymous informant).
@@ -187,12 +212,15 @@ Ethan begins as an unremarkable rookie processing digital evidence. Reviewing ol
 > - Keep Ethan's dialogue understated. He is not a quip-driven action hero — his strength is patience and pattern recognition.
 > - Any puzzle "solved" by Ethan alone should be solvable through legitimate OSINT/forensic method, never a shortcut that contradicts his established skill ceiling.
 > - Preserve the "People lie. Evidence doesn't." philosophy as a recurring narrative device (loading screens, chapter title cards, etc.).
+> - Preserve restraint in emotionally heavy scenes (see `PROLOGUE.md` Pacing & Silence Notes) — withheld grief, not outward breakdown.
 
 ### Image Generation Prompt
 
 ```
 A realistic portrait of a 26-year-old male FBI special agent, early career, junior investigator archetype. Neutral, approachable, slightly tired but alert facial expression — the look of someone who has been up late reading case files. Short, practical, low-maintenance hairstyle. Attentive, focused eyes that suggest quiet intelligence rather than aggression. Wearing a slightly rumpled, inexpensive dark suit with a loosened tie and a plain FBI-issue lanyard/badge clipped at the waist, sleeves occasionally rolled up. Lean, average build — not physically imposing, more "desk investigator" than "field operator." Environment: a dim, cluttered FBI cyber intelligence office at night — a whiteboard covered in red string and printed photos in the background, a cold cup of black coffee on the desk, a well-worn paper notebook next to a keyboard. Lighting: single desk lamp plus cold monitor glow, moody blue-and-amber contrast, soft shadows. Mood: quiet determination, controlled tension, melancholy resolve. Pose: leaning slightly forward over a desk, one hand resting on an open notebook, looking up and off-camera as if just noticing something. Camera angle: medium shot, slightly low angle to suggest quiet significance without heroism. Realism level: photorealistic, cinematic color grading. Color palette: desaturated blues, ambers, and greys — noir-thriller tone. Style: modern cinematic crime-thriller realism, in the visual tradition of grounded procedural dramas — no stylization, no fantasy elements, no other identifiable real person.
 ```
+
+> ⚠️ If the age conflict above is resolved in favor of 22–23, this prompt's "26-year-old" descriptor must be updated to match before regenerating art.
 
 ### Quick Reference
 
@@ -307,6 +335,8 @@ He genuinely believes keeping certain secrets protects society. That belief is w
 
 Publicly, Brooks tells Ethan that he has checked every intelligence database available and found no active organization, no underground marketplace, and no evidence — telling him to forget about it. Ethan leaves believing he's reached a dead end. The moment the office door closes, Brooks waits for the hallway to clear, retrieves a hidden secure encrypted phone, and reports directly to Robert: *"He knows... The new recruit... He's connecting the overdose cases."* When Robert asks whether Ethan can prove anything, Brooks says not yet, and when asked whether they should "deal with him," Brooks says no — Ethan is inexperienced but asking the right questions, and should be watched rather than eliminated.
 
+`PROLOGUE.md` adds a staging refinement to this arc (Scene 7): before the dismissal, Brooks is shown genuinely reading Ethan's evidence in a long silence — a "near-belief" beat intended to make the audience trust him right up until the betrayal in Scene 8. This does not change the outcome above, only how it is staged.
+
 > 🧩 **TODO** — Further chapters/acts of Brooks' arc, including the specifics of his past undercover mistake, have not yet been provided.
 
 ### Gameplay Relevance
@@ -325,6 +355,7 @@ Publicly, Brooks tells Ethan that he has checked every intelligence database ava
 > - Brooks should never be written as visibly villainous in early-game dialogue — his menace is entirely retrospective (the player should feel betrayed on replay/reveal, not suspicious on first read).
 > - He never uses or threatens violence. All his leverage is bureaucratic (procedure, access, delegation, deniability).
 > - Preserve the phone-call scene structure ("He knows." / "Who?" / "The new recruit.") as a model for how Brooks communicates with Robert — clipped, minimal, professional even in betrayal.
+> - Preserve the Scene 7 "near-belief" beat (long silence, coffee, reading the reports) established in `PROLOGUE.md` — it is now the model for how Brooks receives evidence before rejecting it.
 
 ### Image Generation Prompt
 
@@ -514,7 +545,7 @@ Primary antagonist; leader of the hidden underground marketplace and the crimina
 
 ### Appearance
 
-> 🧩 TODO — No physical description has been provided.
+> 🧩 TODO — No physical description has been provided. `PROLOGUE.md` Scene 9 stages him deliberately as a silhouette only — preserve this until a description is confirmed.
 
 ### Personality
 
@@ -621,7 +652,7 @@ Inciting incident / victim. His death is the emotional foundation of Ethan's ent
 
 | Field | Value |
 |---|---|
-| Age | 🧩 TODO |
+| Age | 🧩 TODO — ⚠️ `PROLOGUE.md` proposes 17 (unconfirmed; also depends on resolving the Ethan age conflict above) |
 | Occupation | 🧩 TODO |
 | Organization | Civilian (not affiliated with any criminal organization — "Noah wasn't a criminal, he was another victim") |
 | Status | ⚰️ Deceased |
@@ -652,17 +683,23 @@ Not applicable — Noah is deceased before the story begins. His death is the mo
 | Character | Relationship |
 |---|---|
 | Ethan Carter | Older brother. Noah's death is the reason Ethan begins his investigation into the underground marketplace. |
+| Mother (unnamed) | 🧩 **Proposed (Unconfirmed):** Per `PROLOGUE.md`, proposed to have died during Noah's birth. |
+| Father (unnamed) | 🧩 **Proposed (Unconfirmed):** Per `PROLOGUE.md`, proposed as a deceased FBI agent; Ethan reportedly became Noah's guardian after his death. |
 
 ### Story Arc (Spoilers)
 
 Noah Carter was found dead in a rundown apartment on the outskirts of the city. The official report listed the cause of death as an acute overdose caused by highly contaminated synthetic narcotics — drugs mixed with dangerous chemicals and sold without any concern for human life. Noah was not a criminal; he was one more name added to a growing, largely ignored list of overdose deaths. His death is the reason Ethan makes his promise to find those responsible.
 
+`PROLOGUE.md` stages this discovery directly (Scene 2): only Noah's hand and his keychain are shown at the crime scene — his face is deliberately never shown on-page, a staging choice meant to preserve emotional impact without becoming graphic.
+
+> 🧩 **TODO** — If the proposed family backstory in `PROLOGUE.md` is confirmed, this section should be expanded with Noah's relationship to their parents and how their deaths affected him growing up.
+
 ### Gameplay Relevance
 
 **How this character affects:**
 
-- **Challenges** — Noah's case file is a plausible candidate for the game's tutorial/first evidence challenge.
-- **Evidence** — The official cause-of-death report is an existing, documented piece of narrative evidence (see `EVIDENCE.md`).
+- **Challenges** — Noah's case file is a plausible candidate for the game's tutorial/first evidence challenge (see `PROLOGUE.md` Scene 5).
+- **Evidence** — The official cause-of-death report is an existing, documented piece of narrative evidence (see `EVIDENCE.md` → EVID-001). His keychain is also now a tracked evidence/prop item (see `EVIDENCE.md` → EVID-006).
 - **Dialogue** — Noah should generally be referenced rather than shown directly, to preserve emotional weight, unless flashback material is provided.
 - **Choices** — Mentions of Noah are an established trigger for Ethan's "Emotional" weakness (clouded judgment) — useful for dialogue-branching that tests player restraint.
 - **Unlocks** — 🧩 TODO
@@ -672,6 +709,7 @@ Noah Carter was found dead in a rundown apartment on the outskirts of the city. 
 > Guidelines for future writers:
 > - Noah should never be portrayed as a criminal or complicit in any wrongdoing — the source material is explicit that he was a victim, not a criminal.
 > - Keep his keychain (carried by Ethan) available as a recurring emotional prop/UI motif.
+> - Do not show Noah's face in any crime-scene depiction — this is now an established staging rule per `PROLOGUE.md` Scene 2.
 
 ### Image Generation Prompt
 
@@ -704,6 +742,31 @@ Noah Carter was found dead in a rundown apartment on the outskirts of the city. 
 
 > Documented dialogue: When Ethan says he believes the overdose cases are connected, the supervisor replies flatly that the cases are closed, that Ethan's findings are "coincidences," and denies his request for archive access.
 
+> [!NOTE]
+> `PROLOGUE.md` Scene 6 revises this character's delivery for tone: rather than a blunt denial, the line is staged as coldly professional — *"I'm sorry for your loss, Ethan."* (pause) *"But grief isn't evidence."* — reinforcing institutional dismissiveness over outright cruelty. This does not change the outcome (request denied), only the staging.
+
+### Ethan & Noah's Mother (unnamed)
+
+| Field | Value |
+|---|---|
+| Name | 🧩 TODO — not named |
+| Role | Deceased parent |
+| Status | ⚰️🧩 **Proposed (Unconfirmed)** |
+| Source | `PROLOGUE.md` revision-pass notes only |
+
+> 🧩 **TODO** — Proposed to have died during Noah's birth. This is not present in any previously confirmed story material and requires narrative-lead sign-off before treatment as canon. No other detail should be invented beyond this single proposed fact.
+
+### Ethan & Noah's Father (unnamed)
+
+| Field | Value |
+|---|---|
+| Name | 🧩 TODO — not named |
+| Role | Deceased parent; proposed as a "respected FBI agent" |
+| Status | ⚰️🧩 **Proposed (Unconfirmed)** |
+| Source | `PROLOGUE.md` revision-pass notes only |
+
+> 🧩 **TODO** — Proposed to have been killed in an unspecified "encounter" when Ethan was ~17–18 and Noah was ~12, after which Ethan reportedly became Noah's guardian. This is unconfirmed, conflicts with Ethan's documented age of 26 above, and raises an open question about whether his death has any connection to Robert's network — flagged in `PROLOGUE.md` → Open Conflicts / TODO. Do not imply a connection to Robert without explicit narrative-lead confirmation, to avoid accidentally establishing unintended foreshadowing.
+
 ---
 
 ## Relationship Diagram
@@ -717,6 +780,8 @@ graph TD
     Robert["Robert 🕵️<br/>Marketplace Leader"]
     Marketplace["The Marketplace<br/>(Underground narcotics network)"]
     Supervisor["Ethan's Supervisor<br/>🧩 Unnamed"]
+    Mother["Mother 🧩⚰️<br/>Proposed / Unconfirmed"]
+    Father["Father 🧩⚰️<br/>Proposed / Unconfirmed<br/>FBI Agent"]
 
     Noah -- "younger brother of" --> Ethan
     Ethan -- "trusts / seeks help from" --> Brooks
@@ -727,16 +792,22 @@ graph TD
     Olivia -- "years earlier, infiltrated" --> Marketplace
     Ethan -- "university friend / CTF rival of" --> Olivia
     Ethan -- "requests access, denied by" --> Supervisor
+    Mother -. "proposed parent of<br/>(unconfirmed)" .-> Ethan
+    Mother -. "proposed parent of<br/>(unconfirmed)" .-> Noah
+    Father -. "proposed parent of<br/>(unconfirmed)" .-> Ethan
+    Father -. "proposed parent of<br/>(unconfirmed)" .-> Noah
 
     classDef deceased fill:#3a3a3a,color:#fff,stroke:#888;
     classDef hidden fill:#1f2a44,color:#fff,stroke:#4a6fa5;
     classDef compromised fill:#4a2020,color:#fff,stroke:#a54a4a;
     classDef antagonist fill:#000,color:#fff,stroke:#a51c1c;
+    classDef proposed fill:#2a2a1a,color:#fff,stroke:#c9a227,stroke-dasharray: 4 3;
 
     class Noah deceased;
     class Olivia hidden;
     class Brooks compromised;
     class Robert antagonist;
+    class Mother,Father proposed;
 ```
 
 ---
@@ -746,3 +817,4 @@ graph TD
 | Date | Change |
 |---|---|
 | 🧩 TODO | Initial creation from provided Prologue text and character profiles for Ethan Carter, Daniel Brooks, and Olivia Reed. |
+| 🧩 TODO | Integrated `PROLOGUE.md` revision pass: added proposed-and-unconfirmed Mother/Father stub entries, flagged the Ethan/Noah age conflict, added keychain-origin and grave-scene notes to Ethan/Noah story arcs, revised supervisor dialogue note, added near-belief staging note to Brooks. No previously confirmed field values were overwritten. |
