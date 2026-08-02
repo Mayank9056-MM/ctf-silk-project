@@ -6,7 +6,7 @@ import type {
   Role,
 } from '@/app/generated/prisma/enums';
 import type { AuditCategory } from '../constants/audit.categories';
-import type { AuditSeverity } from '../constants/audit.events';
+import { AuditExportFormat, AuditExportStatus, AuditSeverity } from './audit.enums';
 
 // ----------------------------------------------------------------------------
 // Actor / Resource — who did it, what did it happen to
@@ -222,7 +222,7 @@ export interface AuditSearchResult<T> {
 
 /** Options accepted by `audit-export.service.ts` when generating a CSV/JSON export. */
 export interface AuditExportOptions {
-  readonly format: 'csv' | 'json';
+  readonly format: AuditExportFormat;
   readonly filters: AuditSearchFilters;
   readonly includeMetadata: boolean;
   readonly requestedBy: AuditActor;
@@ -237,8 +237,8 @@ export interface AuditExportOptions {
  */
 export interface AuditExportJob {
   readonly id: string;
-  readonly status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
-  readonly format: 'csv' | 'json';
+  readonly status: AuditExportStatus;
+  readonly format: AuditExportFormat;
   readonly requestedByActorId: string | null;
   readonly rowCount: number | null;
   readonly filePath: string | null;

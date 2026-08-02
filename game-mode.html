@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OPERATION SILK ROAD — Story Mode</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil:wght@600;800&family=Chakra+Petch:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07080a; --bg-deep:#020303;
+  --panel:#12151b; --panel-2:#191d25; --panel-hair:rgba(255,255,255,.07);
+  --text:#e7e9ec; --dim:#7d8592; --dimmer:#4d545e;
+  --accent:#c4272a; --accent-soft:rgba(196,39,42,.18); --accent-glow:rgba(196,39,42,.55);
+  --teal:#39c0ed; --teal-soft:rgba(57,192,237,.14); --teal-glow:rgba(57,192,237,.5);
+  --gold:#c9a227;
+  --paper:#e9dfc4;
+  --f-display:'Big Shoulders Stencil',sans-serif;
+  --f-ui:'Chakra Petch',sans-serif;
+  --f-body:'Inter',sans-serif;
+  --f-mono:'JetBrains Mono',monospace;
+  --f-note:'Special Elite',monospace;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;height:100%;background:var(--bg);}
+body{
+  font-family:var(--f-body); color:var(--text); overflow:hidden; position:relative;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{ background:var(--accent); color:#fff; }
+button{ font-family:inherit; }
+a{ color:inherit; }
+
+/* ================= AMBIENT LAYERS ================= */
+#bgfx{ position:fixed; inset:0; z-index:0; opacity:.55; }
+.vignette{
+  position:fixed; inset:0; z-index:1; pointer-events:none;
+  background:radial-gradient(ellipse at 50% 40%, transparent 35%, rgba(0,0,0,.55) 78%, rgba(0,0,0,.85) 100%);
+}
+.grain{
+  position:fixed; inset:0; z-index:2; pointer-events:none; opacity:.05; mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.scanlines{
+  position:fixed; inset:0; z-index:2; pointer-events:none; opacity:.035;
+  background:repeating-linear-gradient(0deg, #fff 0 1px, transparent 1px 3px);
+}
+
+/* ================= SCREEN STACK ================= */
+.screen{
+  position:fixed; inset:0; z-index:5; display:flex; flex-direction:column;
+  opacity:0; pointer-events:none; transform:scale(1.015);
+  transition:opacity .55s ease, transform .55s cubic-bezier(.2,.8,.2,1);
+}
+.screen[data-active]{ opacity:1; pointer-events:auto; transform:scale(1); }
+
+/* ================= NAV / HUD ================= */
+.screen-nav{
+  position:fixed; bottom:22px; left:50%; transform:translateX(-50%); z-index:50;
+  display:flex; gap:6px; background:rgba(10,11,13,.7); border:1px solid var(--panel-hair);
+  padding:6px; border-radius:999px; backdrop-filter:blur(10px);
+}
+.screen-nav button{
+  appearance:none; border:none; background:transparent; color:var(--dim);
+  font-family:var(--f-ui); font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+  padding:8px 14px; border-radius:999px; cursor:pointer; transition:all .2s ease;
+}
+.screen-nav button:hover{ color:var(--text); }
+.screen-nav button.active{ background:var(--accent); color:#fff; }
+.screen-nav button:focus-visible{ outline:2px solid var(--teal); outline-offset:2px; }
+
+.hud-top{
+  position:fixed; top:0; left:0; right:0; z-index:40; display:flex; justify-content:space-between; align-items:center;
+  padding:16px 26px; font-family:var(--f-mono); font-size:11px; color:var(--dim); letter-spacing:.05em;
+  pointer-events:none; opacity:0; transition:opacity .4s ease;
+}
+.hud-top.show{ opacity:1; }
+.hud-top .status{ display:flex; align-items:center; gap:8px; }
+.hud-dot{ width:7px; height:7px; border-radius:50%; background:var(--teal); box-shadow:0 0 8px var(--teal-glow); animation:pulse-dot 1.6s ease-in-out infinite; }
+@keyframes pulse-dot{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+
+/* ================= SHARED UI ATOMS ================= */
+.eyebrow{ font-family:var(--f-ui); font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--accent); }
+.eyebrow.teal{ color:var(--teal); }
+.icon{ width:14px; height:14px; display:inline-block; vertical-align:-2px; }
+
+/* ================================================================
+   SCREEN 1 — TITLE
+   ================================================================ */
+#screen-title{ align-items:flex-start; justify-content:center; padding:0 8vw; }
+.title-thread{ position:absolute; inset:0; z-index:0; opacity:.35; }
+.title-wrap{ position:relative; z-index:2; max-width:640px; }
+.title-eyebrow{
+  font-family:var(--f-mono); font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:var(--dim);
+  margin-bottom:18px; opacity:0; animation:riseIn .7s ease forwards .1s;
+}
+.title-logo{
+  font-family:var(--f-display); font-weight:800; font-size:clamp(58px,9vw,116px); line-height:.88;
+  letter-spacing:.01em; margin:0; text-transform:uppercase;
+  background:linear-gradient(180deg,#fff 0%, #d8dade 55%, #8b9096 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  filter:drop-shadow(0 0 40px rgba(196,39,42,.25));
+  opacity:0; animation:riseIn .8s ease forwards .25s;
+}
+.title-logo span{ color:var(--accent); -webkit-text-fill-color:var(--accent); filter:drop-shadow(0 0 22px var(--accent-glow)); }
+.title-tag{
+  font-family:var(--f-body); font-weight:300; font-size:16px; color:var(--dim); max-width:460px; line-height:1.6; margin:18px 0 40px;
+  opacity:0; animation:riseIn .7s ease forwards .5s;
+}
+.title-menu{ list-style:none; margin:0; padding:0; opacity:0; animation:riseIn .7s ease forwards .7s; }
+.title-menu li{ margin-bottom:2px; }
+.title-menu button{
+  appearance:none; background:none; border:none; cursor:pointer; color:var(--dimmer);
+  font-family:var(--f-ui); font-size:19px; letter-spacing:.05em; text-transform:uppercase;
+  padding:9px 0; display:flex; align-items:center; gap:12px; position:relative; transition:color .2s ease;
+}
+.title-menu button::before{ content:''; width:0; height:1.5px; background:var(--accent); transition:width .25s ease; }
+.title-menu button:hover, .title-menu button:focus-visible{ color:var(--text); }
+.title-menu button:hover::before, .title-menu button:focus-visible::before{ width:26px; }
+.title-menu button.primary{ color:var(--text); }
+.title-menu button.primary::before{ width:26px; background:var(--accent); }
+.title-menu small{ font-family:var(--f-mono); font-size:11px; color:var(--dimmer); font-weight:400; }
+.title-build{
+  position:absolute; bottom:26px; left:8vw; font-family:var(--f-mono); font-size:10.5px; color:var(--dimmer); letter-spacing:.08em;
+  opacity:0; animation:riseIn .7s ease forwards 1s;
+}
+@keyframes riseIn{ from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:translateY(0);} }
+
+/* ================================================================
+   SCREEN 2 — CASE BOARD
+   ================================================================ */
+#screen-board{ padding:80px 34px 30px; }
+.board-frame{ max-width:1280px; margin:0 auto; width:100%; height:100%; display:grid; grid-template-columns:220px 1fr; gap:20px; }
+
+.rail{ background:linear-gradient(180deg, var(--panel), var(--panel-2)); border:1px solid var(--panel-hair); border-radius:10px; padding:18px 14px; }
+.rail-label{ font-family:var(--f-ui); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--dimmer); margin:0 0 12px 6px;}
+.phase-item{
+  display:flex; align-items:center; gap:10px; padding:9px 8px; border-radius:6px; margin-bottom:2px;
+  font-family:var(--f-body); font-size:13px; color:var(--dimmer);
+}
+.phase-item.done{ color:var(--teal); }
+.phase-item.active{ color:var(--text); background:rgba(196,39,42,.1); border-left:2px solid var(--accent); padding-left:6px; font-weight:600; }
+.phase-item .ic{ width:15px; height:15px; flex:none; opacity:.85; }
+
+.board-main{ display:flex; flex-direction:column; gap:16px; min-height:0; }
+.objective-bar{
+  background:linear-gradient(90deg, rgba(196,39,42,.1), transparent 60%), var(--panel);
+  border:1px solid var(--panel-hair); border-left:3px solid var(--accent); border-radius:8px; padding:14px 18px;
+}
+.objective-bar p{ margin:6px 0 0; font-size:14px; line-height:1.55; color:var(--text); max-width:820px; }
+
+.corkboard{ position:relative; flex:1; background:radial-gradient(ellipse at 30% 20%, #17130f, #0c0a08 70%); border:1px solid var(--panel-hair); border-radius:10px; overflow:hidden; min-height:420px; }
+.corkboard::before{ content:''; position:absolute; inset:0; background-image:repeating-linear-gradient(45deg, rgba(255,255,255,.015) 0 2px, transparent 2px 6px); }
+.thread-svg{ position:absolute; inset:0; width:100%; height:100%; }
+.thread-svg path{ fill:none; stroke:var(--accent); stroke-width:1.6; opacity:.85; filter:drop-shadow(0 0 3px rgba(196,39,42,.5)); stroke-dasharray:400; stroke-dashoffset:400; animation:draw 1.6s ease forwards; }
+.thread-svg path:nth-child(2){ animation-delay:.15s; }
+.thread-svg path:nth-child(3){ animation-delay:.3s; }
+.thread-svg path:nth-child(4){ animation-delay:.45s; }
+@keyframes draw{ to{ stroke-dashoffset:0; } }
+
+.evidence{
+  position:absolute; width:168px; background:var(--paper); color:#1b1a16; border-radius:2px; padding:8px 8px 12px;
+  box-shadow:3px 5px 14px rgba(0,0,0,.55); cursor:default; transition:transform .25s ease, box-shadow .25s ease, z-index 0s;
+}
+.evidence:hover{ transform:translateY(-6px) rotate(0deg) scale(1.03); box-shadow:4px 10px 26px rgba(0,0,0,.6); z-index:9; }
+.evidence::after{ content:''; position:absolute; top:-6px; left:50%; transform:translateX(-50%); width:14px; height:14px; background:var(--accent); border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,.6), inset 0 0 0 2px rgba(255,255,255,.25); }
+.evidence .thumb{ height:88px; border-radius:1px; margin-bottom:8px; position:relative; overflow:hidden; }
+.evidence .thumb span{ position:absolute; bottom:4px; left:5px; font-family:var(--f-mono); font-size:8.5px; color:#cfe; background:rgba(0,0,0,.55); padding:1px 4px; }
+.evidence .cap{ font-family:var(--f-note); font-size:13px; line-height:1.25; color:#26241d; }
+.evidence .cap b{ display:block; font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:#8B1E1E; font-family:var(--f-ui); margin-bottom:3px; font-weight:600;}
+
+.t-surv{ background:repeating-linear-gradient(0deg,#1c2b2a 0 2px, #17211f 2px 4px); }
+.t-wallet{ background:#0c1216; padding:6px; font-family:var(--f-mono); font-size:8px; color:#39c0ed; line-height:1.6; overflow:hidden;}
+.t-chat{ background:#12141b; padding:6px; font-family:var(--f-mono); font-size:8px; color:#9aa;}
+.t-chat i{ display:block; background:#232838; color:#cfe; padding:3px 6px; border-radius:8px; margin-bottom:3px; width:fit-content;}
+.t-gps{ background:#0d1410; background-image:linear-gradient(rgba(57,192,237,.12) 1px, transparent 1px), linear-gradient(90deg, rgba(57,192,237,.12) 1px, transparent 1px); background-size:12px 12px; position:relative;}
+.t-gps::before{ content:''; position:absolute; top:40%; left:55%; width:8px; height:8px; background:var(--accent); border-radius:50% 50% 50% 0; transform:rotate(-45deg); box-shadow:0 0 8px var(--accent-glow);}
+.t-print{ background:#141414; display:flex; align-items:center; justify-content:center; }
+.t-print svg{ width:56px; height:56px; opacity:.8; }
+
+/* ================================================================
+   SCREEN 3 — CAMPAIGN MAP
+   ================================================================ */
+#screen-map{ padding:80px 6vw 40px; align-items:center; }
+.map-wrap{ position:relative; max-width:1100px; width:100%; height:520px; margin:0 auto; }
+.map-svg{ position:absolute; inset:0; width:100%; height:100%; }
+.map-svg .route{ fill:none; stroke:var(--dimmer); stroke-width:2; stroke-dasharray:2 8; }
+.map-svg .route.done{ stroke:var(--teal); stroke-dasharray:none; filter:drop-shadow(0 0 4px var(--teal-glow)); }
+
+.node{ position:absolute; transform:translate(-50%,-50%); text-align:center; width:120px; }
+.node .ring{
+  width:52px; height:52px; margin:0 auto 8px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  border:2px solid var(--dimmer); background:var(--bg-deep); color:var(--dimmer); position:relative; transition:all .3s ease;
+}
+.node .ring .ic{ width:20px; height:20px; }
+.node.done .ring{ border-color:var(--teal); color:var(--teal); box-shadow:0 0 16px var(--teal-glow); }
+.node.active .ring{ border-color:var(--accent); color:var(--accent); box-shadow:0 0 0 4px rgba(196,39,42,.15), 0 0 22px var(--accent-glow); animation:ringPulse 1.8s ease-in-out infinite; }
+@keyframes ringPulse{ 0%,100%{box-shadow:0 0 0 4px rgba(196,39,42,.15),0 0 18px var(--accent-glow);} 50%{box-shadow:0 0 0 8px rgba(196,39,42,.06),0 0 28px var(--accent-glow);} }
+.node.locked .ring{ opacity:.55; }
+.node .label{ font-family:var(--f-ui); font-size:11.5px; letter-spacing:.03em; text-transform:uppercase; color:var(--dim); }
+.node.active .label{ color:var(--text); font-weight:600; }
+.node.final .ring{ width:64px; height:64px; border-color:var(--gold); color:var(--gold); }
+.node.final .label{ color:var(--gold); letter-spacing:.1em; }
+
+.node-tip{
+  position:absolute; bottom:calc(100% + 10px); left:50%; transform:translateX(-50%) translateY(6px); width:210px;
+  background:var(--panel-2); border:1px solid var(--panel-hair); border-radius:8px; padding:12px 14px; text-align:left;
+  opacity:0; pointer-events:none; transition:all .2s ease; box-shadow:0 12px 30px rgba(0,0,0,.5); z-index:20;
+}
+.node:hover .node-tip{ opacity:1; transform:translateX(-50%) translateY(0); }
+.node-tip .tt{ font-family:var(--f-ui); font-size:12.5px; color:var(--text); margin-bottom:4px; font-weight:600;}
+.node-tip p{ margin:0; font-size:11.5px; color:var(--dim); line-height:1.5; }
+
+/* ================================================================
+   SCREEN 4 — TERMINAL
+   ================================================================ */
+#screen-terminal{ padding:90px 8vw 40px; align-items:center; }
+.term-wrap{ max-width:1100px; width:100%; margin:0 auto; display:grid; grid-template-columns:1fr 1.3fr; gap:22px; }
+
+.brief-card{ background:var(--panel); border:1px solid var(--panel-hair); border-radius:10px; padding:22px; align-self:start; }
+.diff-chip{ display:inline-block; font-family:var(--f-mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--accent); border:1px solid var(--accent); padding:3px 9px; border-radius:3px; margin-bottom:14px; }
+.brief-card h2{ font-family:var(--f-ui); font-size:21px; margin:0 0 10px; font-weight:600; }
+.brief-card p{ font-size:13.5px; color:var(--dim); line-height:1.6; margin:0 0 18px; }
+.brief-meta{ display:flex; gap:22px; font-family:var(--f-mono); font-size:11.5px; color:var(--dim); border-top:1px solid var(--panel-hair); padding-top:14px; }
+.brief-meta b{ color:var(--text); display:block; font-size:15px; }
+
+.term-device{ background:#050708; border:1px solid #23262d; border-radius:12px; padding:10px; box-shadow:0 30px 60px -20px rgba(0,0,0,.7); }
+.term-bar{ display:flex; gap:6px; padding:4px 8px 10px; }
+.term-bar span{ width:9px; height:9px; border-radius:50%; background:#2a2d33; }
+.term-body{ background:#020304; border-radius:6px; padding:16px 18px; font-family:var(--f-mono); font-size:12.5px; color:#3ecf6e; line-height:1.85; min-height:230px; }
+.term-body .p{ color:var(--teal); }
+.term-body .out{ color:#8aa; }
+.term-cursor{ display:inline-block; width:7px; height:14px; background:#3ecf6e; vertical-align:middle; animation:blink 1s steps(1) infinite; }
+@keyframes blink{ 50%{ opacity:0; } }
+.flag-row{ display:flex; gap:8px; margin-top:16px; }
+.flag-row input{
+  flex:1; background:#0b0d0f; border:1px solid #23262d; color:var(--text); font-family:var(--f-mono); font-size:12.5px;
+  padding:10px 12px; border-radius:6px; outline:none;
+}
+.flag-row input:focus{ border-color:var(--teal); }
+.flag-row button{
+  background:var(--accent); color:#fff; border:none; padding:10px 18px; border-radius:6px; font-family:var(--f-ui);
+  font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; cursor:pointer; transition:filter .15s ease;
+}
+.flag-row button:hover{ filter:brightness(1.15); }
+
+/* ================================================================
+   SCREEN 5 — DEBRIEF / DIALOGUE
+   ================================================================ */
+#screen-debrief{ align-items:flex-end; justify-content:center; padding:0; }
+.bust{
+  position:absolute; bottom:0; left:50%; transform:translateX(-72%); width:340px; height:70vh; z-index:1;
+  background:radial-gradient(ellipse at 50% 20%, #1b1e24 0%, #0a0b0d 55%, transparent 75%);
+  clip-path:polygon(30% 0%, 70% 0%, 100% 55%, 100% 100%, 0 100%, 0 55%);
+  opacity:.9;
+}
+.dialogue-wrap{ position:relative; z-index:3; width:100%; max-width:900px; margin:0 auto 90px; padding:0 24px; }
+.speaker{ font-family:var(--f-ui); font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+.dbox{ background:rgba(10,11,13,.82); border:1px solid var(--panel-hair); border-left:3px solid var(--accent); border-radius:8px; padding:22px 24px; backdrop-filter:blur(6px); min-height:86px; }
+.dbox p{ margin:0; font-size:17px; line-height:1.6; font-weight:300; color:#e7e9ec; }
+.dbox p .cursor2{ display:inline-block; width:8px; height:16px; background:var(--text); vertical-align:middle; margin-left:2px; animation:blink 1s steps(1) infinite; }
+.choices{ display:flex; gap:12px; margin-top:14px; }
+.choices button{
+  flex:1; background:var(--panel); border:1px solid var(--panel-hair); color:var(--dim); text-align:left; padding:12px 16px;
+  border-radius:7px; cursor:pointer; font-family:var(--f-body); font-size:13.5px; transition:all .2s ease; opacity:0;
+}
+.choices.show button{ opacity:1; }
+.choices button:hover{ border-color:var(--accent); color:var(--text); background:rgba(196,39,42,.08); }
+.choices button b{ display:block; font-family:var(--f-ui); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--teal); margin-bottom:4px; }
+
+@media (max-width:880px){
+  .board-frame{ grid-template-columns:1fr; }
+  .rail{ display:none; }
+  .term-wrap{ grid-template-columns:1fr; }
+  .title-logo{ font-size:15vw; }
+  .bust{ display:none; }
+}
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:.001s !important; transition-duration:.15s !important; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="bgfx"></canvas>
+<div class="vignette"></div>
+<div class="grain"></div>
+<div class="scanlines"></div>
+
+<div class="hud-top" id="hudTop">
+  <div class="status"><span class="hud-dot"></span> SECURE LINK · SR-DIVISION NET</div>
+  <div>CASE #SR-0417</div>
+  <div id="clock">00:00:00</div>
+</div>
+
+<!-- ============ SCREEN 1 — TITLE ============ -->
+<section class="screen" id="screen-title" data-screen-id="title">
+  <svg class="title-thread" viewBox="0 0 1000 600" preserveAspectRatio="none">
+    <path d="M50,520 C 220,480 260,300 480,260 S 760,120 950,60" stroke="#c4272a" stroke-width="1" fill="none" opacity=".5"/>
+    <circle cx="50" cy="520" r="3" fill="#c4272a"/><circle cx="480" cy="260" r="3" fill="#c4272a"/><circle cx="950" cy="60" r="3" fill="#c4272a"/>
+  </svg>
+  <div class="title-wrap">
+    <div class="title-eyebrow">FBI Cyber Division — Case File Access</div>
+    <h1 class="title-logo">OPERATION<br><span>SILK ROAD</span></h1>
+    <p class="title-tag">Some cases close on paper. Ethan Carter never closed this one — and neither will you.</p>
+    <ul class="title-menu">
+      <li><button class="primary" onclick="setScreen('board')">Continue Investigation <small>— Ch. 3 First Lead</small></button></li>
+      <li><button onclick="setScreen('map')">Case Map</button></li>
+      <li><button onclick="setScreen('terminal')">Evidence Terminal</button></li>
+      <li><button onclick="setScreen('debrief')">Debrief Room</button></li>
+      <li><button>Team Roster</button></li>
+    </ul>
+  </div>
+  <div class="title-build">BUILD 0.4.17 — TEAM NULLBYTE DIVISION — ALL SYSTEMS NOMINAL</div>
+</section>
+
+<!-- ============ SCREEN 2 — CASE BOARD ============ -->
+<section class="screen" id="screen-board" data-screen-id="board">
+  <div class="board-frame">
+    <div class="rail">
+      <div class="rail-label">Case Phases</div>
+      <div class="phase-item done"><svg class="ic" viewBox="0 0 20 20"><path d="M4 10l4 4 8-9" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg> Prologue</div>
+      <div class="phase-item done"><svg class="ic" viewBox="0 0 20 20"><path d="M4 10l4 4 8-9" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg> Investigation</div>
+      <div class="phase-item active"><svg class="ic" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="currentColor"/></svg> First Lead</div>
+      <div class="phase-item">Hidden Marketplace</div>
+      <div class="phase-item">Crypto Trail</div>
+      <div class="phase-item">Dark Web</div>
+      <div class="phase-item">Warehouse</div>
+      <div class="phase-item">Internal Corruption</div>
+      <div class="phase-item">Cartel Structure</div>
+      <div class="phase-item">Robert</div>
+    </div>
+
+    <div class="board-main">
+      <div class="objective-bar">
+        <span class="eyebrow">Current Objective</span>
+        <p>Same chemical signature. Same wallet addresses. Same encrypted channel — three overdoses, three cities, one thread. Find what connects them.</p>
+      </div>
+
+      <div class="corkboard">
+        <svg class="thread-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <path d="M14,20 L34,55"/>
+          <path d="M34,55 L58,24"/>
+          <path d="M58,24 L78,58"/>
+          <path d="M34,55 L60,72"/>
+        </svg>
+
+        <div class="evidence" style="left:14%; top:20%; transform:rotate(-4deg);">
+          <div class="thumb t-surv"><span>CAM 04 · 02:14</span></div>
+          <div class="cap"><b>Surveillance</b>Warehouse loading bay, 2:14 AM. Unmarked van, no plates.</div>
+        </div>
+
+        <div class="evidence" style="left:34%; top:55%; transform:rotate(3deg);">
+          <div class="thumb t-wallet">0x4a1f...e2c9 → 3.2 BTC<br>0x88bd...019a → 1.1 BTC<br>0x4a1f...e2c9 → 0.9 BTC<br>mixer: 3 hops detected</div>
+          <div class="cap"><b>Wallet Ledger</b>Same source wallet, three separate buyers.</div>
+        </div>
+
+        <div class="evidence" style="left:58%; top:24%; transform:rotate(-2deg);">
+          <div class="thumb t-chat"><i>where's the next drop</i><i>same as last time. wait for ping</i></div>
+          <div class="cap"><b>Chat Intercept</b>Encrypted channel, alias "ferryman88".</div>
+        </div>
+
+        <div class="evidence" style="left:78%; top:58%; transform:rotate(4deg);">
+          <div class="thumb t-gps"><span style="position:absolute;bottom:4px;left:6px;font-family:var(--f-mono);font-size:8px;color:#39c0ed;">41.87N 87.62W</span></div>
+          <div class="cap"><b>GPS Pin</b>Drop coordinates match two prior overdose cases.</div>
+        </div>
+
+        <div class="evidence" style="left:60%; top:72%; transform:rotate(-3deg);">
+          <div class="thumb t-print"><svg viewBox="0 0 100 100"><g fill="none" stroke="#39c0ed" stroke-width="2"><circle cx="50" cy="50" r="10"/><circle cx="50" cy="50" r="20"/><circle cx="50" cy="50" r="30"/><circle cx="50" cy="50" r="40"/></g></svg></div>
+          <div class="cap"><b>Print Match</b>Partial print recovered from packaging.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SCREEN 3 — CAMPAIGN MAP ============ -->
+<section class="screen" id="screen-map" data-screen-id="map">
+  <div class="map-wrap">
+    <svg class="map-svg" viewBox="0 0 1100 520" preserveAspectRatio="none">
+      <path class="route done" d="M70,440 L230,380"/>
+      <path class="route done" d="M230,380 L390,430"/>
+      <path class="route" d="M390,430 L540,340"/>
+      <path class="route" d="M540,340 L690,400"/>
+      <path class="route" d="M690,400 L840,300"/>
+      <path class="route" d="M840,300 L980,200"/>
+      <path class="route" d="M980,200 L1000,90"/>
+    </svg>
+
+    <div class="node done" style="left:6.4%; top:84.6%;">
+      <div class="ring"><svg class="ic" viewBox="0 0 20 20"><path d="M4 10l4 4 8-9" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="label">Prologue</div>
+      <div class="node-tip"><div class="tt">Prologue</div><p>Noah's case is closed. Ethan isn't satisfied. Cleared.</p></div>
+    </div>
+
+    <div class="node active" style="left:20.9%; top:73%;">
+      <div class="ring"><svg class="ic" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4" fill="currentColor"/></svg></div>
+      <div class="label">First Lead</div>
+      <div class="node-tip"><div class="tt">First Lead · In Progress</div><p>Three cities, one wallet. 2 of 4 challenges solved.</p></div>
+    </div>
+
+    <div class="node locked" style="left:35.4%; top:82.6%;">
+      <div class="ring"><svg class="ic" viewBox="0 0 20 20"><rect x="5" y="9" width="10" height="8" rx="1" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M7 9V6a3 3 0 0 1 6 0v3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></div>
+      <div class="label">Marketplace</div>
+      <div class="node-tip"><div class="tt">Hidden Marketplace</div><p>Locked — complete First Lead to access the mirrored market.</p></div>
+    </div>
+
+    <div class="node locked" style="left:49% ; top:65.4%;">
+      <div class="ring"><svg class="ic" viewBox="0 0 20 20"><rect x="5" y="9" width="10" height="8" rx="1" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M7 9V6a3 3 0 0 1 6 0v3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></div>
+      <div class="label">Crypto Trail</div>
+      <div class="node-tip"><div class="tt">Crypto Trail</div><p>Locked — trace the money once the marketplace is breached.</p></div>
+    </div>
+
+    <div class="node locked" style="left:62.7%; top:77%;">
+      <div class="ring"><svg class="ic" viewBox="0 0 20 20"><rect x="5" y="9" width="10" height="8" rx="1" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M7 9V6a3 3 0 0 1 6 0v3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></div>
+      <div class="label">Dark Web</div>
+      <div class="node-tip"><div class="tt">Dark Web</div><p>Locked — deeper access requires the crypto trail complete.</p></div>
+    </div>
+
+    <div class="node locked" style="left:76.4%; top:57.7%;">
+      <div class="ring"><svg class="ic" viewBox="0 0 20 20"><rect x="5" y="9" width="10" height="8" rx="1" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M7 9V6a3 3 0 0 1 6 0v3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></div>
+      <div class="label">Warehouse</div>
+      <div class="node-tip"><div class="tt">Warehouse</div><p>Locked — the raid chapter. High threat tier.</p></div>
+    </div>
+
+    <div class="node final locked" style="left:89.1%; top:38.5%;">
+      <div class="ring"><svg class="ic" viewBox="0 0 20 20"><path d="M10 2 L18 10 L10 18 L2 10 Z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="10" cy="10" r="2.2" fill="currentColor"/></svg></div>
+      <div class="label">Robert</div>
+      <div class="node-tip"><div class="tt">??? — Classified</div><p>Locked. Nobody knows his face. Nobody knows his name.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SCREEN 4 — TERMINAL ============ -->
+<section class="screen" id="screen-terminal" data-screen-id="terminal">
+  <div class="term-wrap">
+    <div class="brief-card">
+      <div class="diff-chip">Cryptography · Hard</div>
+      <h2>Wallet Trace: TX 0x4a1f…</h2>
+      <p>The wallet behind all three overdoses routes through a mixer before settling on an exchange. Recover the final destination address and submit it as the flag.</p>
+      <div class="brief-meta">
+        <div><b>250</b>points</div>
+        <div><b>2/3</b>solved</div>
+        <div><b>1</b>hint used</div>
+      </div>
+    </div>
+
+    <div class="term-device">
+      <div class="term-bar"><span></span><span></span><span></span></div>
+      <div class="term-body" id="termBody"></div>
+      <div class="flag-row">
+        <input type="text" placeholder="SR{ submit_flag_here }" />
+        <button>Submit</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SCREEN 5 — DEBRIEF ============ -->
+<section class="screen" id="screen-debrief" data-screen-id="debrief">
+  <div class="bust"></div>
+  <div class="dialogue-wrap">
+    <div class="speaker"><span class="hud-dot" style="background:var(--accent); box-shadow:0 0 8px var(--accent-glow);"></span> SENIOR AGENT — [ REDACTED ]</div>
+    <div class="dbox"><p id="dialogueText"></p></div>
+    <div class="choices" id="choiceRow">
+      <button><b>Push Further</b>Reopen the case on my own time. I need to see where this goes.</button>
+      <button><b>Report to Command</b>File it properly. Let the Bureau decide what happens next.</button>
+    </div>
+  </div>
+</section>
+
+<script>
+/* ---------- background particle drift ---------- */
+const canvas = document.getElementById('bgfx');
+const ctx = canvas.getContext('2d');
+let W,H,particles=[];
+const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function resize(){ W=canvas.width=innerWidth; H=canvas.height=innerHeight; }
+resize(); addEventListener('resize', resize);
+function initParticles(){
+  particles = Array.from({length:60}, () => ({
+    x:Math.random()*W, y:Math.random()*H, r:Math.random()*1.4+.3,
+    vy:-(Math.random()*.25+.05), vx:(Math.random()-.5)*.08, a:Math.random()*.5+.1
+  }));
+}
+initParticles();
+function drawParticles(){
+  ctx.clearRect(0,0,W,H);
+  particles.forEach(p=>{
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,7);
+    ctx.fillStyle = `rgba(200,210,220,${p.a})`; ctx.fill();
+    if(!reduced){ p.y+=p.vy; p.x+=p.vx; if(p.y<-10){p.y=H+10; p.x=Math.random()*W;} }
+  });
+  requestAnimationFrame(drawParticles);
+}
+drawParticles();
+
+/* ---------- clock ---------- */
+function tick(){
+  const d = new Date();
+  document.getElementById('clock').textContent = d.toLocaleTimeString('en-GB',{hour12:false});
+}
+tick(); setInterval(tick,1000);
+
+/* ---------- screen switching ---------- */
+const screens = ['title','board','map','terminal','debrief'];
+const navHost = document.body;
+const nav = document.createElement('div');
+nav.className = 'screen-nav';
+nav.innerHTML = screens.map((s,i)=>`<button data-s="${s}">${i+1}. ${s}</button>`).join('');
+document.body.appendChild(nav);
+nav.querySelectorAll('button').forEach(b => b.addEventListener('click', ()=> setScreen(b.dataset.s)));
+
+let termTimer=null, dialogueTimer=null;
+function setScreen(id){
+  screens.forEach(s => document.getElementById('screen-'+s).removeAttribute('data-active'));
+  document.getElementById('screen-'+id).setAttribute('data-active','');
+  nav.querySelectorAll('button').forEach(b=> b.classList.toggle('active', b.dataset.s===id));
+  document.getElementById('hudTop').classList.toggle('show', id!=='title');
+
+  if(id==='terminal') runTerminal();
+  if(id==='debrief') runDialogue();
+}
+
+function typeInto(el, lines, speed=22){
+  el.innerHTML='';
+  let li=0, ci=0;
+  function step(){
+    if(li>=lines.length) return;
+    const line = lines[li];
+    el.innerHTML = lines.slice(0,li).map(l=>l.html).join('<br>') + (li>0?'<br>':'') + `<span class="${line.cls||''}">${line.text.slice(0,ci)}</span>` + '<span class="term-cursor"></span>';
+    if(ci < line.text.length){ ci++; termTimer=setTimeout(step, speed); }
+    else{ line.html = `<span class="${line.cls||''}">${line.text}</span>`; li++; ci=0; termTimer=setTimeout(step, 260); }
+  }
+  step();
+}
+
+function runTerminal(){
+  clearTimeout(termTimer);
+  const lines = [
+    {cls:'p', text:'agent@sr-div:~$ trace --wallet 0x4a1f...e2c9'},
+    {cls:'out', text:'resolving mixer hops... 3 found'},
+    {cls:'out', text:'hop 1: 0x88bd...019a  (0.4s)'},
+    {cls:'out', text:'hop 2: 0x2f10...77ab  (0.9s)'},
+    {cls:'out', text:'hop 3: exchange match — shadowfx.onion'},
+    {cls:'p', text:'agent@sr-div:~$ _'}
+  ];
+  typeInto(document.getElementById('termBody'), lines, 16);
+}
+
+function runDialogue(){
+  clearTimeout(dialogueTimer);
+  const el = document.getElementById('dialogueText');
+  const choiceRow = document.getElementById('choiceRow');
+  choiceRow.classList.remove('show');
+  const text = "There's no marketplace, Carter. No larger organization. Let it go — for your own sake.";
+  el.innerHTML='';
+  let i=0;
+  function step(){
+    el.innerHTML = text.slice(0,i) + '<span class="cursor2"></span>';
+    if(i<text.length){ i++; dialogueTimer=setTimeout(step, 26); }
+    else{ el.innerHTML = text; choiceRow.classList.add('show'); }
+  }
+  step();
+}
+
+setScreen('title');
+</script>
+</body>
+</html>
