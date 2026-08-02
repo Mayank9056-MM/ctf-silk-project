@@ -5,7 +5,7 @@
 > **Audience:** Developers, narrative writers, game designers, challenge creators
 > **Status:** 🟡 Living document — only the Prologue has been provided so far; later chapters are marked `TODO`
 
-This document holds the narrative spine of the game: premise, setting, tone, and the confirmed story content provided to date. See [`CHARACTERS.md`](./CHARACTERS.md) for full character profiles and [`ORGANIZATIONS.md`](./ORGANIZATIONS.md) / [`TIMELINE.md`](./TIMELINE.md) for supporting structural references.
+This document holds the narrative spine of the game: premise, setting, tone, and the confirmed story content provided to date. See [`CHARACTERS.md`](./CHARACTERS.md) for full character profiles, [`PROLOGUE.md`](./PROLOGUE.md) for the scene-by-scene production breakdown of the Prologue below, and [`ORGANIZATIONS.md`](./ORGANIZATIONS.md) / [`TIMELINE.md`](./TIMELINE.md) for supporting structural references.
 
 ---
 
@@ -46,6 +46,7 @@ This document holds the narrative spine of the game: premise, setting, tone, and
   - A rundown apartment on the outskirts of the city, where Noah Carter was found dead.
   - FBI offices, including Ethan's supervisor's office and Daniel Brooks' office.
   - An abandoned industrial complex converted into a hidden command center, where Robert operates.
+  - A cemetery / grave site (introduced in `PROLOGUE.md` Scenes 3 & 10 — exact name/location 🧩 TODO, see `WORLD.md`).
 
 > 🧩 **TODO** — City/country setting, additional locations, and time period specifics have not been confirmed.
 
@@ -70,6 +71,9 @@ Hundreds of overdose victims across different cities, different suppliers, and d
 ### Prologue — The Beginning
 
 > The full prologue text is preserved below exactly as provided, for reference by writers, designers, and QA.
+
+> [!IMPORTANT]
+> This section is kept **verbatim** as the canonical source text and should not be rewritten to match later revisions. The approved shot-by-shot production breakdown — including revised dialogue for the supervisor and Brooks scenes, staging direction, and the emotional-climax grave scene not present in this prose version — lives in [`PROLOGUE.md`](./PROLOGUE.md). Where the two differ, `PROLOGUE.md` governs implementation.
 
 It was a cold, rainy evening when Special Agent Ethan Carter received the phone call that would change his life forever. His younger brother, Noah Carter, had been found dead in a rundown apartment on the outskirts of the city.
 
@@ -188,7 +192,7 @@ Unknown to Ethan, his investigation had already attracted the attention of one o
 
 | Chapter / Act | Title | Status | Summary |
 |---|---|---|---|
-| Prologue | The Beginning | ✅ Confirmed | Noah's death, Ethan's promise, the discovery of a pattern, dead ends at the supervisor and Brooks, and the reveal that Brooks reports to Robert. |
+| Prologue | The Beginning | ✅ Confirmed — production breakdown in [`PROLOGUE.md`](./PROLOGUE.md) | Noah's death, Ethan's promise, the discovery of a pattern, dead ends at the supervisor and Brooks, and the reveal that Brooks reports to Robert. |
 | Act 1 | 🧩 TODO | 🧩 Not yet provided | — |
 | Act 2 | 🧩 TODO | 🧩 Not yet provided | — |
 | Act 3 | 🧩 TODO | 🧩 Not yet provided | — |
@@ -204,9 +208,11 @@ Unknown to Ethan, his investigation had already attracted the attention of one o
 - Who is Robert, really — background, motive, and full identity are unconfirmed.
 - Will Ghost (Olivia) ever reveal her identity to Ethan, and how?
 - Will Ethan discover that his supervisor's dismissal and Brooks' denial were not simple oversights?
+- 🧩 **New (from `PROLOGUE.md` revision pass):** Is Ethan's proposed family backstory (mother, father, guardianship of Noah) canon? This has not been confirmed and currently conflicts with Ethan's established age — see `PROLOGUE.md` → Open Conflicts / TODO and `CHARACTERS.md` → Ethan Carter.
 
 ## Related Documents
 
+- [`PROLOGUE.md`](./PROLOGUE.md) — scene-by-scene production breakdown of the Prologue, revised dialogue, and staging direction
 - [`CHARACTERS.md`](./CHARACTERS.md) — full character profiles
 - [`ORGANIZATIONS.md`](./ORGANIZATIONS.md) — factions and organizational structure
 - [`TIMELINE.md`](./TIMELINE.md) — chronological event tracking
@@ -219,3 +225,4 @@ Unknown to Ethan, his investigation had already attracted the attention of one o
 | Date | Change |
 |---|---|
 | 🧩 TODO | Initial creation from the provided Prologue text. |
+| 🧩 TODO | Added `PROLOGUE.md` cross-references (Related Documents, Story Structure, Open Threads); flagged proposed family-backstory conflict. No canonical prose changed. |
