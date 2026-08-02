@@ -3,12 +3,7 @@ import {
   AuditActorType,
   AuditResourceType,
 } from "@/app/generated/prisma/enums";
-
-export enum AuditSeverity {
-  INFO = "INFO",
-  WARNING = "WARNING",
-  CRITICAL = "CRITICAL",
-}
+import { AuditSeverity } from "../types/audit.enums";
 
 export interface AuditEventDefinition {
   action: AuditAction;
