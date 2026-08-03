@@ -37,8 +37,7 @@ import {
   type AuditEventDefinition,
 } from "../constants/audit.events";
 import { AUDIT_DEFAULTS, AUDIT_LIMITS } from "../constants/audit.constants";
-import type { AuditCategory } from "../constants/audit.categories";
-import { AuditSeverity } from "../types/audit.enums";
+import { AuditSeverity, AUDIT_SEVERITY_ORDER } from "../types/audit.enums";
 import type {
   AuditSearchFilters,
   AuditPagination,
@@ -102,17 +101,11 @@ function buildActionIndex<K>(
 const ACTIONS_BY_CATEGORY = buildActionIndex((d) => d.category);
 const ACTIONS_BY_SEVERITY = buildActionIndex((d) => d.severity);
 
-const SEVERITY_ORDER: readonly AuditSeverity[] = [
-  AuditSeverity.INFO,
-  AuditSeverity.WARNING,
-  AuditSeverity.CRITICAL,
-];
-
 function severitiesAtOrAbove(
   minSeverity: AuditSeverity,
 ): readonly AuditSeverity[] {
-  const index = SEVERITY_ORDER.indexOf(minSeverity);
-  return SEVERITY_ORDER.slice(index === -1 ? 0 : index);
+  const index = AUDIT_SEVERITY_ORDER.indexOf(minSeverity);
+  return AUDIT_SEVERITY_ORDER.slice(index === -1 ? 0 : index);
 }
 
 // ----------------------------------------------------------------------------
@@ -340,7 +333,7 @@ export async function getAuditDetail(
   const db = prisma;
   const row = await findById(db, id);
   if (!row) return null;
- 
+
   return mapOrLog(() => toAuditDetailDTO(row), { fn: "getAuditDetail", id });
 }
 /**
@@ -448,7 +441,6 @@ export async function getActorHistory(
  * one query path, not two.
  */
 export async function getRecentEvents(
-  db: DbClient,
   options: {
     readonly minSeverity?: AuditSeverity;
     readonly limit?: number;
@@ -456,11 +448,6 @@ export async function getRecentEvents(
 ): Promise<readonly AuditListItemDTO[]> {
   const minSeverity =
     options.minSeverity ??
-    // AUDIT_DEFAULTS.ACTIVITY_FEED_MIN_SEVERITY is a plain string
-    // literal ("WARNING") in audit.constants.ts, not typed against
-    // AuditSeverity, to avoid audit.constants.ts importing
-    // audit.enums.ts. The values are identical by construction; this
-    // cast is the one place that bridges them.
     (AUDIT_DEFAULTS.ACTIVITY_FEED_MIN_SEVERITY as AuditSeverity);
 
   const limit = Math.min(
