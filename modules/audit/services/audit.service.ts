@@ -141,51 +141,76 @@ async function resolveRequestContext(
 // ----------------------------------------------------------------------------
 
 /**
- * Resolves category/severity/resourceType from AUDIT_EVENTS and performs
- * the two soft integrity checks AuditEventDefinition documents:
- * expectedActorTypes (warn-only hint) and requiredMetadataKeys ("MUST
- * receive" per that field's own doc comment, but still warn-not-throw
- * here — a developer forgetting a metadata key is a bug worth surfacing
- * loudly in logs, but losing the audit record entirely over it would be
- * a worse outcome for a security-relevant event than writing an
- * incomplete one).
+ * Soft integrity checks shared by every write path — see
+ * AuditEventDefinition's own doc comments for why these warn rather
+ * than throw (losing an audit record over a developer's missing
+ * metadata key would be a worse outcome than writing an incomplete
+ * one). Factored out so record() and recordMany() run the exact same
+ * checks — recordMany's previous inline copy omitted both of these
+ * entirely, so a batched write could violate either with no log
+ * signal at all.
  */
-async function assembleAuditRecordInput(
-  input: RecordAuditEventInput,
-): Promise<AuditRecordInput> {
-  const definition = getAuditEventDefinition(input.eventKey);
+function validateActorAndMetadata(
+  eventKey: AuditEventKey,
+  actor: AuditActor,
+  metadata: Record<string, unknown> | undefined,
+): void {
+  const definition = getAuditEventDefinition(eventKey);
 
   if (
     definition.expectedActorTypes &&
-    !definition.expectedActorTypes.includes(input.actor.actorType)
+    !definition.expectedActorTypes.includes(actor.actorType)
   ) {
-    log.warn(
-      `Audit event "${input.eventKey}" recorded with unexpected actor type`,
-      {
-        eventKey: input.eventKey,
-        actorType: input.actor.actorType,
-        expected: definition.expectedActorTypes,
-      },
-    );
+    log.warn(`Audit event "${eventKey}" recorded with unexpected actor type`, {
+      eventKey,
+      actorType: actor.actorType,
+      expected: definition.expectedActorTypes,
+    });
   }
 
   if (definition.requiredMetadataKeys?.length) {
     const missing = definition.requiredMetadataKeys.filter(
-      (key) => !input.metadata || !(key in input.metadata),
+      (key) => !metadata || !(key in metadata),
     );
     if (missing.length > 0) {
-      log.warn(
-        `Audit event "${input.eventKey}" is missing required metadata keys`,
-        {
-          eventKey: input.eventKey,
-          missing,
-        },
-      );
+      log.warn(`Audit event "${eventKey}" is missing required metadata keys`, {
+        eventKey,
+        missing,
+      });
     }
   }
+}
+
+/**
+ * Resolves category/severity/resourceType from AUDIT_EVENTS, runs the
+ * shared soft integrity checks, and assembles the internal
+ * AuditRecordInput shape. Both record() and recordMany() go through
+ * this now — the only behavioral difference between them is context
+ * resolution: record() wants resolveRequestContext()'s
+ * getRequestMetadata() fallback (a real request is live); recordMany()
+ * does not (batched events may flush long after the originating
+ * request is gone — see resolveContextFromRequest below).
+ */
+async function assembleAuditRecordInput(
+  input: RecordAuditEventInput,
+  options: { readonly resolveContextFromRequest?: boolean } = {},
+): Promise<AuditRecordInput> {
+  const definition = getAuditEventDefinition(input.eventKey);
+
+  validateActorAndMetadata(input.eventKey, input.actor, input.metadata);
 
   const before = toRedactedSnapshot(input.before);
   const after = toRedactedSnapshot(input.after);
+
+  const context =
+    options.resolveContextFromRequest === false
+      ? {
+          ipAddress: input.context?.ipAddress ?? null,
+          userAgent: input.context?.userAgent ?? null,
+          requestId: input.context?.requestId ?? null,
+          sessionId: input.context?.sessionId ?? null,
+        }
+      : await resolveRequestContext(input.context);
 
   return {
     eventKey: input.eventKey,
@@ -195,7 +220,7 @@ async function assembleAuditRecordInput(
       resourceId: input.resourceId ?? null,
       resourceName: input.resourceName ?? null,
     },
-    context: await resolveRequestContext(input.context),
+    context,
     success: input.success,
     reason: input.reason,
     diff: before && after ? { before, after } : undefined,
@@ -265,13 +290,14 @@ export async function record(
  * Batched variant backing a future write-buffer flush. Deliberately
  * does NOT implement AUDIT_PERFORMANCE's buffering, retry, or
  * dead-letter behavior itself — that belongs to whatever periodically
- * calls this (a buffer layer, not this service). This method's only
- * job is "take N already-decided events, write them in one round-trip."
+ * calls this. This method's only job is "take N already-decided
+ * events, write them in one round-trip."
  *
- * Unlike record(), does not fall back to getRequestMetadata() per item
- * — batched events are assumed to already carry whatever context
- * mattered, captured by the caller at the moment each event happened,
- * since by flush time the original request may no longer exist.
+ * Reuses assembleAuditRecordInput per item (with
+ * resolveContextFromRequest: false — see that function's doc comment)
+ * so batched writes get exactly the same actor/metadata validation as
+ * a single record() call, instead of a hand-maintained second copy of
+ * that logic silently drifting from it.
  */
 export async function recordMany(
   db: DbClient,
@@ -280,30 +306,9 @@ export async function recordMany(
   try {
     const rows = await Promise.all(
       inputs.map(async (input) => {
-        const definition = AUDIT_EVENTS[input.eventKey];
-        const before = toRedactedSnapshot(input.before);
-        const after = toRedactedSnapshot(input.after);
-
-        const assembled: AuditRecordInput = {
-          eventKey: input.eventKey,
-          actor: input.actor,
-          resource: {
-            resourceType: definition.resourceType,
-            resourceId: input.resourceId ?? null,
-            resourceName: input.resourceName ?? null,
-          },
-          context: {
-            ipAddress: input.context?.ipAddress ?? null,
-            userAgent: input.context?.userAgent ?? null,
-            requestId: input.context?.requestId ?? null,
-            sessionId: input.context?.sessionId ?? null,
-          },
-          success: input.success,
-          reason: input.reason,
-          diff: before && after ? { before, after } : undefined,
-          metadata: toRedactedMetadata(input.metadata),
-        };
-
+        const assembled = await assembleAuditRecordInput(input, {
+          resolveContextFromRequest: false,
+        });
         return toCreateAuditLogInput(assembled);
       }),
     );
