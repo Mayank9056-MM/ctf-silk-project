@@ -5,7 +5,7 @@ import prisma from "@/lib/prisma";
 import { eventService } from "@/modules/event/services/event.service";
 import { storyContentRepository } from "../repositories/story-content.repository";
 import { storyProgressRepository } from "../repositories/story-progress.repository";
-import { storyCache, storyCacheKeys } from "../utils/story-cache";
+import { storyCache, storyCacheKeys } from "../cache/story.cache";
 import { unlockService } from "./unlock.service";
 import { sceneService } from "./scene.service";
 import { storyNavigationService } from "./story-navigation.service";
