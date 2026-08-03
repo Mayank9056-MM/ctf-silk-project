@@ -1,6 +1,12 @@
-import { Prisma, Role, User } from "@/app/generated/prisma/client";
+import {
+  AuditActorType,
+  Prisma,
+  Role,
+  User,
+} from "@/app/generated/prisma/client";
 
 import prisma from "@/lib/prisma";
+import { authLogger as log } from "@/lib/logger/logger.scopes";
 import { passwordService } from "./password.service";
 import { RegisterInput } from "../validations/register.schema";
 import { userRepository } from "../repositories/user.repository";
@@ -15,6 +21,9 @@ import { accessTokenService } from "./access-token.service";
 import { PublicUser } from "../types/user.types";
 import { toPublicUser } from "../utils/user.mapper";
 
+import * as auditService from "../../audit/services/audit.service";
+import type { AuditActor } from "../../audit/types/audit.types";
+
 interface RequestMetadata {
   userAgent?: string;
   ipAddress?: string;
@@ -27,6 +36,11 @@ function getDummyHash(): Promise<string> {
   }
   return dummyHashPromise;
 }
+
+type LoginFailureReason =
+  | "invalid_credentials"
+  | "account_locked"
+  | "account_banned";
 
 class AuthService {
   /**
@@ -65,6 +79,17 @@ class AuthService {
         email: input.email,
         passwordHash,
       });
+
+      log.info("User registered", { userId: user.id });
+
+      await auditService.record(prisma, {
+        eventKey: "REGISTER",
+        actor: this.selfActor(user),
+        resourceId: user.id,
+        resourceName: user.username,
+        success: true,
+      });
+
       return toPublicUser(user);
     } catch (error) {
       if (
@@ -72,6 +97,11 @@ class AuthService {
         error.code === "P2002"
       ) {
         const target = (error.meta?.target as string[] | undefined)?.[0];
+
+        log.warn("Registration race detected on unique constraint", {
+          target,
+        });
+
         if (target === "email") {
           throw ApiError.conflict(
             ErrorCode.EMAIL_ALREADY_EXISTS,
@@ -103,6 +133,8 @@ class AuthService {
     const user = await userRepository.findByEmail(prisma, input.email);
 
     if (!user) {
+      log.warn("Login attempted for unknown email", { email: input.email });
+      await this.auditLoginFailure(null, "invalid_credentials");
       await this.simulatePasswordVerification();
       throw ApiError.unauthorized(
         ErrorCode.INVALID_CREDENTIALS,
@@ -114,6 +146,14 @@ class AuthService {
       const minutesRemaining = Math.ceil(
         (user.lockedUntil.getTime() - Date.now()) / 60_000,
       );
+
+      log.warn("Login attempted on locked account", {
+        userId: user.id,
+        minutesRemaining,
+      });
+
+      await this.auditLoginFailure(user, "account_locked");
+
       throw ApiError.tooManyRequests(
         ErrorCode.ACCOUNT_LOCKED,
         `Account is temporarily locked. Try again in ${minutesRemaining} minute(s).`,
@@ -121,6 +161,8 @@ class AuthService {
     }
 
     if (user.status === "BANNED") {
+      log.warn("Login attempted on banned account", { userId: user.id });
+      await this.auditLoginFailure(user, "account_banned");
       throw ApiError.forbidden(
         ErrorCode.ACCOUNT_BANNED,
         "This account has been banned.",
@@ -133,7 +175,9 @@ class AuthService {
     );
 
     if (!passwordValid) {
+      log.warn("Invalid password on login attempt", { userId: user.id });
       await this.handleFailedLogin(user.id, user.failedLoginAttempts);
+      await this.auditLoginFailure(user, "invalid_credentials");
       throw ApiError.unauthorized(
         ErrorCode.INVALID_CREDENTIALS,
         "Invalid email or password.",
@@ -167,7 +211,17 @@ class AuthService {
         ipAddress: metadata.ipAddress,
         user: { connect: { id: user.id } },
       });
+
+      await auditService.record(tx, {
+        eventKey: "LOGIN",
+        actor: this.selfActor(user),
+        resourceId: user.id,
+        resourceName: user.username,
+        success: true,
+      });
     });
+
+    log.info("Login succeeded", { userId: user.id });
 
     await this.issueAccessAndCookies(user.id, user.role, rawRefreshToken);
 
@@ -198,6 +252,7 @@ class AuthService {
     );
 
     if (!existingToken) {
+      log.warn("Refresh attempted with unrecognized token");
       await cookieService.clearAuthCookies();
       throw ApiError.unauthorized(
         ErrorCode.INVALID_REFRESH_TOKEN,
@@ -213,6 +268,24 @@ class AuthService {
         prisma,
         existingToken.userId,
       );
+
+      log.error(
+        "Refresh token reuse detected — all sessions revoked",
+        undefined,
+        { userId: existingToken.userId },
+      );
+
+      await auditService.recordSystemEvent(
+        prisma,
+        "REFRESH_TOKEN_REUSE_DETECTED",
+        {
+          resourceId: existingToken.userId,
+          success: true,
+          reason: "Revoked refresh token presented again",
+          metadata: { tokenId: existingToken.id },
+        },
+      );
+
       await cookieService.clearAuthCookies();
       throw ApiError.unauthorized(
         ErrorCode.REFRESH_TOKEN_REVOKED,
@@ -232,6 +305,9 @@ class AuthService {
     const user = await userRepository.findById(prisma, existingToken.userId);
 
     if (!user || user.status === "BANNED") {
+      log.warn("Refresh rejected — account banned or missing", {
+        userId: existingToken.userId,
+      });
       await refreshTokenRepository.revoke(prisma, existingToken.id);
       await cookieService.clearAuthCookies();
       throw ApiError.forbidden(
@@ -261,6 +337,8 @@ class AuthService {
       );
     });
 
+    log.debug("Refresh token rotated", { userId: user.id });
+
     await this.issueAccessAndCookies(user.id, user.role, newRawToken);
 
     return toPublicUser(user);
@@ -283,6 +361,20 @@ class AuthService {
       );
       if (existingToken && !existingToken.revokedAt) {
         await refreshTokenRepository.revoke(prisma, existingToken.id);
+
+          log.info("User logged out", { userId: existingToken.userId });
+
+             await auditService.record(prisma, {
+          eventKey: "LOGOUT",
+          actor: {
+            actorType: AuditActorType.USER,
+            actorId: existingToken.userId,
+            actorUsername: null,
+            actorRole: null,
+          },
+          resourceId: existingToken.userId,
+          success: true,
+        });
       }
     }
 
@@ -296,6 +388,7 @@ class AuthService {
    */
   async logoutAllSessions(userId: string): Promise<void> {
     await refreshTokenRepository.revokeAllForUser(prisma, userId);
+     log.info("All sessions revoked for user", { userId });
   }
 
   /**
@@ -312,14 +405,39 @@ class AuthService {
     const shouldLock =
       currentAttempts + 1 >= AUTH_CONSTANTS.MAX_FAILED_LOGIN_ATTEMPTS;
 
+       log.debug("Incrementing failed login attempts", {
+      userId,
+      attempts: currentAttempts + 1,
+    });
+
     await prisma.$transaction(async (tx) => {
+
       await userRepository.incrementFailedLoginAttempts(tx, userId);
+
       if (shouldLock) {
+        const lockedUntil = new Date(
+          Date.now() + AUTH_CONSTANTS.ACCOUNT_LOCK_DURATION_MS
+        )
         await userRepository.lockAccount(
           tx,
           userId,
-          new Date(Date.now() + AUTH_CONSTANTS.ACCOUNT_LOCK_DURATION_MS),
+          lockedUntil,
         );
+
+                log.warn("Account locked after repeated failed logins", {
+          userId,
+          attempts: currentAttempts + 1,
+        });
+ 
+        // The state transition into a lock is what's audit-worthy — not
+        // each increment leading up to it. Joined to the same tx as the
+        // lock write for the same reason LOGIN success is joined above.
+        await auditService.recordSystemEvent(tx, "ACCOUNT_LOCKED", {
+          resourceId: userId,
+          success: true,
+          metadata: { failedAttempts: currentAttempts + 1, lockedUntil },
+        });
+
       }
     });
   }
@@ -342,7 +460,10 @@ class AuthService {
     role: Role,
     rawRefreshToken: string,
   ): Promise<void> {
-    const accessToken = accessTokenService.generateAccessToken({ userId, role });
+    const accessToken = accessTokenService.generateAccessToken({
+      userId,
+      role,
+    });
     await cookieService.setAccessToken(accessToken);
     await cookieService.setRefreshToken(rawRefreshToken);
   }
@@ -350,6 +471,41 @@ class AuthService {
   private async simulatePasswordVerification(): Promise<void> {
     const dummyHash = await getDummyHash();
     await passwordService.verify("irrelevant", dummyHash);
+  }
+
+  private selfActor(user: Pick<User, "id" | "username" | "role">): AuditActor {
+    return {
+      actorType: AuditActorType.USER,
+      actorId: user.id,
+      actorUsername: user.username,
+      actorRole: user.role,
+    };
+  }
+
+  /**
+   * Shared LOGIN-failure audit call. `user` is null for the
+   * unknown-email case, where there's no account to attribute the
+   * attempt to — actorId stays null, actorUsername carries the
+   * attempted email instead, for admin-side correlation only (this
+   * value never reaches the client).
+   */
+  private async auditLoginFailure(
+    user: Pick<User, "id" | "username" | "role" | "email"> | null,
+    reason: LoginFailureReason,
+  ): Promise<void> {
+    const actor: AuditActor = user
+      ? this.selfActor(user)
+      : {
+          actorType: AuditActorType.USER,
+          actorId: null,
+          actorUsername: null,
+          actorRole: null,
+        };
+
+    await auditService.recordFailure(prisma, "LOGIN", actor, reason, {
+      resourceId: user?.id ?? null,
+      resourceName: user?.username ?? null,
+    });
   }
 }
 
