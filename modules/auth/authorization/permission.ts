@@ -28,6 +28,8 @@ export enum Permission {
   MANAGE_ANNOUNCEMENTS = "MANAGE_ANNOUNCEMENTS",
 
   SYSTEM_SETTINGS = "SYSTEM_SETTINGS",
+
+  VIEW_AUDIT_LOG = "VIEW_AUDIT_LOG",
 }
 
 const USER_PERMISSIONS: readonly Permission[] = [
@@ -48,6 +50,7 @@ const SUPER_ADMIN_PERMISSIONS: readonly Permission[] = [
   Permission.MANAGE_CHALLENGES,
   Permission.MANAGE_ANNOUNCEMENTS,
   Permission.SYSTEM_SETTINGS,
+  Permission.VIEW_AUDIT_LOG,
 ];
 
 /**
