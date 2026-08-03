@@ -31,4 +31,6 @@ export enum ErrorCode {
 
   // Internal
   INTERNAL_SERVER_ERROR = "INTERNAL_SERVER_ERROR",
+
+  PERMISSION_DENIED = "PERMISSION_DENIED",
 }
