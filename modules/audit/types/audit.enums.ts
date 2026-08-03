@@ -31,6 +31,12 @@ export enum AuditSeverity {
   CRITICAL = "CRITICAL",
 }
 
+export const AUDIT_SEVERITY_ORDER: readonly AuditSeverity[] = [
+  AuditSeverity.INFO,
+  AuditSeverity.WARNING,
+  AuditSeverity.CRITICAL,
+] as const;
+
 /**
  * Export output formats supported by audit-export.service.ts.
  */
