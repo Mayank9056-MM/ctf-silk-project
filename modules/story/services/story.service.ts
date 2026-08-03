@@ -16,6 +16,10 @@ import type { SceneDTO } from "../types/scene.dto";
 import type { StoryStateDTO } from "../types/story.dto";
 import { STORY_CONSTANTS } from "../constants/story.constants";
 
+import { storyLogger as log } from "@/lib/logger/logger.scopes";
+import * as auditService from "../../audit/services/audit.service";
+import { AuditActorType } from "@/app/generated/prisma/enums";
+
 /**
  * The top-level facade for everything storyNavigationService doesn't own
  * — the campaign map, a standalone progress summary, replaying completed
@@ -155,6 +159,11 @@ class StoryService {
     const access = await eventService.getEventAccess(prisma);
 
     if (!access.canAccessGame) {
+      log.debug("Story restart rejected — event not live", {
+        userId,
+        state: access.state,
+      });
+
       throw ApiError.forbidden(
         ErrorCode.FORBIDDEN,
         access.state === "EVENT_SOON"
@@ -164,6 +173,20 @@ class StoryService {
     }
 
     await storyProgressRepository.resetProgress(prisma, userId);
+
+    log.info("Story progress reset", { userId });
+
+    await auditService.record(prisma, {
+      eventKey: "STORY_RESTARTED",
+      actor: {
+        actorType: AuditActorType.USER,
+        actorId: userId,
+        actorUsername: null,
+        actorRole: null,
+      },
+      resourceId: userId,
+      success: true,
+    });
 
     return storyNavigationService.getCurrentScene(userId);
   }
