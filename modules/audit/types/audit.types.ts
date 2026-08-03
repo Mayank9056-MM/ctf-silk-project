@@ -1,12 +1,15 @@
-
 import type {
   AuditAction,
   AuditActorType,
   AuditResourceType,
   Role,
-} from '@/app/generated/prisma/enums';
-import type { AuditCategory } from '../constants/audit.categories';
-import { AuditExportFormat, AuditExportStatus, AuditSeverity } from './audit.enums';
+} from "@/app/generated/prisma/enums";
+import type { AuditCategory } from "../constants/audit.categories";
+import {
+  AuditExportFormat,
+  AuditExportStatus,
+  AuditSeverity,
+} from "./audit.enums";
 
 // ----------------------------------------------------------------------------
 // Actor / Resource — who did it, what did it happen to
@@ -66,56 +69,23 @@ export interface AuditResource {
  * actor/resource type; it is NOT a place to smuggle arbitrary business
  * data — see `AuditMetadata` for that.
  */
-export type AuditSnapshot = Readonly<Record<string, string | number | boolean | null>>;
+export type AuditSnapshot = Readonly<
+  Record<string, string | number | boolean | null>
+>;
 
-/**
- * A before/after pair for events that mutate a resource's state
- * (CHALLENGE_UPDATED, EVENT_UPDATED, UNLOCK_RULE_UPDATED, etc.).
- *
- * `before`/`after` are already-redacted domain snapshots, not raw Prisma
- * update payloads — redaction happens once, at write time, in
- * `utils/audit-redactor.ts`, so every downstream consumer (repository,
- * export, dashboard) can trust the value is safe to display/export
- * without re-checking. Events with no meaningful state change (LOGIN,
- * CHALLENGE_CREATED) simply omit this field rather than populate it with
- * `{ before: null, after: null }` noise.
- */
 export interface AuditDiff {
   readonly before: AuditSnapshot;
   readonly after: AuditSnapshot;
 }
 
-/**
- * Free-form, event-specific contextual data (e.g. `{ fromRole, toRole }`
- * for USER_ROLE_CHANGED, `{ attemptedPermission }` for PERMISSION_DENIED).
- *
- * Distinct from AuditDiff: metadata is supplementary context about *why*
- * or *how* an event happened; AuditDiff is specifically the resource's
- * state transition. A branded type (not `Record<string, unknown>`)
- * because metadata MUST pass through `utils/audit-redactor.ts` before
- * it's valid to construct one — the brand exists purely to make
-   "did anyone forget to redact this" a compile-time-visible question at
- * every call site that touches metadata.
- */
 export type AuditMetadata = Readonly<Record<string, unknown>> & {
   readonly __redacted: true;
 };
 
-// ----------------------------------------------------------------------------
-// Request context
-// ----------------------------------------------------------------------------
 
-/**
- * The ambient request-level context captured alongside every audit event.
- * Grouped separately from AuditActor because it describes the *request*,
- * not the *identity* — a single actor can generate events from many
- * different contexts (different IPs, different sessions).
- *
- * All fields are nullable by design: `requestId`/`sessionId` are
- * provisioned in the schema but not yet propagated end-to-end (see the
- * schema comment on `AuditLog`), so this type must not force callers to
- * fabricate values that don't exist yet.
- */
+// Request context
+
+
 export interface AuditRequestContext {
   readonly ipAddress: string | null;
   readonly userAgent: string | null;
@@ -123,9 +93,7 @@ export interface AuditRequestContext {
   readonly sessionId: string | null;
 }
 
-// ----------------------------------------------------------------------------
 // Write path
-// ----------------------------------------------------------------------------
 
 /**
  * The single input shape `audit.service.ts` builds and hands to
@@ -185,8 +153,8 @@ export interface AuditPagination {
 
 /** Sortable columns are deliberately enumerated, not `keyof AuditLog`, to keep the sortable surface intentional rather than accidentally exposing every column. */
 export interface AuditSort {
-  readonly field: 'occurredAt' | 'severity' | 'category' | 'action';
-  readonly direction: 'asc' | 'desc';
+  readonly field: "occurredAt" | "severity" | "category" | "action";
+  readonly direction: "asc" | "desc";
 }
 
 /**
