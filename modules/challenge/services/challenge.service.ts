@@ -48,8 +48,8 @@ class ChallengeService {
   /**
    * Returns all chalenges in a chapter.
    */
-  async getChallengesByChapter(chapter: string) {
-    const challeges = await challengeRepository.findByChapter(chapter);
+  async getChallengesByChapter(chapterId: string) {
+    const challeges = await challengeRepository.findByChapter(chapterId);
     return toPublicChallengeList(challeges);
   }
 }
