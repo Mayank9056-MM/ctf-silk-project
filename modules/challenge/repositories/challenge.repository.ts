@@ -1,13 +1,11 @@
 import prisma from "@/lib/prisma";
 
 export class ChallengeRepository {
-  private readonly attachmentsOrder = { orderBy: { order: "asc" as const } };
-
   async findAll() {
     return prisma.challenge.findMany({
       omit: { flagHash: true },
-      include: { attachments: this.attachmentsOrder },
-      orderBy: [{ chapter: "asc" }, { displayOrder: "asc" }],
+      include: { attachments: { orderBy: { order: "asc" } } },
+      orderBy: [{ chapter: { order: "asc" } }, { displayOrder: "asc" }],
     });
   }
 
@@ -15,7 +13,7 @@ export class ChallengeRepository {
     return prisma.challenge.findUnique({
       where: { id },
       omit: { flagHash: true },
-      include: { attachments: this.attachmentsOrder },
+      include: { attachments: { orderBy: { order: "asc" } } },
     });
   }
 
@@ -23,16 +21,26 @@ export class ChallengeRepository {
     return prisma.challenge.findUnique({
       where: { slug },
       omit: { flagHash: true },
-      include: { attachments: this.attachmentsOrder },
+      include: { attachments: { orderBy: { order: "asc" } } },
     });
   }
 
-  async findByChapter(chapter: number) {
+  async findByChapter(chapterId: string) {
     return prisma.challenge.findMany({
-      where: { chapter },
+      where: {
+        chapterId,
+      },
       omit: { flagHash: true },
-      include: { attachments: this.attachmentsOrder },
-      orderBy: { displayOrder: "asc" },
+      include: {
+        attachments: {
+          orderBy: {
+            order: "asc",
+          },
+        },
+      },
+      orderBy: {
+        displayOrder: "asc",
+      },
     });
   }
 

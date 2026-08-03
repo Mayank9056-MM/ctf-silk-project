@@ -6,6 +6,7 @@ import {
   toPublicChallenge,
   toPublicChallengeList,
 } from "../utils/challenge.mapper";
+import { challengeLogger as log } from "@/lib/logger/logger.scopes";
 
 class ChallengeService {
   /**
@@ -23,6 +24,7 @@ class ChallengeService {
     const challenge = await challengeRepository.findById(id);
 
     if (!challenge) {
+      log.warn("Challenge lookup by id missed", { id });
       throw new ApiError(404, ErrorCode.NOT_FOUND, "Challenge not found.");
     }
 
@@ -36,6 +38,7 @@ class ChallengeService {
     const challenge = await challengeRepository.findBySlug(slug);
 
     if (!challenge) {
+      log.warn("Challenge lookup by slug missed", { slug });
       throw new ApiError(404, ErrorCode.NOT_FOUND, "Challenge not found.");
     }
 
@@ -45,8 +48,8 @@ class ChallengeService {
   /**
    * Returns all chalenges in a chapter.
    */
-  async getChallengesByChapter(chapter: number) {
-    const challeges = await challengeRepository.findByChapter(chapter);
+  async getChallengesByChapter(chapterId: string) {
+    const challeges = await challengeRepository.findByChapter(chapterId);
     return toPublicChallengeList(challeges);
   }
 }

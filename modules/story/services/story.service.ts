@@ -5,7 +5,7 @@ import prisma from "@/lib/prisma";
 import { eventService } from "@/modules/event/services/event.service";
 import { storyContentRepository } from "../repositories/story-content.repository";
 import { storyProgressRepository } from "../repositories/story-progress.repository";
-import { storyCache, storyCacheKeys } from "../utils/story-cache";
+import { storyCache, storyCacheKeys } from "../cache/story.cache";
 import { unlockService } from "./unlock.service";
 import { sceneService } from "./scene.service";
 import { storyNavigationService } from "./story-navigation.service";
@@ -15,6 +15,10 @@ import type { StoryProgressDTO } from "../types/progress.dto";
 import type { SceneDTO } from "../types/scene.dto";
 import type { StoryStateDTO } from "../types/story.dto";
 import { STORY_CONSTANTS } from "../constants/story.constants";
+
+import { storyLogger as log } from "@/lib/logger/logger.scopes";
+import * as auditService from "../../audit/services/audit.service";
+import { AuditActorType } from "@/app/generated/prisma/enums";
 
 /**
  * The top-level facade for everything storyNavigationService doesn't own
@@ -155,6 +159,11 @@ class StoryService {
     const access = await eventService.getEventAccess(prisma);
 
     if (!access.canAccessGame) {
+      log.debug("Story restart rejected — event not live", {
+        userId,
+        state: access.state,
+      });
+
       throw ApiError.forbidden(
         ErrorCode.FORBIDDEN,
         access.state === "EVENT_SOON"
@@ -164,6 +173,20 @@ class StoryService {
     }
 
     await storyProgressRepository.resetProgress(prisma, userId);
+
+    log.info("Story progress reset", { userId });
+
+    await auditService.record(prisma, {
+      eventKey: "STORY_RESTARTED",
+      actor: {
+        actorType: AuditActorType.USER,
+        actorId: userId,
+        actorUsername: null,
+        actorRole: null,
+      },
+      resourceId: userId,
+      success: true,
+    });
 
     return storyNavigationService.getCurrentScene(userId);
   }

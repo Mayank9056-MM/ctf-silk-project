@@ -8,6 +8,7 @@ import { challengeRepository } from "@/modules/challenge/repositories/challenge.
 import { flagService } from "@/modules/challenge/services/flag.service";
 import { hashFlag } from "@/modules/challenge/utils/hash-flag";
 
+import { submissionLogger as log } from "@/lib/logger/logger.scopes";
 import { submissionRepository } from "../repositories/submission.repository";
 import { toSubmissionDTOList } from "../utils/submission.mapper";
 import { SUBMISSION_CONSTANTS } from "../constants/submission.constants";
@@ -46,7 +47,7 @@ class SubmissionService {
     userId: string,
     input: SubmitFlagInput,
   ): Promise<SubmitFlagOutcome> {
-    await this.assertEventIsLive();
+    await this.assertEventIsLive(userId);
     await this.assertNotRateLimited(userId);
 
     const challenge = await challengeRepository.getFlagVerificationData(
@@ -54,47 +55,60 @@ class SubmissionService {
     );
 
     if (!challenge) {
+      log.warn("Submission attempted for unknown challenge", {
+        userId,
+        challengeId: input.challengeId,
+      });
       throw ApiError.notFound(ErrorCode.NOT_FOUND, "Challenge not found.");
     }
 
     const isCorrect = await flagService.verify(input.flag, challenge.flagHash);
     const submittedFlagHash = isCorrect ? await hashFlag(input.flag) : null;
 
-    return prisma.$transaction(async (tx) => {
-      const submission = await submissionRepository.createSubmission(tx, {
-        isCorrect,
-        submittedFlagHash,
-        user: { connect: { id: userId } },
-        challenge: { connect: { id: input.challengeId } },
-      });
-
-      if (!isCorrect) {
-        return { isCorrect: false, xpAwarded: 0, alreadySolved: false };
-      }
-
-      try {
-        await submissionRepository.createSolve(tx, {
-          xpAwarded: challenge.xpReward,
+    try {
+      return prisma.$transaction(async (tx) => {
+        const submission = await submissionRepository.createSubmission(tx, {
+          isCorrect,
+          submittedFlagHash,
           user: { connect: { id: userId } },
           challenge: { connect: { id: input.challengeId } },
-          submission: { connect: { id: submission.id } },
         });
 
-        return {
-          isCorrect: true,
-          xpAwarded: challenge.xpReward,
-          alreadySolved: false,
-        };
-      } catch (error) {
-        if (this.isDuplicateSolve(error)) {
-          // Composite PK collision on (userId, challengeId) — already
-          // solved via a prior submission. This attempt is still logged
-          // above; no additional XP.
-          return { isCorrect: true, xpAwarded: 0, alreadySolved: true };
+        if (!isCorrect) {
+          return { isCorrect: false, xpAwarded: 0, alreadySolved: false };
         }
-        throw error;
-      }
-    });
+
+        try {
+          await submissionRepository.createSolve(tx, {
+            xpAwarded: challenge.xpReward,
+            user: { connect: { id: userId } },
+            challenge: { connect: { id: input.challengeId } },
+            submission: { connect: { id: submission.id } },
+          });
+
+          return {
+            isCorrect: true,
+            xpAwarded: challenge.xpReward,
+            alreadySolved: false,
+          };
+        } catch (error) {
+          if (this.isDuplicateSolve(error)) {
+            // Composite PK collision on (userId, challengeId) — already
+            // solved via a prior submission. This attempt is still logged
+            // above; no additional XP.
+            return { isCorrect: true, xpAwarded: 0, alreadySolved: true };
+          }
+          throw error;
+        }
+      });
+    } catch (error) {
+      log.error("Submission transaction failed unexpectedly", error, {
+        userId,
+        challengeId: input.challengeId,
+        isCorrect,
+      });
+      throw error;
+    }
   }
 
   /**
@@ -111,10 +125,15 @@ class SubmissionService {
     return toSubmissionDTOList(submissions);
   }
 
-  private async assertEventIsLive(): Promise<void> {
+  private async assertEventIsLive(userId: string): Promise<void> {
     const access = await eventService.getEventAccess(prisma);
 
     if (!access.canAccessGame) {
+      log.debug("Submission rejected — event not live", {
+        userId,
+        state: access.state,
+      });
+
       throw ApiError.forbidden(
         ErrorCode.FORBIDDEN,
         access.state === "EVENT_SOON"
@@ -142,6 +161,11 @@ class SubmissionService {
     );
 
     if (recentCount >= SUBMISSION_CONSTANTS.MAX_SUBMISSIONS_PER_WINDOW) {
+      log.warn("Submission rate limit exceeded", {
+        userId,
+        recentCount,
+      });
+
       throw ApiError.tooManyRequests(
         ErrorCode.TOO_MANY_REQUESTS,
         "Too many submissions. Please wait a moment before trying again.",
