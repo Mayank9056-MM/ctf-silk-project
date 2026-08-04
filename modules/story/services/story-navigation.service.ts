@@ -1,4 +1,9 @@
-import { Prisma, type Scene, type Chapter, type Choice } from "@/app/generated/prisma/client";
+import {
+  Prisma,
+  type Scene,
+  type Chapter,
+  type Choice,
+} from "@/app/generated/prisma/client";
 import { StoryProgressStatus } from "@/app/generated/prisma/enums";
 import { ApiError } from "@/lib/errors/ApiError";
 import { ErrorCode } from "@/lib/errors/ErrorCode";
@@ -14,6 +19,8 @@ import { resolveNextScene } from "../utils/scene-resolver";
 import type { SceneResolution } from "../types/scene.types";
 import { toStoryProgressDTO, toStoryStateDTO } from "../utils/story.mapper";
 import type { StoryStateDTO } from "../types/story.dto";
+
+import { storyLogger as log } from "@/lib/logger/logger.scopes";
 
 /**
  * Owns moment-to-moment story progression — "what scene is this player
@@ -42,7 +49,7 @@ class StoryNavigationService {
    * on first visit.
    */
   async getCurrentScene(userId: string): Promise<StoryStateDTO> {
-    await this.assertEventIsLive();
+    await this.assertEventIsLive(userId);
 
     const progress = await this.getOrCreateProgress(userId);
 
@@ -54,6 +61,11 @@ class StoryNavigationService {
       // Defensive — getOrCreateProgress always sets both together;
       // this only fires if something outside this service (a future
       // admin tool, a manual DB edit) left the row inconsistent.
+      log.error(
+        "Story progress row is inconsistent — missing scene or chapter reference",
+        undefined,
+        { userId, progressId: progress.userId },
+      );
       throw ApiError.internal("Story progress is in an inconsistent state.");
     }
 
@@ -65,7 +77,12 @@ class StoryNavigationService {
     return toStoryStateDTO(
       chapter,
       scene,
-      toStoryProgressDTO(progress, chapter.slug, scene.slug, await this.countCompletedScenes(userId)),
+      toStoryProgressDTO(
+        progress,
+        chapter.slug,
+        scene.slug,
+        await this.countCompletedScenes(userId),
+      ),
     );
   }
 
@@ -74,12 +91,23 @@ class StoryNavigationService {
    * player's current scene actually has choices attached, so a client
    * can never bypass a branch decision by calling the wrong endpoint.
    */
-  async advanceScene(userId: string, currentSceneId: string): Promise<StoryStateDTO> {
-    await this.assertEventIsLive();
+  async advanceScene(
+    userId: string,
+    currentSceneId: string,
+  ): Promise<StoryStateDTO> {
+    await this.assertEventIsLive(userId);
 
-    const { scene: currentScene, choices } = await this.requireCurrentScene(userId, currentSceneId);
+    const { scene: currentScene, choices } = await this.requireCurrentScene(
+      userId,
+      currentSceneId,
+    );
 
     if (choices.length > 0) {
+      log.debug("Advance rejected — scene requires a choice", {
+        userId,
+        sceneId: currentSceneId,
+      });
+
       throw ApiError.conflict(
         ErrorCode.VALIDATION_ERROR,
         "This scene requires a choice — use select-choice instead.",
@@ -96,14 +124,29 @@ class StoryNavigationService {
    * choiceId from an old response can't be replayed against a scene
    * the player has since moved past.
    */
-  async selectChoice(userId: string, currentSceneId: string, choiceId: string): Promise<StoryStateDTO> {
-    await this.assertEventIsLive();
+  async selectChoice(
+    userId: string,
+    currentSceneId: string,
+    choiceId: string,
+  ): Promise<StoryStateDTO> {
+    await this.assertEventIsLive(userId);
 
-    const { scene: currentScene, choices } = await this.requireCurrentScene(userId, currentSceneId);
+    const { scene: currentScene, choices } = await this.requireCurrentScene(
+      userId,
+      currentSceneId,
+    );
     const choice = choices.find((candidate) => candidate.id === choiceId);
 
     if (!choice) {
-      throw ApiError.notFound(ErrorCode.NOT_FOUND, "Choice not found for this scene.");
+      log.debug("Select-choice rejected — choice not found for scene", {
+        userId,
+        sceneId: currentSceneId,
+        choiceId,
+      });
+      throw ApiError.notFound(
+        ErrorCode.NOT_FOUND,
+        "Choice not found for this scene.",
+      );
     }
 
     const resolution = await this.safeResolve(currentScene, choice);
@@ -114,13 +157,20 @@ class StoryNavigationService {
   // Internal
   // ============================================================
 
-  private async assertEventIsLive(): Promise<void> {
+  private async assertEventIsLive(userId: string): Promise<void> {
     const access = await eventService.getEventAccess(prisma);
 
     if (!access.canAccessGame) {
+      log.debug("Story navigation rejected — event not live", {
+        userId,
+        state: access.state,
+      });
+
       throw ApiError.forbidden(
         ErrorCode.FORBIDDEN,
-        access.state === "EVENT_SOON" ? "The event hasn't started yet." : "The event has ended.",
+        access.state === "EVENT_SOON"
+          ? "The event hasn't started yet."
+          : "The event has ended.",
       );
     }
   }
@@ -129,23 +179,51 @@ class StoryNavigationService {
     const existing = await storyProgressRepository.findProgress(prisma, userId);
     if (existing) return existing;
 
-    const [firstChapter] = await storyContentRepository.findPublishedChapters(prisma);
+    const [firstChapter] =
+      await storyContentRepository.findPublishedChapters(prisma);
 
     if (!firstChapter) {
+      log.error(
+        "No published chapters exist — cannot bootstrap story progress",
+        undefined,
+        {
+          userId,
+        },
+      );
+
       throw ApiError.internal("No published chapters exist yet.");
     }
 
-    const entryScene = await storyContentRepository.findFirstSceneOfChapter(prisma, firstChapter.id);
+    const entryScene = await storyContentRepository.findFirstSceneOfChapter(
+      prisma,
+      firstChapter.id,
+    );
 
     if (!entryScene) {
+      log.error(
+        "First published chapter has no scenes — cannot bootstrap story progress",
+        undefined,
+        {
+          userId,
+          chapterId: firstChapter.id,
+        },
+      );
       throw ApiError.internal(`Chapter ${firstChapter.slug} has no scenes.`);
     }
 
-    return storyProgressRepository.createProgress(prisma, {
+    const created = storyProgressRepository.createProgress(prisma, {
       user: { connect: { id: userId } },
       currentChapter: { connect: { id: firstChapter.id } },
       currentScene: { connect: { id: entryScene.id } },
     });
+
+    log.info("Story progress bootstrapped for new player", {
+      userId,
+      chapterId: firstChapter.id,
+      sceneId: entryScene.id,
+    });
+
+    return created;
   }
 
   /**
@@ -162,6 +240,14 @@ class StoryNavigationService {
     const progress = await storyProgressRepository.findProgress(prisma, userId);
 
     if (!progress || progress.currentSceneId !== currentSceneId) {
+      log.debug(
+        "Scene mismatch — client's currentSceneId doesn't match progress",
+        {
+          userId,
+          claimedSceneId: currentSceneId,
+        },
+      );
+
       throw ApiError.conflict(
         ErrorCode.VALIDATION_ERROR,
         "This isn't your current scene. Refresh and try again.",
@@ -174,6 +260,11 @@ class StoryNavigationService {
     ]);
 
     if (!scene) {
+      log.error("Player's current scene has no content", undefined, {
+        userId,
+        sceneId: currentSceneId,
+      });
+
       throw ApiError.notFound(ErrorCode.NOT_FOUND, "Scene not found.");
     }
 
@@ -185,12 +276,20 @@ class StoryNavigationService {
    * plain Error is an authoring-integrity problem, never something to
    * surface verbatim to a player.
    */
-  private async safeResolve(currentScene: Scene, choice: Choice | null): Promise<SceneResolution> {
+  private async safeResolve(
+    currentScene: Scene,
+    choice: Choice | null,
+  ): Promise<SceneResolution> {
     try {
       return await resolveNextScene(prisma, currentScene, choice);
     } catch (error) {
-      console.error("[storyNavigationService] scene resolution failed:", error);
-      throw ApiError.internal("This part of the story isn't available right now.");
+      log.error("Scene resolution failed — content-integrity problem", error, {
+        sceneId: currentScene.id,
+        choiceId: choice?.id ?? null,
+      });
+      throw ApiError.internal(
+        "This part of the story isn't available right now.",
+      );
     }
   }
 
@@ -207,49 +306,100 @@ class StoryNavigationService {
         await storyProgressRepository.completeStory(tx, userId);
       });
 
+      log.info("Story completed", { userId });
+
       return this.buildCompletedState(userId, currentScene.chapterId);
     }
 
     if (!resolution.nextScene) {
-      throw ApiError.internal("Scene resolution returned no next scene without indicating story completion.");
+      log.error(
+        "Scene resolution returned no next scene without indicating story completion",
+        undefined,
+        { userId, sceneId: currentScene.id },
+      );
+
+      throw ApiError.internal(
+        "Scene resolution returned no next scene without indicating story completion.",
+      );
     }
     const nextScene = resolution.nextScene;
 
-    const sceneUnlock = await unlockService.evaluateSceneUnlock(userId, nextScene.id);
+    const sceneUnlock = await unlockService.evaluateSceneUnlock(
+      userId,
+      nextScene.id,
+    );
     if (!sceneUnlock.isUnlocked) {
-      throw ApiError.forbidden(ErrorCode.FORBIDDEN, "That part of the story isn't unlocked yet.");
+      log.debug("Scene transition blocked — target scene not unlocked", {
+        userId,
+        sceneId: nextScene.id,
+      });
+
+      throw ApiError.forbidden(
+        ErrorCode.FORBIDDEN,
+        "That part of the story isn't unlocked yet.",
+      );
     }
 
     if (resolution.nextChapter) {
-      const chapterUnlock = await unlockService.evaluateChapterUnlock(userId, resolution.nextChapter.id);
+      const chapterUnlock = await unlockService.evaluateChapterUnlock(
+        userId,
+        resolution.nextChapter.id,
+      );
       if (!chapterUnlock.isUnlocked) {
-        throw ApiError.forbidden(ErrorCode.FORBIDDEN, "The next chapter isn't unlocked yet.");
+        log.debug("Chapter transition blocked — target chapter not unlocked", {
+          userId,
+          chapterId: resolution.nextChapter.id,
+        });
+
+        throw ApiError.forbidden(
+          ErrorCode.FORBIDDEN,
+          "The next chapter isn't unlocked yet.",
+        );
       }
     }
 
     await prisma.$transaction(async (tx) => {
       await this.recordChoiceIfPresent(tx, userId, currentScene.id, choiceId);
       await this.completeSceneIfNeeded(tx, userId, currentScene.id);
-      await storyProgressRepository.updateCurrentScene(tx, userId, nextScene.id);
+      await storyProgressRepository.updateCurrentScene(
+        tx,
+        userId,
+        nextScene.id,
+      );
       if (resolution.nextChapter) {
-        await storyProgressRepository.updateCurrentChapter(tx, userId, resolution.nextChapter.id);
+        await storyProgressRepository.updateCurrentChapter(
+          tx,
+          userId,
+          resolution.nextChapter.id,
+        );
       }
     });
 
-    const chapter = resolution.nextChapter ?? (await this.requireChapter(currentScene.chapterId));
+    const chapter =
+      resolution.nextChapter ??
+      (await this.requireChapter(currentScene.chapterId));
     const [scene, progress] = await Promise.all([
       sceneService.getScene(userId, nextScene.id),
       storyProgressRepository.findProgress(prisma, userId),
     ]);
 
     if (!progress) {
+      log.error("Story progress vanished mid-transition", undefined, {
+        userId,
+        sceneId: nextScene.id,
+      });
       throw ApiError.internal("Story progress vanished mid-transition.");
     }
 
     return toStoryStateDTO(
       chapter,
       scene,
-      toStoryProgressDTO(progress, chapter.slug, scene.slug, await this.countCompletedScenes(userId)),
+      toStoryProgressDTO(
+        progress,
+        chapter.slug,
+        scene.slug,
+        await this.countCompletedScenes(userId),
+      ),
     );
   }
 
@@ -276,13 +426,30 @@ class StoryNavigationService {
     } catch (error) {
       if (!this.isDuplicateKeyError(error)) throw error;
 
-      const existing = await storyProgressRepository.findChoice(tx, userId, sceneId);
+      const existing = await storyProgressRepository.findChoice(
+        tx,
+        userId,
+        sceneId,
+      );
       if (existing?.choiceId !== choiceId) {
+        log.warn("Concurrent choice selection race detected", {
+          userId,
+          sceneId,
+          attemptedChoiceId: choiceId,
+          recordedChoiceId: existing?.choiceId ?? null,
+        });
+
         throw ApiError.conflict(
           ErrorCode.VALIDATION_ERROR,
           "A different choice was already recorded for this scene.",
         );
       }
+
+      log.debug("Duplicate choice selection — already recorded, no-op", {
+        userId,
+        sceneId,
+        choiceId,
+      });
     }
   }
 
@@ -290,34 +457,61 @@ class StoryNavigationService {
    * SceneCompletion has no equivalent ambiguity — a P2002 here
    * unambiguously means "already completed," nothing further to verify.
    */
-  private async completeSceneIfNeeded(tx: DbClient, userId: string, sceneId: string): Promise<void> {
+  private async completeSceneIfNeeded(
+    tx: DbClient,
+    userId: string,
+    sceneId: string,
+  ): Promise<void> {
     try {
       await storyProgressRepository.completeScene(tx, userId, sceneId);
     } catch (error) {
       if (!this.isDuplicateKeyError(error)) throw error;
+      log.debug("Duplicate scene completion — already recorded, no-op", {
+        userId,
+        sceneId,
+      });
     }
   }
 
   private isDuplicateKeyError(error: unknown): boolean {
-    return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
+    return (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    );
   }
 
   private async requireChapter(chapterId: string): Promise<Chapter> {
-    const chapter = await storyContentRepository.findChapterById(prisma, chapterId);
+    const chapter = await storyContentRepository.findChapterById(
+      prisma,
+      chapterId,
+    );
     if (!chapter) {
-      throw ApiError.internal(`Chapter ${chapterId} referenced by progress no longer exists.`);
+      log.error("Chapter referenced by progress no longer exists", undefined, {
+        chapterId,
+      });
+      throw ApiError.internal(
+        `Chapter ${chapterId} referenced by progress no longer exists.`,
+      );
     }
     return chapter;
   }
 
   private async countCompletedScenes(userId: string): Promise<number> {
-    const completions = await storyProgressRepository.getCompletedScenes(prisma, userId);
+    const completions = await storyProgressRepository.getCompletedScenes(
+      prisma,
+      userId,
+    );
     return completions.length;
   }
 
-  private async buildCompletedState(userId: string, lastChapterId: string | null): Promise<StoryStateDTO> {
+  private async buildCompletedState(
+    userId: string,
+    lastChapterId: string | null,
+  ): Promise<StoryStateDTO> {
     if (!lastChapterId) {
-      throw ApiError.internal("Completed story progress has no chapter reference.");
+      throw ApiError.internal(
+        "Completed story progress has no chapter reference.",
+      );
     }
 
     const [chapter, progress] = await Promise.all([
@@ -332,7 +526,12 @@ class StoryNavigationService {
     return toStoryStateDTO(
       chapter,
       null,
-      toStoryProgressDTO(progress, chapter.slug, null, await this.countCompletedScenes(userId)),
+      toStoryProgressDTO(
+        progress,
+        chapter.slug,
+        null,
+        await this.countCompletedScenes(userId),
+      ),
     );
   }
 }
