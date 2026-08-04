@@ -5,6 +5,10 @@ import { ErrorCode } from "@/lib/errors/ErrorCode";
 import { eventService } from "@/modules/event/services/event.service";
 import { eventRepository } from "@/modules/event/repositories/event.repository";
 
+import { leaderboardLogger as log } from "@/lib/logger/logger.scopes";
+import { record } from "@/modules/audit/services/audit.service";
+import type { AuditActor } from "@/modules/audit/types/audit.types";
+
 import { leaderboardRepository } from "../repositories/leaderboard.repository";
 import { LeaderboardScope } from "../types/leaderboard.enums";
 import type { UserRankResult } from "../types/leaderboard.types";
@@ -32,16 +36,20 @@ import type {
  * caller's transaction.
  */
 class LeaderboardService {
-  async getLeaderboard(page: number, pageSize: number): Promise<LeaderboardDTO> {
+  async getLeaderboard(
+    page: number,
+    pageSize: number,
+  ): Promise<LeaderboardDTO> {
     const { scope, frozenAt } = await this.resolveScope();
 
     if (scope === LeaderboardScope.FROZEN && frozenAt) {
-      const { rows, totalCount } = await leaderboardRepository.findFrozenEntries(
-        prisma,
-        frozenAt,
-        page,
-        pageSize,
-      );
+      const { rows, totalCount } =
+        await leaderboardRepository.findFrozenEntries(
+          prisma,
+          frozenAt,
+          page,
+          pageSize,
+        );
       return toLeaderboardDTO(rows, scope, page, pageSize, totalCount);
     }
 
@@ -69,14 +77,23 @@ class LeaderboardService {
    * "frozen since X"), but it never filters these rows the way it does
    * for players — see the mapper's toAdminLeaderboardDTO comment.
    */
-  async getAdminLeaderboard(page: number, pageSize: number): Promise<AdminLeaderboardDTO> {
+  async getAdminLeaderboard(
+    page: number,
+    pageSize: number,
+  ): Promise<AdminLeaderboardDTO> {
     const event = await eventService.getEvent(prisma);
     const { rows, totalCount } = await leaderboardRepository.findAdminEntries(
       prisma,
       page,
       pageSize,
     );
-    return toAdminLeaderboardDTO(rows, page, pageSize, totalCount, event.leaderboardFrozenAt);
+    return toAdminLeaderboardDTO(
+      rows,
+      page,
+      pageSize,
+      totalCount,
+      event.leaderboardFrozenAt,
+    );
   }
 
   /**
@@ -86,37 +103,90 @@ class LeaderboardService {
    * silently move the freeze point forward without an explicit unfreeze
    * first.
    */
-  async freezeLeaderboard(): Promise<void> {
+  async freezeLeaderboard(actor: AuditActor): Promise<void> {
     const event = await eventService.getEvent(prisma);
     const access = await eventService.getEventAccess(prisma);
 
     if (!access.hasStarted) {
+      log.warn("Leaderboard freeze rejected — event has not started", {
+        actorId: actor.actorId,
+      });
       throw ApiError.conflict(
         ErrorCode.VALIDATION_ERROR,
         "Cannot freeze the leaderboard before the event has started.",
       );
     }
     if (event.leaderboardFrozenAt) {
+      log.warn("Leaderboard freeze rejected — already frozen", {
+        actorId: actor.actorId,
+        frozenAt: event.leaderboardFrozenAt,
+      });
+
       throw ApiError.conflict(
         ErrorCode.VALIDATION_ERROR,
         "The leaderboard is already frozen.",
       );
     }
 
-    await eventRepository.update(prisma, { leaderboardFrozenAt: new Date() });
+    const frozenAt = new Date();
+
+    try {
+      await eventRepository.update(prisma, { leaderboardFrozenAt: new Date() });
+    } catch (error) {
+      log.error("Failed to persist leaderboard freeze", error, {
+        actorId: actor.actorId,
+      });
+      throw error;
+    }
+
+    log.info("Leaderboard frozen", { actorId: actor.actorId, frozenAt });
+
+    await record(prisma, {
+      eventKey: "LEADERBOARD_FROZEN",
+      actor,
+      success: true,
+      resourceName: "Leaderboard",
+      metadata: { frozenAt: frozenAt.toISOString() },
+    });
   }
 
-  async unfreezeLeaderboard(): Promise<void> {
+  async unfreezeLeaderboard(actor: AuditActor): Promise<void> {
     const event = await eventService.getEvent(prisma);
 
     if (!event.leaderboardFrozenAt) {
+      log.warn("Leaderboard unfreeze rejected — not currently frozen", {
+        actorId: actor.actorId,
+      });
+
       throw ApiError.conflict(
         ErrorCode.VALIDATION_ERROR,
         "The leaderboard is not currently frozen.",
       );
     }
 
-    await eventRepository.update(prisma, { leaderboardFrozenAt: null });
+    const previouslyFrozenAt = event.leaderboardFrozenAt;
+
+    try {
+      await eventRepository.update(prisma, { leaderboardFrozenAt: null });
+    } catch (error) {
+      log.error("Failed to persist leaderboard unfreeze", error, {
+        actorId: actor.actorId,
+      });
+      throw error;
+    }
+
+    log.info("Leaderboard unfrozen", {
+      actorId: actor.actorId,
+      previouslyFrozenAt,
+    });
+
+    await record(prisma, {
+      eventKey: "LEADERBOARD_UNFROZEN",
+      actor,
+      success: true,
+      resourceName: "Leaderboard",
+      metadata: { previouslyFrozenAt: previouslyFrozenAt.toISOString() },
+    });
   }
 
   /**
@@ -125,7 +195,10 @@ class LeaderboardService {
    * don't store" discipline as getEventAccess: a freeze toggled mid-event
    * must take effect on the very next request, not after some TTL.
    */
-  private async resolveScope(): Promise<{ scope: LeaderboardScope; frozenAt: Date | null }> {
+  private async resolveScope(): Promise<{
+    scope: LeaderboardScope;
+    frozenAt: Date | null;
+  }> {
     const event = await eventService.getEvent(prisma);
     return event.leaderboardFrozenAt
       ? { scope: LeaderboardScope.FROZEN, frozenAt: event.leaderboardFrozenAt }
@@ -142,7 +215,13 @@ class LeaderboardService {
 
     const result: UserRankResult = lookup
       ? { scope, ...lookup }
-      : { scope, rank: null, totalXp: 0, solvedChallenges: 0, lastSolvedAt: null };
+      : {
+          scope,
+          rank: null,
+          totalXp: 0,
+          solvedChallenges: 0,
+          lastSolvedAt: null,
+        };
 
     return toUserRankDTO(result);
   }
