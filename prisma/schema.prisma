@@ -226,6 +226,7 @@ model User {
   updatedAt          DateTime          @updatedAt
   leaderboardEntries LeaderboardEntry?
   auditLogs          AuditLog[]
+  playerHints        PlayerHint[]
 
   @@map("users")
 }
@@ -358,6 +359,7 @@ model Challenge {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  hints     Hint[]
 
   @@unique([chapterId, displayOrder])
   @@map("challenges")
@@ -715,4 +717,57 @@ model ChoiceSelection {
   @@id([userId, sceneId])
   @@index([choiceId])
   @@map("choice_selections")
+}
+
+// ======================================================
+// Hint Module
+// ======================================================
+
+enum HintLevel {
+  LEVEL_1
+  LEVEL_2
+  LEVEL_3
+}
+
+model Hint {
+  id String @id @default(cuid())
+
+  challengeId String
+
+  title   String @db.VarChar(100)
+  content String @db.Text
+
+  level HintLevel
+
+  xpCost Int @default(0)
+
+  status ContentStatus @default(DRAFT)
+
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  playerHints PlayerHint[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([challengeId, level])
+  @@index([challengeId, level])
+  @@map("hints")
+}
+
+model PlayerHint {
+  userId String
+  hintId String
+
+  unlockedAt DateTime @default(now())
+
+  xpSpent Int @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  hint Hint @relation(fields: [hintId], references: [id], onDelete: Cascade)
+
+  @@id([userId, hintId])
+  @@index([hintId])
+  @@map("player_hints")
 }
