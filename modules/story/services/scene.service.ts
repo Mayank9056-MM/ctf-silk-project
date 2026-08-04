@@ -10,6 +10,8 @@ import { toSceneDTO } from "../utils/scene.mapper";
 import type { ResolvedScene } from "../types/scene.types";
 import type { SceneDTO } from "../types/scene.dto";
 
+import { storyLogger as log } from "@/lib/logger/logger.scopes";
+
 /**
  * Assembles a single scene's full player-facing response — dialogue,
  * choices, evidence preview, completion status — from a sceneId the
@@ -27,7 +29,7 @@ class SceneService {
    * silently tolerate.
    */
   async getScene(userId: string, sceneId: string): Promise<SceneDTO> {
-    const resolved = await this.resolveSceneContent(sceneId, {
+    const resolved = await this.resolveSceneContent(userId, sceneId, {
       requirePublished: true,
     });
     return this.assembleDTO(userId, resolved);
@@ -50,6 +52,10 @@ class SceneService {
     );
 
     if (!hasCompleted) {
+      log.debug("Replay requested for uncompleted or nonexistent scene", {
+        userId,
+        sceneId,
+      });
       throw ApiError.notFound(ErrorCode.NOT_FOUND, "Scene not found.");
     }
 
@@ -57,7 +63,7 @@ class SceneService {
     // published at some point; a scene should never become un-viewable
     // to a player who already has legitimate history with it, even if
     // it's later archived.
-    const resolved = await this.resolveSceneContent(sceneId, {
+    const resolved = await this.resolveSceneContent(userId, sceneId, {
       requirePublished: false,
     });
     return this.assembleDTO(userId, resolved, { isCompleted: true });
@@ -71,6 +77,7 @@ class SceneService {
    * purely to check it exists.
    */
   private async resolveSceneContent(
+    userId: string,
     sceneId: string,
     options: { requirePublished: boolean },
   ): Promise<ResolvedScene> {
@@ -80,10 +87,24 @@ class SceneService {
     ]);
 
     if (!scene) {
+      if (!options.requirePublished) {
+        log.error(
+          "Completed scene missing its content — data integrity issue",
+          undefined,
+          { userId, sceneId },
+        );
+      } else {
+        log.warn("Scene lookup missed", { userId, sceneId });
+      }
       throw ApiError.notFound(ErrorCode.NOT_FOUND, "Scene not found.");
     }
 
     if (options.requirePublished && scene.status !== ContentStatus.PUBLISHED) {
+      log.error("Unpublished scene reached via player-facing path", undefined, {
+        userId,
+        sceneId,
+        status: scene.status,
+      });
       throw ApiError.notFound(ErrorCode.NOT_FOUND, "Scene not found.");
     }
 
