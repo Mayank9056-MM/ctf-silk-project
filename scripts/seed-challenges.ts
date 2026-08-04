@@ -14,7 +14,7 @@ import { CHALLENGE_DIFFICULTY } from "@/modules/challenge/constants/challenge.co
 interface ChallengeSeed {
   slug: string;
   title: string;
-  chapter: number;
+  chapterId: string;
   /** Position within its chapter — unique per chapter, starting at 1. */
   displayOrder: number;
   difficulty: number;
@@ -36,7 +36,7 @@ const CHALLENGES: ChallengeSeed[] = [
   {
     slug: "closed-case-file",
     title: "The Closed Case File",
-    chapter: 1,
+    chapterId: "1",
     displayOrder: 1,
     difficulty: CHALLENGE_DIFFICULTY.EASY,
     xpReward: 100,
@@ -45,7 +45,7 @@ const CHALLENGES: ChallengeSeed[] = [
   {
     slug: "first-inconsistency",
     title: "First Inconsistency",
-    chapter: 1,
+    chapterId: "1",
     displayOrder: 2,
     difficulty: CHALLENGE_DIFFICULTY.EASY,
     xpReward: 100,
@@ -59,7 +59,7 @@ const CHALLENGES: ChallengeSeed[] = [
   {
     slug: "the-wallet-trail",
     title: "The Wallet Trail",
-    chapter: 2,
+    chapterId: "2",
     displayOrder: 1,
     difficulty: CHALLENGE_DIFFICULTY.MEDIUM,
     xpReward: 150,
@@ -69,7 +69,7 @@ const CHALLENGES: ChallengeSeed[] = [
   {
     slug: "encrypted-channel",
     title: "The Encrypted Channel",
-    chapter: 2,
+    chapterId: "2",
     displayOrder: 2,
     difficulty: CHALLENGE_DIFFICULTY.MEDIUM,
     xpReward: 150,
@@ -79,7 +79,7 @@ const CHALLENGES: ChallengeSeed[] = [
   {
     slug: "three-cities-one-thread",
     title: "Three Cities, One Thread",
-    chapter: 2,
+    chapterId: "2",
     displayOrder: 3,
     difficulty: CHALLENGE_DIFFICULTY.MEDIUM,
     xpReward: 175,
@@ -93,7 +93,7 @@ const CHALLENGES: ChallengeSeed[] = [
   {
     slug: "mirrored-market",
     title: "The Mirrored Marketplace",
-    chapter: 3,
+    chapterId: "3",
     displayOrder: 1,
     difficulty: CHALLENGE_DIFFICULTY.MEDIUM,
     xpReward: 175,
@@ -103,7 +103,7 @@ const CHALLENGES: ChallengeSeed[] = [
   {
     slug: "vendor-metadata-leak",
     title: "Vendor Metadata Leak",
-    chapter: 3,
+    chapterId: "3",
     displayOrder: 2,
     difficulty: CHALLENGE_DIFFICULTY.MEDIUM,
     xpReward: 175,
@@ -113,7 +113,7 @@ const CHALLENGES: ChallengeSeed[] = [
   {
     slug: "hidden-upload-folder",
     title: "The Hidden Upload Folder",
-    chapter: 3,
+    chapterId: "3",
     displayOrder: 3,
     difficulty: CHALLENGE_DIFFICULTY.HARD,
     xpReward: 200,
@@ -127,7 +127,7 @@ const CHALLENGES: ChallengeSeed[] = [
   {
     slug: "mixer-hop-trace",
     title: "Tracing the Mixer",
-    chapter: 4,
+    chapterId: "4",
     displayOrder: 1,
     difficulty: CHALLENGE_DIFFICULTY.HARD,
     xpReward: 200,
@@ -137,7 +137,7 @@ const CHALLENGES: ChallengeSeed[] = [
   {
     slug: "onion-service-recon",
     title: "Onion Service Recon",
-    chapter: 4,
+    chapterId: "4",
     displayOrder: 2,
     difficulty: CHALLENGE_DIFFICULTY.HARD,
     xpReward: 225,
@@ -147,7 +147,7 @@ const CHALLENGES: ChallengeSeed[] = [
   {
     slug: "brute-the-vault",
     title: "Brute the Vault",
-    chapter: 4,
+    chapterId: "4",
     displayOrder: 3,
     difficulty: CHALLENGE_DIFFICULTY.HARD,
     xpReward: 225,
@@ -161,7 +161,7 @@ const CHALLENGES: ChallengeSeed[] = [
   {
     slug: "warehouse-logs",
     title: "Warehouse Access Logs",
-    chapter: 5,
+    chapterId: "5",
     displayOrder: 1,
     difficulty: CHALLENGE_DIFFICULTY.HARD,
     xpReward: 250,
@@ -171,7 +171,7 @@ const CHALLENGES: ChallengeSeed[] = [
   {
     slug: "the-informant",
     title: "The Informant Inside",
-    chapter: 5,
+    chapterId: "5",
     displayOrder: 2,
     difficulty: CHALLENGE_DIFFICULTY.EXPERT,
     xpReward: 275,
@@ -185,7 +185,7 @@ const CHALLENGES: ChallengeSeed[] = [
   {
     slug: "the-org-chart",
     title: "Reconstructing the Org Chart",
-    chapter: 6,
+    chapterId: "6",
     displayOrder: 1,
     difficulty: CHALLENGE_DIFFICULTY.EXPERT,
     xpReward: 300,
@@ -195,7 +195,7 @@ const CHALLENGES: ChallengeSeed[] = [
   {
     slug: "who-is-robert",
     title: "Who Is Robert?",
-    chapter: 6,
+    chapterId: "6",
     displayOrder: 2,
     difficulty: CHALLENGE_DIFFICULTY.EXPERT,
     xpReward: 350,
@@ -222,10 +222,10 @@ function validateChallenges(challenges: ChallengeSeed[]): void {
 
   const chapterOrderKeys = new Set<string>();
   for (const challenge of challenges) {
-    const key = `${challenge.chapter}:${challenge.displayOrder}`;
+    const key = `${challenge.chapterId}:${challenge.displayOrder}`;
     if (chapterOrderKeys.has(key)) {
       errors.push(
-        `Duplicate (chapter, displayOrder) for "${challenge.slug}": chapter ${challenge.chapter}, order ${challenge.displayOrder}.`,
+        `Duplicate (chapter, displayOrder) for "${challenge.slug}": chapter ${challenge.chapterId}, order ${challenge.displayOrder}.`,
       );
     }
     chapterOrderKeys.add(key);
@@ -286,7 +286,7 @@ async function seedChallenges(): Promise<void> {
         where: { slug: challenge.slug },
         update: {
           title: challenge.title,
-          chapter: challenge.chapter,
+          chapterId: challenge.chapterId,
           displayOrder: challenge.displayOrder,
           difficulty: challenge.difficulty,
           xpReward: challenge.xpReward,
@@ -295,7 +295,7 @@ async function seedChallenges(): Promise<void> {
         create: {
           slug: challenge.slug,
           title: challenge.title,
-          chapter: challenge.chapter,
+          chapterId: challenge.chapterId,
           displayOrder: challenge.displayOrder,
           difficulty: challenge.difficulty,
           xpReward: challenge.xpReward,
