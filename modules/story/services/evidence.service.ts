@@ -3,7 +3,7 @@ import { ErrorCode } from "@/lib/errors/ErrorCode";
 import prisma from "@/lib/prisma";
 
 import { storyContentRepository } from "../repositories/story-content.repository";
-import { storyCache, storyCacheKeys } from "../utils/story-cache";
+import { storyCache, storyCacheKeys } from "../cache/story.cache";
 import {
   toEvidenceDTO,
   toEvidenceDTOList,
@@ -17,6 +17,8 @@ import type {
   AdminEvidenceDTO,
 } from "../types/evidence.dto";
 import { STORY_CONSTANTS } from "../constants/story.constants";
+
+import { storyLogger as log } from "@/lib/logger/logger.scopes";
 
 /**
  * Owns Evidence content — the investigation board. Same scope discipline
@@ -42,6 +44,7 @@ class EvidenceService {
     );
 
     if (!evidence) {
+      log.warn("Evidence lookup missed", { evidenceId });
       throw ApiError.notFound(ErrorCode.NOT_FOUND, "Evidence not found.");
     }
 
@@ -63,7 +66,14 @@ class EvidenceService {
       STORY_CONSTANTS.EVIDENCE_CACHE_TTL_MS,
     );
 
-    return evidence ? toEvidencePreviewDTO(evidence) : null;
+    if (!evidence) {
+      log.warn("Scene's declared evidence reference resolved to nothing", {
+        evidenceId,
+      });
+      return null;
+    }
+
+    return toEvidencePreviewDTO(evidence);
   }
 
   /**
@@ -103,6 +113,8 @@ class EvidenceService {
     );
 
     if (!evidence) {
+      log.warn("Admin evidence lookup missed", { evidenceId });
+
       throw ApiError.notFound(ErrorCode.NOT_FOUND, "Evidence not found.");
     }
 
