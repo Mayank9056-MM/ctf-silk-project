@@ -5,12 +5,17 @@ import { ErrorCode } from "@/lib/errors/ErrorCode";
 import { getCountDown } from "../utils/countdown";
 import { getEventAccess } from "../utils/get-event-access";
 import type { EventAccess, EventCountdown } from "../types/event.types";
+import { eventLogger as log } from "@/lib/logger/logger.scopes";
 
 export class EventService {
   async getEvent(db: DbClient) {
     const event = await eventRepository.findSingleton(db);
 
     if (!event) {
+      log.error(
+        "Event singleton is missing — every gated action on the platform will fail until this is seeded",
+      );
+
       throw ApiError.notFound(
         ErrorCode.NOT_FOUND,
         "Event has not been initialized.",
