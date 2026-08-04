@@ -10,6 +10,8 @@ import {
 import type { DialogueSequenceDTO } from "../types/dialogue.dto";
 import type { AdminDialogueLineDTO } from "../types/dialogue.dto";
 
+import { storyLogger as log } from "@/lib/logger/logger.scopes";
+
 /**
  * Owns dialogue content for a scene. Deliberately does NOT check event
  * access, scene publish status, or unlock rules — those apply equally
@@ -33,6 +35,7 @@ class DialogueService {
     );
 
     if (!scene) {
+      log.warn("Dialogue sequence requested for missing scene", { sceneId });
       throw ApiError.notFound(ErrorCode.NOT_FOUND, "Scene not found.");
     }
 
@@ -54,6 +57,9 @@ class DialogueService {
     );
 
     if (!scene) {
+      log.warn("Admin dialogue lookup requested for missing scene", {
+        sceneId,
+      });
       throw ApiError.notFound(ErrorCode.NOT_FOUND, "Scene not found.");
     }
 
@@ -77,6 +83,10 @@ class DialogueService {
     const line = lines.find((candidate) => candidate.id === dialogueLineId);
 
     if (!line) {
+      log.warn("Dialogue line not found in scene", {
+        sceneId,
+        dialogueLineId,
+      });
       throw ApiError.notFound(ErrorCode.NOT_FOUND, "Dialogue line not found.");
     }
 

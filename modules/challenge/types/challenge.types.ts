@@ -26,7 +26,7 @@ export type ChallengeListItem = Pick<
   | "id"
   | "title"
   | "slug"
-  | "chapter"
+  | "chapterId"
   | "displayOrder"
   | "difficulty"
   | "xpReward"

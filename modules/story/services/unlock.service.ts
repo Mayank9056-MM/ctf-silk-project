@@ -13,6 +13,8 @@ import { storyContentRepository } from "../repositories/story-content.repository
 import { storyProgressRepository } from "../repositories/story-progress.repository";
 import type { UnlockEvaluationResult } from "../types/story.types";
 
+import { storyLogger as log } from "@/lib/logger/logger.scopes";
+
 /**
  * Evaluates UnlockRules — the general gating mechanism from the domain
  * design doc. Combination logic across multiple rules on one target is
@@ -87,13 +89,13 @@ class UnlockService {
   ): Promise<boolean> {
     switch (rule.conditionType) {
       case UnlockConditionType.CHALLENGE_SOLVED:
-        return this.isChallengeSolved(userId, rule.referenceId);
+        return this.isChallengeSolved(userId,rule.id, rule.referenceId);
       case UnlockConditionType.CHAPTER_COMPLETED:
-        return this.isChapterCompleted(userId, rule.referenceId);
+        return this.isChapterCompleted(userId,rule.id, rule.referenceId);
       case UnlockConditionType.SCENE_COMPLETED:
-        return this.isSceneCompleted(userId, rule.referenceId);
+        return this.isSceneCompleted(userId,rule.id, rule.referenceId);
       case UnlockConditionType.CHOICE_SELECTED:
-        return this.isChoiceSelected(userId, rule.referenceId);
+        return this.isChoiceSelected(userId,rule.id, rule.referenceId);
       case UnlockConditionType.EVENT_LIVE:
         return this.isEventLive();
       default:
@@ -106,10 +108,12 @@ class UnlockService {
 
   private async isChallengeSolved(
     userId: string,
+    ruleId: string,
     referenceId: string | null,
   ): Promise<boolean> {
     if (!referenceId)
-      return this.failClosed("CHALLENGE_SOLVED rule missing referenceId");
+      return this.failClosed("CHALLENGE_SOLVED rule missing referenceId", {
+    ruleId,userId});
     return submissionRepository.existsSolveByUserAndChallenge(
       prisma,
       userId,
@@ -119,10 +123,12 @@ class UnlockService {
 
   private async isSceneCompleted(
     userId: string,
+    ruleId: string,
     referenceId: string | null,
   ): Promise<boolean> {
     if (!referenceId)
-      return this.failClosed("SCENE_COMPLETED rule missing referenceId");
+      return this.failClosed("SCENE_COMPLETED rule missing referenceId",{
+    ruleId, userId});
     return storyProgressRepository.hasCompletedScene(
       prisma,
       userId,
@@ -141,10 +147,14 @@ class UnlockService {
    */
   private async isChapterCompleted(
     userId: string,
+    ruleId: string,
     referenceId: string | null,
   ): Promise<boolean> {
     if (!referenceId)
-      return this.failClosed("CHAPTER_COMPLETED rule missing referenceId");
+      return this.failClosed("CHAPTER_COMPLETED rule missing referenceId", {
+        ruleId,
+        userId,
+      });
 
     const progress = await storyProgressRepository.findProgress(prisma, userId);
     if (!progress) return false;
@@ -159,6 +169,11 @@ class UnlockService {
     if (!targetChapter || !currentChapter) {
       return this.failClosed(
         `CHAPTER_COMPLETED references a missing chapter (${referenceId})`,
+        {
+          ruleId,
+          userId,
+          referenceId,
+        },
       );
     }
 
@@ -167,10 +182,14 @@ class UnlockService {
 
   private async isChoiceSelected(
     userId: string,
+    ruleId: string,
     referenceId: string | null,
   ): Promise<boolean> {
     if (!referenceId)
-      return this.failClosed("CHOICE_SELECTED rule missing referenceId");
+      return this.failClosed("CHOICE_SELECTED rule missing referenceId", {
+        ruleId,
+        userId,
+      });
     return storyProgressRepository.existsChoiceSelectionByChoiceId(
       prisma,
       userId,
@@ -183,14 +202,22 @@ class UnlockService {
     return access.canAccessGame;
   }
 
-  private failClosed(message: string): boolean {
-    console.error(
-      `[unlockService] ${message} — failing closed (treating as locked).`,
+  private failClosed(
+    message: string,
+    context: Record<string, unknown>,
+  ): boolean {
+    log.error(
+      "Unlock rule integrity problem — failing closed (locked)",
+      undefined,
+      { reason: message, ...context },
     );
     return false;
   }
 
   private assertUnreachable(value: never): never {
+    log.error("Unhandled UnlockConditionType reached at runtime", undefined, {
+      conditionType: String(value),
+    });
     throw new Error(`Unhandled UnlockConditionType: ${value}`);
   }
 }
