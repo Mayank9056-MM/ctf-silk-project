@@ -15,3 +15,4 @@ export const eventLogger = new Logger({ module: "event" });
 export const storyLogger = new Logger({ module: "story" });
 export const rateLimitLogger = new Logger({ module: "rate-limit" });
 export const auditLogger = new Logger({ module: "audit" });
+export const hintLogger = new Logger({ module: "hint" });

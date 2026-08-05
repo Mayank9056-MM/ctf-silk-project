@@ -254,6 +254,20 @@ class LeaderboardRepository {
         "updatedAt" = ${solvedAt}
     `;
   }
+
+  async decrementXp(
+    db: DbClient,
+    userId: string,
+    amount: number,
+  ): Promise<boolean> {
+    const affectedRows = await db.$executeRaw`
+      UPDATE "leaderboard_entries"
+      SET "totalXp" = "totalXp" - ${amount}
+      WHERE "userId" = ${userId} AND "totalXp" >= ${amount}
+    `;
+
+    return affectedRows > 0;
+  }
 }
 
 export const leaderboardRepository = new LeaderboardRepository();
