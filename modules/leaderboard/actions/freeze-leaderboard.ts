@@ -6,6 +6,8 @@ import { ApiError } from "@/lib/errors/ApiError";
 
 import { leaderboardService } from "../services/leaderboard.service";
 import type { ActionState } from "@/lib/action-state";
+import { AuditActor } from "@/modules/audit/types/audit.types";
+import { AuditActorType } from "@/app/generated/prisma/enums";
 
 /**
  * Admin-only. Gated on Permission.MANAGE_EVENTS since leaderboardFrozenAt
@@ -22,8 +24,16 @@ import type { ActionState } from "@/lib/action-state";
  */
 export async function freezeLeaderboard(): Promise<ActionState<void>> {
   try {
-    await requirePermission(Permission.MANAGE_EVENTS);
-    await leaderboardService.freezeLeaderboard();
+    const user = await requirePermission(Permission.MANAGE_EVENTS);
+
+    const actor: AuditActor = {
+      actorType: AuditActorType.ADMIN,
+      actorId: user.userId,
+      actorUsername: null,
+      actorRole: user.role,
+    };
+
+    await leaderboardService.freezeLeaderboard(actor);
 
     return { success: true, message: "Leaderboard frozen." };
   } catch (error) {
