@@ -227,6 +227,7 @@ model User {
   leaderboardEntries LeaderboardEntry?
   auditLogs          AuditLog[]
   playerHints        PlayerHint[]
+  announcements      Announcement[]
 
   @@map("users")
 }
@@ -770,4 +771,36 @@ model PlayerHint {
   @@id([userId, hintId])
   @@index([hintId])
   @@map("player_hints")
+}
+
+// ======================================================
+// Annoucement Module
+// ======================================================
+
+enum AnnouncementPriority {
+  NORMAL
+  IMPORTANT
+  CRITICAL
+}
+
+model Announcement {
+  id String @id @default(cuid())
+
+  title   String @db.VarChar(150)
+  message String @db.Text
+
+  priority AnnouncementPriority @default(NORMAL)
+
+  status ContentStatus @default(PUBLISHED)
+
+  createdById String
+
+  createdBy User @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([createdById])
+  @@map("announcements")
 }
