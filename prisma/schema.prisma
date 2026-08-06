@@ -98,6 +98,11 @@ enum AuditAction {
   EXPORT_LEADERBOARD
   EXPORT_SUBMISSIONS
   EXPORT_AUDIT
+
+  // Announcements
+  ANNOUNCEMENT_CREATED
+  ANNOUNCEMENT_UPDATED
+  ANNOUNCEMENT_ARCHIVED
 }
 
 enum AuditResourceType {
@@ -111,6 +116,7 @@ enum AuditResourceType {
   SYSTEM
   EVIDENCE
   UNLOCK_RULE
+  ANNOUNCEMENT
 }
 
 model AuditLog {
