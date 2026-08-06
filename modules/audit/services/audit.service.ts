@@ -10,7 +10,6 @@ import { getRequestMetadata } from "@/lib/get-request-metadata";
 import type { Prisma } from "@/app/generated/prisma/client";
 
 import {
-  AUDIT_EVENTS,
   getAuditEventDefinition,
   type AuditEventKey,
 } from "../constants/audit.events";
