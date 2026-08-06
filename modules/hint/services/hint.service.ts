@@ -15,8 +15,6 @@ import {
   canUnlockHint,
 } from "../utils/hint-access";
 import { hasEnoughXp, normalizeXpCost } from "../utils/hint-pricing";
-import { HINT_MESSAGES } from "../constants/hint.messages";
-import { UNLOCK_MESSAGES } from "../constants/hint.messages";
 import type { HintWithPlayerState } from "../types/hint.types";
 import type { HintListDTO, HintUnlockDTO } from "../types/hint.dto";
 
@@ -111,7 +109,7 @@ class HintService {
     const targetHint = await hintRepository.findHintById(prisma, hintId);
 
     if (!targetHint) {
-      throw ApiError.notFound(ErrorCode.NOT_FOUND, HINT_MESSAGES.NOT_FOUND);
+      throw ApiError.notFound(ErrorCode.NOT_FOUND, "Hint not found.");
     }
 
     const hints = await hintRepository.findChallengeHints(
@@ -133,7 +131,7 @@ class HintService {
         undefined,
         { userId, hintId, challengeId: targetHint.challengeId },
       );
-      throw ApiError.notFound(ErrorCode.NOT_FOUND, HINT_MESSAGES.NOT_FOUND);
+      throw ApiError.notFound(ErrorCode.NOT_FOUND, "Hint not found.");
     }
 
     // Optimistic UX only — this reads a snapshot taken before the
@@ -146,14 +144,14 @@ class HintService {
     if (isHintUnlocked(targetState)) {
       throw ApiError.conflict(
         ErrorCode.VALIDATION_ERROR,
-        UNLOCK_MESSAGES.ALREADY_UNLOCKED,
+        "You have already unlocked this hint.",
       );
     }
 
     if (!hasUnlockedPreviousLevel(hints, targetState.hint.level)) {
       throw ApiError.conflict(
         ErrorCode.VALIDATION_ERROR,
-        UNLOCK_MESSAGES.PREVIOUS_HINT_REQUIRED,
+        "You must unlock the previous hint first.",
       );
     }
 
@@ -163,7 +161,7 @@ class HintService {
     if (!hasEnoughXp(currentXp, cost)) {
       throw ApiError.conflict(
         ErrorCode.VALIDATION_ERROR,
-        UNLOCK_MESSAGES.INSUFFICIENT_XP,
+        "You do not have enough XP to unlock this hint.",
       );
     }
 
@@ -193,7 +191,7 @@ class HintService {
           ) {
             throw ApiError.conflict(
               ErrorCode.VALIDATION_ERROR,
-              UNLOCK_MESSAGES.ALREADY_UNLOCKED,
+              "You have already unlocked this hint.",
             );
           }
           throw error;
@@ -223,7 +221,7 @@ class HintService {
             // it, so neither write takes effect.
             throw ApiError.conflict(
               ErrorCode.VALIDATION_ERROR,
-              UNLOCK_MESSAGES.INSUFFICIENT_XP,
+              "You do not have enough XP to unlock this hint.",
             );
           }
         }
@@ -270,10 +268,7 @@ class HintService {
       // those into CHALLENGE_NOT_FOUND would hide a different, possibly
       // more urgent problem behind a misleading 404.
       if (error instanceof ApiError && error.code === ErrorCode.NOT_FOUND) {
-        throw ApiError.notFound(
-          ErrorCode.NOT_FOUND,
-          HINT_MESSAGES.CHALLENGE_NOT_FOUND,
-        );
+        throw ApiError.notFound(ErrorCode.NOT_FOUND, "Challenge not found.");
       }
       throw error;
     }
