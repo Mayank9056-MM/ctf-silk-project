@@ -6,11 +6,21 @@ import { ApiError } from "@/lib/errors/ApiError";
 
 import { leaderboardService } from "../services/leaderboard.service";
 import type { ActionState } from "@/lib/action-state";
+import { AuditActor } from "@/modules/audit/types/audit.types";
+import { AuditActorType } from "@/app/generated/prisma/enums";
 
 export async function unfreezeLeaderboard(): Promise<ActionState<void>> {
   try {
-    await requirePermission(Permission.MANAGE_EVENTS);
-    await leaderboardService.unfreezeLeaderboard();
+    const user = await requirePermission(Permission.MANAGE_EVENTS);
+
+    const actor: AuditActor = {
+      actorType: AuditActorType.ADMIN,
+      actorId: user.userId,
+      actorUsername: null,
+      actorRole: user.role,
+    };
+
+    await leaderboardService.unfreezeLeaderboard(actor);
 
     return { success: true, message: "Leaderboard unfrozen." };
   } catch (error) {
