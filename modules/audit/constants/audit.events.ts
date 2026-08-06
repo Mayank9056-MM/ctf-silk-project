@@ -414,6 +414,34 @@ export const AUDIT_EVENTS = {
     description: "An admin exported the audit log itself.",
     severity: AuditSeverity.WARNING,
   },
+
+  // ═══════════════ Announcement CMS ═══════════════
+  ANNOUNCEMENT_CREATED: {
+    action: AuditAction.ANNOUNCEMENT_CREATED,
+    resourceType: AuditResourceType.ANNOUNCEMENT,
+    category: AuditCategory.CMS,
+    description: "An admin created a new announcement.",
+    severity: AuditSeverity.INFO,
+    expectedActorTypes: [AuditActorType.ADMIN],
+  },
+
+  ANNOUNCEMENT_UPDATED: {
+    action: AuditAction.ANNOUNCEMENT_UPDATED,
+    resourceType: AuditResourceType.ANNOUNCEMENT,
+    category: AuditCategory.CMS,
+    description: "An admin updated an announcement.",
+    severity: AuditSeverity.WARNING,
+    expectedActorTypes: [AuditActorType.ADMIN],
+  },
+
+  ANNOUNCEMENT_ARCHIVED: {
+    action: AuditAction.ANNOUNCEMENT_ARCHIVED,
+    resourceType: AuditResourceType.ANNOUNCEMENT,
+    category: AuditCategory.CMS,
+    description: "An admin archived an announcement.",
+    severity: AuditSeverity.WARNING,
+    expectedActorTypes: [AuditActorType.ADMIN],
+  },
 } as const satisfies Record<string, AuditEventDefinition>;
 
 export type AuditEventKey = keyof typeof AUDIT_EVENTS;
