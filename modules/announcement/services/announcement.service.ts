@@ -228,12 +228,7 @@ class AnnouncementService {
     return toArchiveAnnouncementDTO(archived);
   }
 
-  /**
-   * Single-announcement read. NOT gated by status or actor as specified
-   * — see this file's own leading note. As written, this exposes any
-   * status (including DRAFT/ARCHIVED) to any caller; that needs a
-   * decision before this ships, not a silent assumption either way.
-   */
+
   async getAnnouncement(id: string): Promise<AnnouncementDTO> {
     const announcement = await this.assertAnnouncementExists(id);
 
