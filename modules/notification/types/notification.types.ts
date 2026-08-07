@@ -1,7 +1,9 @@
-import {
+import type {
   Notification,
   NotificationPriority,
+  NotificationResourceType,
   NotificationType,
+  User,
 } from "@/app/generated/prisma/client";
 
 /**
@@ -12,10 +14,7 @@ import {
  * Prisma intersection type throughout the module.
  */
 export type NotificationWithUser = Notification & {
-  user: {
-    id: string;
-    fullName: string;
-  };
+  user: Pick<User, "id" | "fullName">;
 };
 
 /**
@@ -39,7 +38,7 @@ export interface CreateNotificationInput {
    * ANNOUNCEMENT
    * EVENT
    */
-  resourceType?: string;
+  resourceType?: NotificationResourceType;
   resourceId?: string;
 }
 
