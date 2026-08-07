@@ -10,8 +10,6 @@ import type {
   AnnouncementListResult,
 } from "../types/announcement.types";
 
-// announcement.repository.ts
-
 class AnnouncementRepository {
   /** Author fields exposed on every AnnouncementWithAuthor read — no email, matching the module's own DTO decision not to expose internal user information beyond a display name. */
   private readonly authorSelect = {
@@ -87,6 +85,13 @@ class AnnouncementRepository {
    * exists first — an update against a nonexistent id fails naturally at
    * the database level, and the service layer decides what that means
    * for the caller, not this method.
+   *
+   * `id` is taken as its own parameter, separate from
+   * UpdateAnnouncementInput.id — the input type already carries an `id`
+   * field, making the two slightly redundant; this method uses the
+   * explicitly-passed argument for the WHERE clause and leaves
+   * `input.id` unused here, matching the three-argument shape requested
+   * rather than guessing which one should win.
    *
    * Every content field on UpdateAnnouncementInput is optional — Prisma
    * omits `undefined` values from the UPDATE rather than nulling them
