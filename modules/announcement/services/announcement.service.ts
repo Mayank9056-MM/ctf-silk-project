@@ -1,5 +1,4 @@
 import {
-  ContentStatus,
   Prisma,
   type Announcement,
 } from "@/app/generated/prisma/client";
