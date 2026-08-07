@@ -25,6 +25,20 @@ export interface AnnouncementDTO {
   updatedAt: Date;
 }
 
+export interface AnnouncementAdminDTO {
+  id: string;
+  title: string;
+  message: string;
+  priority: AnnouncementPriority;
+  status: ContentStatus;
+  createdAt: Date;
+  updatedAt: Date;
+  author: {
+    id: string;
+    name: string;
+  };
+}
+
 /**
  * Paginated announcement list returned to the frontend.
  */
