@@ -1,4 +1,4 @@
-import {
+import type {
   NotificationPriority,
   NotificationResourceType,
   NotificationType,
@@ -66,6 +66,11 @@ export interface MarkNotificationAsReadDTO {
 
 /**
  * Response after marking every notification as read.
+ *
+ * Deliberately NOT `{ notification: NotificationDTO }` — a bulk
+ * operation has no single entity to return, so this reports the count
+ * of what actually changed instead of forcing an unrelated shape onto a
+ * fundamentally different kind of result.
  */
 export interface MarkAllNotificationsAsReadDTO {
   /**
