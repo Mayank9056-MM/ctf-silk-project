@@ -2,11 +2,10 @@
 
 import { requireAuth } from "@/modules/auth/authorization/require-auth";
 import { announcementService } from "../services/announcement.service";
-import {
-  createAnnouncementSchema,
-} from "../validations/create-announcement.schema";
+import { createAnnouncementSchema } from "../validations/create-announcement.schema";
 import type { CreateAnnouncementDTO } from "../types/announcement.dto";
 import type { AuditActor } from "@/modules/audit/types/audit.types";
+import { AuditActorType } from "@/app/generated/prisma/enums";
 
 /**
  * Creates a new announcement.
@@ -30,7 +29,7 @@ export async function createAnnouncement(
   const user = await requireAuth();
 
   const actor: AuditActor = {
-    actorType: "ADMIN",
+    actorType: AuditActorType.ADMIN,
     actorId: user.userId,
     actorUsername: user.name,
     actorRole: user.role,

@@ -16,7 +16,7 @@ export const getAnnouncementsSchema = z.object({
     .positive("Page size must be greater than zero.")
     .max(
       ANNOUNCEMENT_PAGINATION.MAX_PAGE_SIZE,
-      `Page size cannot exceed ${ANNOUNCEMENT_PAGINATION.DEFAULT_PAGE_SIZE}`,
+      `Page size cannot exceed ${ANNOUNCEMENT_PAGINATION.MAX_PAGE_SIZE}`,
     )
     .default(ANNOUNCEMENT_PAGINATION.DEFAULT_PAGE_SIZE),
 });
