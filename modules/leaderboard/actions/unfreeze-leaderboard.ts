@@ -16,7 +16,7 @@ export async function unfreezeLeaderboard(): Promise<ActionState<void>> {
     const actor: AuditActor = {
       actorType: AuditActorType.ADMIN,
       actorId: user.userId,
-      actorUsername: null,
+      actorUsername: user.name,
       actorRole: user.role,
     };
 
