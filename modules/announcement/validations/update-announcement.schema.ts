@@ -3,7 +3,6 @@
 import { z } from "zod";
 import {
   createAnnouncementSchema,
-  CreateAnnouncementSchema,
 } from "./create-announcement.schema";
 
 export const updateAnnouncementSchema = createAnnouncementSchema
