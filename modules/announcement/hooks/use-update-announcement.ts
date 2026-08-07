@@ -1,39 +1,36 @@
-"use server";
+"use client";
 
-import { requireAuth } from "@/modules/auth/authorization/require-auth";
-import { announcementService } from "../services/announcement.service";
-import { updateAnnouncementSchema } from "../validations/update-announcement.schema";
-import type { UpdateAnnouncementDTO } from "../types/announcement.dto";
-import type { AuditActor } from "@/modules/audit/types/audit.types";
-import { AuditActorType } from "@/app/generated/prisma/enums";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { UpdateAnnouncementDTO } from "../types/announcement.dto";
+import { UpdateAnnouncementSchema } from "../validations/update-announcement.schema";
+import { updateAnnouncement } from "../actions/update-announcement";
+import { announcementKeys } from "../constants/announcement.keys";
 
 /**
- * Updates an existing announcement's content.
+ * Updates an existing announcement and invalidates both its detail
+ * cache and the announcement list cache on success.
  *
- * Auth → validate → service → return. `id` is required by the schema
- * and destructured out separately from the rest of the payload,
- * matching announcementService.updateAnnouncement()'s own
- * (actor, id, input) signature.
+ * Returns the standard TanStack Query mutation object
+ * (`mutate`/`mutateAsync`/`isPending`/`isError`/`error`/etc.) untouched
+ * — this hook does not wrap, rename, or reshape any part of it. On
+ * success, `data` is exactly the UpdateAnnouncementDTO the Server
+ * Action returned.
  *
- * Errors are not caught here. A validation failure (thrown by
- * updateAnnouncementSchema.parse()), a permission failure, a
- * not-found, or an unexpected service failure all propagate as the
- * real error they are — this action does not translate, wrap, or
- * swallow any of them.
+ * Errors are not caught or transformed here — a validation failure, a
+ * permission failure, a not-found, or an unexpected server error all
+ * surface through the mutation's own `error`/`isError` state exactly as
+ * updateAnnouncement() threw them.
  */
-export async function updateAnnouncement(
-  input: unknown,
-): Promise<UpdateAnnouncementDTO> {
-  const user = await requireAuth();
+export function useUpdateAnnouncement() {
+  const queryClient = useQueryClient();
 
-  const actor: AuditActor = {
-    actorType: AuditActorType.ADMIN,
-    actorId: user.userId,
-    actorUsername: user.name,
-    actorRole: user.role,
-  };
-
-  const { id, ...rest } = updateAnnouncementSchema.parse(input);
-
-  return announcementService.updateAnnouncement(actor, id, rest);
+  return useMutation<UpdateAnnouncementDTO, Error, UpdateAnnouncementSchema>({
+    mutationFn: (input) => updateAnnouncement(input),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: announcementKeys.detail(variables.id),
+      });
+      queryClient.invalidateQueries({ queryKey: announcementKeys.lists() });
+    },
+  });
 }
