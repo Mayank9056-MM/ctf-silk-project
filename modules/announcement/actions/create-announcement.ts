@@ -2,7 +2,9 @@
 
 import { requireAuth } from "@/modules/auth/authorization/require-auth";
 import { announcementService } from "../services/announcement.service";
-import { createAnnouncementSchema } from "../validations/create-announcement.schema";
+import {
+  createAnnouncementSchema,
+} from "../validations/create-announcement.schema";
 import type { CreateAnnouncementDTO } from "../types/announcement.dto";
 import type { AuditActor } from "@/modules/audit/types/audit.types";
 
