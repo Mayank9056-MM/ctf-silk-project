@@ -19,6 +19,7 @@ import { ErrorCode } from "@/lib/errors/ErrorCode";
 export interface AuthenticatedUser {
   userId: string;
   role: Role;
+  name: string;
 }
 
 /**
@@ -57,7 +58,11 @@ export async function requireAuth(): Promise<AuthenticatedUser> {
 
   try {
     const payload = accessTokenService.verifyAccessToken(accessToken);
-    return { userId: payload.userId, role: payload.role };
+    return {
+      userId: payload.userId,
+      role: payload.role,
+      name: payload.username,
+    };
   } catch (error) {
     // Both branches map to INVALID_ACCESS_TOKEN: from the caller's
     // perspective "expired" and "tampered/malformed" require the same
