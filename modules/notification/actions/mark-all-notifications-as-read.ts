@@ -4,10 +4,10 @@
 
 import { requireAuth } from "@/modules/auth/authorization/require-auth";
 import { notificationService } from "@/modules/notification/services/notification.service";
-import { markNotificationAsReadSchema } from "@/modules/notification/validations/mark-notification-as-read.schema";
 import type { MarkNotificationAsReadDTO } from "@/modules/notification/types/notification.dto";
 import type { AuditActor } from "@/modules/audit/types/audit.types";
 import { AuditActorType } from "@/app/generated/prisma/enums";
+import { markAllNotificationsAsReadSchema } from "../validations/mark-all-notifications-as-read.schema";
 
 /**
  * Marks one notification as read, if — and only if — it belongs to the
@@ -38,7 +38,7 @@ export async function markNotificationAsRead(
     actorRole: user.role,
   };
 
-  const { id } = markNotificationAsReadSchema.parse(input);
+  const { id } = markAllNotificationsAsReadSchema.parse(input);
 
   return notificationService.markNotificationAsRead(actor, id);
 }
