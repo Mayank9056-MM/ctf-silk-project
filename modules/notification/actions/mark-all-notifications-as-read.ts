@@ -1,34 +1,14 @@
 "use server";
 
-// mark-notification-as-read.ts
+// mark-all-notifications-as-read.ts
 
 import { requireAuth } from "@/modules/auth/authorization/require-auth";
 import { notificationService } from "@/modules/notification/services/notification.service";
-import type { MarkNotificationAsReadDTO } from "@/modules/notification/types/notification.dto";
+import type { MarkAllNotificationsAsReadDTO } from "@/modules/notification/types/notification.dto";
 import type { AuditActor } from "@/modules/audit/types/audit.types";
 import { AuditActorType } from "@/app/generated/prisma/enums";
-import { markAllNotificationsAsReadSchema } from "../validations/mark-all-notifications-as-read.schema";
 
-/**
- * Marks one notification as read, if — and only if — it belongs to the
- * authenticated user.
- *
- * Auth → validate → service → return. Ownership is enforced entirely
- * inside notificationService.markNotificationAsRead() (see that
- * method's findOwnedNotificationOrThrow() helper) — a mismatch between
- * the requested id's owner and the authenticated actor surfaces as
- * NOT_FOUND, not FORBIDDEN, by that service's own deliberate design.
- * This action does not know or care which outcome occurred; it only
- * propagates whatever the service returns or throws.
- *
- * Errors are not caught here. A validation failure (thrown by
- * markNotificationAsReadSchema.parse()), a not-found/not-owned
- * rejection, or an unexpected service failure all propagate as the real
- * error they are.
- */
-export async function markNotificationAsRead(
-  input: unknown,
-): Promise<MarkNotificationAsReadDTO> {
+export async function markAllNotificationsAsRead(): Promise<MarkAllNotificationsAsReadDTO> {
   const user = await requireAuth();
 
   const actor: AuditActor = {
@@ -38,7 +18,5 @@ export async function markNotificationAsRead(
     actorRole: user.role,
   };
 
-  const { id } = markAllNotificationsAsReadSchema.parse(input);
-
-  return notificationService.markNotificationAsRead(actor, id);
+  return notificationService.markAllNotificationsAsRead(actor);
 }
