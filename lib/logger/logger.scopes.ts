@@ -17,3 +17,4 @@ export const rateLimitLogger = new Logger({ module: "rate-limit" });
 export const auditLogger = new Logger({ module: "audit" });
 export const hintLogger = new Logger({ module: "hint" });
 export const announcementLogger = new Logger({ module: "announcement" });
+export const notificationLogger = new Logger({ module: "notification" });
