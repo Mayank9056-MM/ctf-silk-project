@@ -163,7 +163,7 @@ class NotificationService {
 
     return toMarkNotificationAsReadDTO(updated);
   }
-
+  
   /**
    * Marks every currently-unread notification belonging to the actor as
    * read, in one repository call. actor.actorId is the only identity this
@@ -173,18 +173,27 @@ class NotificationService {
   async markAllNotificationsAsRead(
     actor: AuditActor,
   ): Promise<MarkAllNotificationsAsReadDTO> {
-    const result: Prisma.BatchPayload =
-      await notificationRepository.markAllNotificationsAsRead(
-        prisma,
-        actor.actorId as string,
-      );
+    try {
+      const result: Prisma.BatchPayload =
+        await notificationRepository.markAllNotificationsAsRead(
+          prisma,
+          actor.actorId as string,
+        );
 
-    log.info("All notifications marked as read", {
-      actorId: actor.actorId,
-      updatedCount: result.count,
-    });
+      log.info("All notifications marked as read", {
+        actorId: actor.actorId,
+        updatedCount: result.count,
+      });
 
-    return toMarkAllNotificationsAsReadDTO(result.count);
+      return toMarkAllNotificationsAsReadDTO(result.count);
+    } catch (error) {
+      log.error("Failed to mark all notifications as read", {
+        error,
+        actorId: actor.actorId,
+      });
+
+      throw error;
+    }
   }
 
   // --------------------------------------------------------------------
