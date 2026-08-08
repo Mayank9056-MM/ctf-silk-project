@@ -3,8 +3,6 @@
 import type { Announcement } from "@/app/generated/prisma/client";
 import { ContentStatus } from "@/app/generated/prisma/enums";
 
-// announcement-state.ts
-
 /**
  * True only when this announcement has been archived. The real check
  * behind archiveAnnouncement() rejecting a double-archive attempt with a
