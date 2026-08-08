@@ -442,6 +442,148 @@ export const AUDIT_EVENTS = {
     severity: AuditSeverity.WARNING,
     expectedActorTypes: [AuditActorType.ADMIN],
   },
+
+  // ═══════════════ Admin / Event Operations ═══════════════
+  EVENT_PAUSED: {
+    action: AuditAction.EVENT_PAUSED,
+    resourceType: AuditResourceType.EVENT,
+    category: AuditCategory.EVENT_MANAGEMENT,
+    description: "An admin paused live event gameplay operations.",
+    severity: AuditSeverity.CRITICAL,
+    expectedActorTypes: [AuditActorType.ADMIN],
+  },
+
+  EVENT_RESUMED: {
+    action: AuditAction.EVENT_RESUMED,
+    resourceType: AuditResourceType.EVENT,
+    category: AuditCategory.EVENT_MANAGEMENT,
+    description: "An admin resumed live event gameplay operations.",
+    severity: AuditSeverity.WARNING,
+    expectedActorTypes: [AuditActorType.ADMIN],
+  },
+
+  REGISTRATION_ENABLED: {
+    action: AuditAction.REGISTRATION_ENABLED,
+    resourceType: AuditResourceType.EVENT,
+    category: AuditCategory.EVENT_MANAGEMENT,
+    description: "An admin manually enabled event registration.",
+    severity: AuditSeverity.WARNING,
+    expectedActorTypes: [AuditActorType.ADMIN],
+  },
+
+  REGISTRATION_DISABLED: {
+    action: AuditAction.REGISTRATION_DISABLED,
+    resourceType: AuditResourceType.EVENT,
+    category: AuditCategory.EVENT_MANAGEMENT,
+    description: "An admin manually disabled event registration.",
+    severity: AuditSeverity.WARNING,
+    expectedActorTypes: [AuditActorType.ADMIN],
+  },
+
+  // ═══════════════ Security Operations ═══════════════
+  SECURITY_SIGNAL_STATUS_CHANGED: {
+    action: AuditAction.SECURITY_SIGNAL_STATUS_CHANGED,
+    resourceType: AuditResourceType.SECURITY_SIGNAL,
+    category: AuditCategory.SECURITY,
+    description: "An admin changed the status of a security signal.",
+    severity: AuditSeverity.WARNING,
+    expectedActorTypes: [AuditActorType.ADMIN],
+  },
+
+  SECURITY_ALERT_CREATED: {
+    action: AuditAction.SECURITY_ALERT_CREATED,
+    resourceType: AuditResourceType.SECURITY_ALERT,
+    category: AuditCategory.SECURITY,
+    description:
+      "A security alert was created for administrative investigation.",
+    severity: AuditSeverity.CRITICAL,
+    expectedActorTypes: [AuditActorType.ADMIN, AuditActorType.SYSTEM],
+  },
+
+  SECURITY_ALERT_ACKNOWLEDGED: {
+    action: AuditAction.SECURITY_ALERT_ACKNOWLEDGED,
+    resourceType: AuditResourceType.SECURITY_ALERT,
+    category: AuditCategory.SECURITY,
+    description: "An admin acknowledged a security alert.",
+    severity: AuditSeverity.WARNING,
+    expectedActorTypes: [AuditActorType.ADMIN],
+  },
+
+  SECURITY_ALERT_RESOLVED: {
+    action: AuditAction.SECURITY_ALERT_RESOLVED,
+    resourceType: AuditResourceType.SECURITY_ALERT,
+    category: AuditCategory.SECURITY,
+    description: "An admin resolved a security alert.",
+    severity: AuditSeverity.WARNING,
+    expectedActorTypes: [AuditActorType.ADMIN],
+  },
+
+  SECURITY_ALERT_DISMISSED: {
+    action: AuditAction.SECURITY_ALERT_DISMISSED,
+    resourceType: AuditResourceType.SECURITY_ALERT,
+    category: AuditCategory.SECURITY,
+    description: "An admin dismissed a security alert after investigation.",
+    severity: AuditSeverity.INFO,
+    expectedActorTypes: [AuditActorType.ADMIN],
+  },
+
+  // ═══════════════ Incident Management ═══════════════
+  INCIDENT_CREATED: {
+    action: AuditAction.INCIDENT_CREATED,
+    resourceType: AuditResourceType.INCIDENT,
+    category: AuditCategory.SECURITY,
+    description: "An incident was created for operational investigation.",
+    severity: AuditSeverity.CRITICAL,
+    expectedActorTypes: [AuditActorType.ADMIN],
+  },
+
+  INCIDENT_ACKNOWLEDGED: {
+    action: AuditAction.INCIDENT_ACKNOWLEDGED,
+    resourceType: AuditResourceType.INCIDENT,
+    category: AuditCategory.SECURITY,
+    description: "An admin acknowledged an operational incident.",
+    severity: AuditSeverity.WARNING,
+    expectedActorTypes: [AuditActorType.ADMIN],
+  },
+
+  INCIDENT_STATUS_CHANGED: {
+    action: AuditAction.INCIDENT_STATUS_CHANGED,
+    resourceType: AuditResourceType.INCIDENT,
+    category: AuditCategory.SECURITY,
+    description: "An admin changed the status of an operational incident.",
+    severity: AuditSeverity.WARNING,
+    expectedActorTypes: [AuditActorType.ADMIN],
+  },
+
+  INCIDENT_RESOLVED: {
+    action: AuditAction.INCIDENT_RESOLVED,
+    resourceType: AuditResourceType.INCIDENT,
+    category: AuditCategory.SECURITY,
+    description: "An admin marked an operational incident as resolved.",
+    severity: AuditSeverity.WARNING,
+    expectedActorTypes: [AuditActorType.ADMIN],
+  },
+
+  INCIDENT_CLOSED: {
+    action: AuditAction.INCIDENT_CLOSED,
+    resourceType: AuditResourceType.INCIDENT,
+    category: AuditCategory.SECURITY,
+    description: "An admin closed an operational incident.",
+    severity: AuditSeverity.INFO,
+    expectedActorTypes: [AuditActorType.ADMIN],
+  },
+
+  // ═══════════════ Emergency Operations ═══════════════
+  EMERGENCY_OPERATION: {
+    action: AuditAction.EMERGENCY_OPERATION,
+    resourceType: AuditResourceType.SYSTEM,
+    category: AuditCategory.SECURITY,
+    description:
+      "An admin performed an emergency/break-glass operation outside the normal admin workflow. Deliberately generic — the specific operation performed belongs in metadata.operationType and the justification in the top-level `reason` field, rather than growing a new AuditAction for every one-off emergency scenario.",
+    severity: AuditSeverity.CRITICAL,
+    expectedActorTypes: [AuditActorType.ADMIN],
+    requiredMetadataKeys: ["operationType"],
+  },
 } as const satisfies Record<string, AuditEventDefinition>;
 
 export type AuditEventKey = keyof typeof AUDIT_EVENTS;
