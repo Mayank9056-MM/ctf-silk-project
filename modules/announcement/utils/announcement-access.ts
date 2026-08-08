@@ -6,8 +6,6 @@ import { Permission } from "@/modules/auth/authorization/permission";
 import { ApiError } from "@/lib/errors/ApiError";
 import { ErrorCode } from "@/lib/errors/ErrorCode";
 
-// announcement-access.ts
-
 /**
  * Asserts that `actor` is permitted to create, update, or archive
  * announcements. Every mutating Announcement operation shares this
