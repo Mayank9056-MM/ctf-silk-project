@@ -7,6 +7,7 @@ import { notificationService } from "@/modules/notification/services/notificatio
 import { createNotificationSchema } from "@/modules/notification/validations/create-notification.schema";
 import type { CreateNotificationDTO } from "@/modules/notification/types/notification.dto";
 import type { AuditActor } from "@/modules/audit/types/audit.types";
+import { AuditActorType } from "@/app/generated/prisma/enums";
 
 /**
  * Creates a notification targeting a specific user. Administrative
@@ -33,7 +34,7 @@ export async function createNotification(
   const user = await requireAuth();
 
   const actor: AuditActor = {
-    actorType: "ADMIN",
+    actorType: AuditActorType.ADMIN,
     actorId: user.userId,
     actorUsername: user.name,
     actorRole: user.role,
