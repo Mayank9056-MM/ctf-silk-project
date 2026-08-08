@@ -1,7 +1,4 @@
-import {
-  Prisma,
-  type Announcement,
-} from "@/app/generated/prisma/client";
+import { Prisma, type Announcement } from "@/app/generated/prisma/client";
 import prisma from "@/lib/prisma";
 import { ApiError } from "@/lib/errors/ApiError";
 import { ErrorCode } from "@/lib/errors/ErrorCode";
@@ -11,9 +8,9 @@ import { hasPermission } from "@/modules/auth/authorization/has-permission";
 import { Permission } from "@/modules/auth/authorization/permission";
 import { record } from "@/modules/audit/services/audit.service";
 import type { AuditActor } from "@/modules/audit/types/audit.types";
-
+import { isArchived, isPublished } from "../utils/announcement-state";
+import { assertCanManageAnnouncements } from "../utils/announcement-access";
 import { announcementRepository } from "../repositories/announcement.repository";
-import { isArchived, isPublished } from "../utils/announcement-access";
 import {
   toAnnouncementDTO,
   toAnnouncementListDTO,
@@ -50,7 +47,7 @@ class AnnouncementService {
     actor: AuditActor,
     input: Omit<CreateAnnouncementInput, "createdById">,
   ): Promise<CreateAnnouncementDTO> {
-    this.assertCanManageAnnouncements(actor);
+    assertCanManageAnnouncements(actor);
 
     if (!actor.actorId) {
       throw ApiError.forbidden(
@@ -116,7 +113,7 @@ class AnnouncementService {
     id: string,
     input: UpdateAnnouncementInput,
   ): Promise<UpdateAnnouncementDTO> {
-    this.assertCanManageAnnouncements(actor);
+    assertCanManageAnnouncements(actor);
     const existing = await this.assertAnnouncementExists(id);
 
     let updated: Announcement;
@@ -172,7 +169,7 @@ class AnnouncementService {
     actor: AuditActor,
     id: string,
   ): Promise<ArchiveAnnouncementDTO> {
-    this.assertCanManageAnnouncements(actor);
+    assertCanManageAnnouncements(actor);
     const existing = await this.assertAnnouncementExists(id);
 
     if (isArchived(existing)) {
@@ -227,7 +224,6 @@ class AnnouncementService {
     return toArchiveAnnouncementDTO(archived);
   }
 
-
   async getAnnouncement(id: string): Promise<AnnouncementDTO> {
     const announcement = await this.assertAnnouncementExists(id);
 
@@ -242,7 +238,7 @@ class AnnouncementService {
     actor: AuditActor,
     id: string,
   ): Promise<AnnouncementAdminDTO> {
-    this.assertCanManageAnnouncements(actor);
+    assertCanManageAnnouncements(actor);
 
     const announcement = await this.assertAnnouncementExists(id);
 
@@ -268,25 +264,6 @@ class AnnouncementService {
   // --------------------------------------------------------------------
   // Private helpers — created only where reused across methods
   // --------------------------------------------------------------------
-
-  /**
-   * Reused by createAnnouncement, updateAnnouncement, and
-   * archiveAnnouncement — the one place "is this actor allowed to
-   * manage announcements" is decided, so all three mutations agree on
-   * the same rule by construction rather than three independent copies
-   * of the same permission check.
-   */
-  private assertCanManageAnnouncements(actor: AuditActor): void {
-    if (
-      !actor.actorRole ||
-      !hasPermission(actor.actorRole, Permission.MANAGE_ANNOUNCEMENTS)
-    ) {
-      throw ApiError.forbidden(
-        ErrorCode.PERMISSION_DENIED,
-        "You do not have permission to manage announcements.",
-      );
-    }
-  }
 
   /**
    * Reused by updateAnnouncement and archiveAnnouncement — both need the
