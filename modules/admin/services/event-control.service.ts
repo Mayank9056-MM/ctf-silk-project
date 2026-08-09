@@ -150,11 +150,6 @@ class EventControlService {
           );
         }
 
-        log.info("Event resumed", {
-          actorId: actor.actorId,
-          eventId: event.id,
-        });
-
         await record(tx, {
           eventKey: "EVENT_RESUMED",
           actor,
@@ -164,6 +159,11 @@ class EventControlService {
         });
 
         return this.requireEventControl(tx, event.id);
+      });
+
+      log.info("Event resumed", {
+        actorId: actor.actorId,
+        eventId: event.id,
       });
     } catch (error) {
       if (error instanceof ApiError) throw error;
