@@ -4,6 +4,7 @@ import { AuditActorType } from "@/app/generated/prisma/enums";
 import type { AuditActor } from "@/modules/audit/types/audit.types";
 import { requireAuth } from "@/modules/auth/authorization/require-auth";
 import { playerManagementService } from "../../services/player-management.service";
+import { banPlayerSchema } from "../../validations/player-management/ban-player.schema";
 
 /**
  * Bans a player from the Admin player-management panel.
@@ -22,6 +23,8 @@ import { playerManagementService } from "../../services/player-management.servic
 export async function banPlayer(playerId: string) {
   const user = await requireAuth();
 
+  const validated = banPlayerSchema.parse({ playerId });
+
   const actor: AuditActor = {
     actorType: AuditActorType.ADMIN,
     actorId: user.userId,
@@ -29,5 +32,5 @@ export async function banPlayer(playerId: string) {
     actorRole: user.role,
   };
 
-  return playerManagementService.banPlayer(actor, playerId);
+  return playerManagementService.banPlayer(actor, validated.playerId);
 }
