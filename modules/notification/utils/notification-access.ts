@@ -1,5 +1,6 @@
 // notification-access.ts
 
+import { AuditActorType } from "@/app/generated/prisma/enums";
 import type { Notification } from "@/app/generated/prisma/client";
 import type { AuditActor } from "@/modules/audit/types/audit.types";
 import { hasPermission } from "@/modules/auth/authorization/has-permission";
@@ -10,15 +11,26 @@ import { ErrorCode } from "@/lib/errors/ErrorCode";
 // notification-access.ts
 
 /**
- * Asserts that `actor` is permitted to manually create a notification.
+ * Asserts that `actor` is permitted to create a notification.
  *
- * Manual notification creation is an administrative action — players
- * never create their own notifications; every Notification a player
- * receives is a side effect of some other event (an announcement being
- * published, an account lock, an event schedule change), triggered by
- * the system or an admin action, never by a player's own request.
+ * Two distinct paths:
+ *   1. SYSTEM actors (brute-force lockout, refresh-token-reuse
+ *      detection, and any future background-triggered notification)
+ *      bypass the role check entirely — there is no human role to
+ *      check against for a system-initiated event. Mirrors
+ *      AUDIT_EVENTS' own `expectedActorTypes: [AuditActorType.SYSTEM]`
+ *      pattern for these exact events; without this branch, every
+ *      SYSTEM-actor call throws PERMISSION_DENIED unconditionally,
+ *      since a SYSTEM actor's actorRole is always null by construction
+ *      (see recordSystemEvent() in audit.service.ts for the identical
+ *      null-role shape).
+ *   2. Every other actor (ADMIN) must hold MANAGE_NOTIFICATIONS,
+ *      exactly as before — manual notification creation is still an
+ *      administrative action; players never create their own.
  */
 export function assertCanCreateNotification(actor: AuditActor): void {
+  if (actor.actorType === AuditActorType.SYSTEM) return;
+
   if (
     !actor.actorRole ||
     !hasPermission(actor.actorRole, Permission.MANAGE_NOTIFICATIONS)
