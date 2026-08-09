@@ -4,6 +4,7 @@ import { AuditActorType } from "@/app/generated/prisma/enums";
 import type { AuditActor } from "@/modules/audit/types/audit.types";
 import { requireAuth } from "@/modules/auth/authorization/require-auth";
 import { playerManagementService } from "../../services/player-management.service";
+import { resetPlayerPasswordSchema } from "../../validations/player-management/reset-player-password.schema";
 
 /**
  * Resets a player's password from the Admin player-management panel.
@@ -26,6 +27,8 @@ import { playerManagementService } from "../../services/player-management.servic
 export async function resetPlayerPassword(playerId: string) {
   const user = await requireAuth();
 
+  const validated = resetPlayerPasswordSchema.parse({ playerId });
+
   const actor: AuditActor = {
     actorType: AuditActorType.ADMIN,
     actorId: user.userId,
@@ -33,5 +36,5 @@ export async function resetPlayerPassword(playerId: string) {
     actorRole: user.role,
   };
 
-  return playerManagementService.resetPlayerPassword(actor, playerId);
+  return playerManagementService.resetPlayerPassword(actor, validated.playerId);
 }
