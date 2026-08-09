@@ -4,6 +4,7 @@ import { AuditActorType } from "@/app/generated/prisma/enums";
 import { requireAuth } from "@/modules/auth/authorization/require-auth";
 import type { AuditActor } from "@/modules/audit/types/audit.types";
 import { playerManagementService } from "../../services/player-management.service";
+import { getPlayerSchema } from "../../validations/player-management/get-player.schema";
 
 /**
  * Gets a single player for the Admin player-management view.
@@ -21,6 +22,8 @@ import { playerManagementService } from "../../services/player-management.servic
 export async function getPlayer(playerId: string) {
   const user = await requireAuth();
 
+  const validated = getPlayerSchema.parse({ playerId });
+
   const actor: AuditActor = {
     actorType: AuditActorType.ADMIN,
     actorId: user.userId,
@@ -28,5 +31,5 @@ export async function getPlayer(playerId: string) {
     actorRole: user.role,
   };
 
-  return playerManagementService.getPlayer(actor, playerId);
+  return playerManagementService.getPlayer(actor, validated.playerId);
 }
