@@ -25,7 +25,7 @@ class ChallengeService {
 
     if (!challenge) {
       log.warn("Challenge lookup by id missed", { id });
-      throw new ApiError(404, ErrorCode.NOT_FOUND, "Challenge not found.");
+      throw ApiError.notFound(ErrorCode.NOT_FOUND, "Challenge not found.");
     }
 
     return toPublicChallenge(challenge);
@@ -39,7 +39,7 @@ class ChallengeService {
 
     if (!challenge) {
       log.warn("Challenge lookup by slug missed", { slug });
-      throw new ApiError(404, ErrorCode.NOT_FOUND, "Challenge not found.");
+      throw ApiError.notFound(ErrorCode.NOT_FOUND, "Challenge not found.");
     }
 
     return toPublicChallenge(challenge);
