@@ -937,6 +937,24 @@ model EventControl {
   @@map("event_controls")
 }
 
+// ======================================================
+// FUTURE — Security Operations
+// ======================================================
+//
+// Not implemented in the current event release.
+// Do not build services, repositories, actions, hooks,
+// or UI for these models unless the security subsystem
+// is explicitly brought into scope.
+//
+// Planned future capabilities:
+// - Security signal detection
+// - Security alert workflow
+// - Suspicious activity investigation
+//
+// Current release scope:
+// EventControl + PlayerManagement + Audit
+//
+
 enum Severity {
   LOW
   MEDIUM
