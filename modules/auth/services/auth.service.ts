@@ -26,6 +26,7 @@ import { toPublicUser } from "../utils/user.mapper";
 import * as auditService from "../../audit/services/audit.service";
 import type { AuditActor } from "../../audit/types/audit.types";
 import { notificationService } from "@/modules/notification/services/notification.service";
+import { eventService } from "@/modules/event/services/event.service";
 
 interface RequestMetadata {
   userAgent?: string;
@@ -69,6 +70,20 @@ class AuthService {
    * unique constraints on `email`/`username`, caught below as P2002.
    */
   async register(input: RegisterInput): Promise<PublicUser> {
+    const access = await eventService.getEventAccess(prisma);
+
+    if (!access.canRegister) {
+      log.warn("Registration rejected — registration is currently closed", {
+        registrationEnabled: access.registrationEnabled,
+        hasEnded: access.hasEnded,
+      });
+
+      throw ApiError.forbidden(
+        ErrorCode.FORBIDDEN,
+        "Registration is currently closed.",
+      );
+    }
+
     const [emailTaken, usernameTaken] = await Promise.all([
       userRepository.existsByEmail(prisma, input.email),
       userRepository.existsByUsername(prisma, input.username),

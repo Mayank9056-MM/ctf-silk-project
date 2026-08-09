@@ -129,17 +129,19 @@ class SubmissionService {
     const access = await eventService.getEventAccess(prisma);
 
     if (!access.canAccessGame) {
-      log.debug("Submission rejected — event not live", {
+      log.debug("Submission rejected — event not accessible", {
         userId,
         state: access.state,
+        isPaused: access.isPaused,
       });
 
-      throw ApiError.forbidden(
-        ErrorCode.FORBIDDEN,
-        access.state === "EVENT_SOON"
+      const message = access.isPaused
+        ? "The event is temporarily paused. Please try again shortly."
+        : access.state === "EVENT_SOON"
           ? "The event hasn't started yet."
-          : "The event has ended. Submissions are closed.",
-      );
+          : "The event has ended. Submissions are closed.";
+
+      throw ApiError.forbidden(ErrorCode.FORBIDDEN, message);
     }
   }
 

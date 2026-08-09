@@ -2,14 +2,17 @@
 // seed-event.ts
 // ============================================================================
 //
-// Seeds the Event singleton row. Every gated action on the platform
-// (eventService.getEventAccess) throws NOT_FOUND without this row
-// existing — a fresh database with content but no Event is a broken
-// environment, not a partial one, which is why this runs unconditionally
-// first in seed.ts's orchestration, independent of every other script.
+// Seeds the Event singleton row AND its required EventControl companion
+// row. EventControl is now load-bearing for every gated request —
+// eventService.getEventAccess() throws NOT_FOUND if it's missing, the
+// same severity already applied to a missing Event singleton itself.
+// This addition is the minimal seed/default the EventControl
+// integration genuinely requires (see the accompanying architecture
+// notes) — not a speculative addition.
 // ============================================================================
 
 import prisma from "@/lib/prisma";
+import { EventOperationalMode } from "@/app/generated/prisma/enums";
 import "dotenv/config"
 
 /**
@@ -22,12 +25,20 @@ import "dotenv/config"
  * via the Event update path, not hardcoded here permanently. This seed
  * exists so `getEventAccess()` has something valid to compute against
  * from a fresh database, not to be the source of truth for a live event.
+ *
+ * The EventControl upsert mirrors the Event upsert's own discipline:
+ * `update: {}` never overwrites an already-configured control row —
+ * re-running this script must never silently un-pause a live event or
+ * flip an admin's registration toggle back to a default. registrationEnabled
+ * is set explicitly to `true` rather than relied upon as a schema
+ * default, since this script has no independent way to confirm what
+ * that default actually is.
  */
 export async function seedEvent(): Promise<void> {
   const startsAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // +1 day
   const endsAt = new Date(startsAt.getTime() + 4 * 60 * 60 * 1000); // +4 hours
 
-  await prisma.event.upsert({
+  const event = await prisma.event.upsert({
     where: { singleton: 1 },
     update: {}, // Never overwrite an already-configured event on re-run.
     create: {
@@ -38,7 +49,17 @@ export async function seedEvent(): Promise<void> {
     },
   });
 
-  console.log("[seed-event] Event singleton ready.");
+  await prisma.eventControl.upsert({
+    where: { eventId: event.id },
+    update: {}, // Never overwrite an already-configured control row on re-run.
+    create: {
+      eventId: event.id,
+      mode: EventOperationalMode.NORMAL,
+      registrationEnabled: true,
+    },
+  });
+
+  console.log("[seed-event] Event singleton and EventControl ready.");
 }
 
 if (require.main === module) {
