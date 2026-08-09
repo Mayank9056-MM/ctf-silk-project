@@ -2,7 +2,10 @@
 
 import { z } from "zod";
 import { UserStatus } from "@/app/generated/prisma/enums";
-import { PLAYER_MANAGEMENT_LIMITS } from "../../constants/player-management.constants";
+import {
+  PLAYER_MANAGEMENT_LIMITS,
+  PLAYER_MANAGEMENT_PAGINATION,
+} from "../../constants/player-management.constants";
 
 /**
  * Input validation for the paginated Admin player-management list.
@@ -45,8 +48,8 @@ export const getPlayersSchema = z.object({
     .int("Page size must be an integer.")
     .min(1, "Page size must be at least 1.")
     .max(
-      PLAYER_MANAGEMENT_LIMITS.PAGE_SIZE_MAX,
-      `Page size must not exceed ${PLAYER_MANAGEMENT_LIMITS.PAGE_SIZE_MAX}.`,
+      PLAYER_MANAGEMENT_PAGINATION.MAX_PAGE_SIZE,
+      `Page size must not exceed ${PLAYER_MANAGEMENT_PAGINATION.MAX_PAGE_SIZE}.`,
     ),
 });
 
