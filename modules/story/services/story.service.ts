@@ -159,17 +159,19 @@ class StoryService {
     const access = await eventService.getEventAccess(prisma);
 
     if (!access.canAccessGame) {
-      log.debug("Story restart rejected — event not live", {
+      log.debug("Story restart rejected — event not accessible", {
         userId,
         state: access.state,
+        isPaused: access.isPaused,
       });
 
-      throw ApiError.forbidden(
-        ErrorCode.FORBIDDEN,
-        access.state === "EVENT_SOON"
+      const message = access.isPaused
+        ? "The event is temporarily paused. Please try again shortly."
+        : access.state === "EVENT_SOON"
           ? "The event hasn't started yet."
-          : "The event has ended.",
-      );
+          : "The event has ended.";
+
+      throw ApiError.forbidden(ErrorCode.FORBIDDEN, message);
     }
 
     await storyProgressRepository.resetProgress(prisma, userId);
