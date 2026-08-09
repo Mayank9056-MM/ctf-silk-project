@@ -108,9 +108,18 @@ class NotificationService {
     actor: AuditActor,
     query: NotificationListQuery,
   ): Promise<NotificationListDTO> {
+    if (!actor.actorId) {
+      throw ApiError.forbidden(
+        ErrorCode.PERMISSION_DENIED,
+        "A resolvable actor is required to access notifications.",
+      );
+    }
+
+    const actorId = actor.actorId;
+
     const result = await notificationRepository.findNotifications(
       prisma,
-      actor.actorId as string,
+      actorId,
       query,
     );
 
@@ -125,9 +134,18 @@ class NotificationService {
   async getUnreadNotificationCount(
     actor: AuditActor,
   ): Promise<UnreadNotificationCountDTO> {
+    if (!actor.actorId) {
+      throw ApiError.forbidden(
+        ErrorCode.PERMISSION_DENIED,
+        "A resolvable actor is required to access notifications.",
+      );
+    }
+
+    const actorId = actor.actorId;
+
     const unreadCount = await notificationRepository.countUnreadNotifications(
       prisma,
-      actor.actorId as string,
+      actorId,
     );
 
     return toUnreadNotificationCountDTO(unreadCount);
@@ -163,7 +181,7 @@ class NotificationService {
 
     return toMarkNotificationAsReadDTO(updated);
   }
-  
+
   /**
    * Marks every currently-unread notification belonging to the actor as
    * read, in one repository call. actor.actorId is the only identity this
@@ -174,10 +192,19 @@ class NotificationService {
     actor: AuditActor,
   ): Promise<MarkAllNotificationsAsReadDTO> {
     try {
+      if (!actor.actorId) {
+        throw ApiError.forbidden(
+          ErrorCode.PERMISSION_DENIED,
+          "A resolvable actor is required to access notifications.",
+        );
+      }
+
+      const actorId = actor.actorId;
+
       const result: Prisma.BatchPayload =
         await notificationRepository.markAllNotificationsAsRead(
           prisma,
-          actor.actorId as string,
+          actorId,
         );
 
       log.info("All notifications marked as read", {
