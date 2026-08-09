@@ -5,7 +5,7 @@
 import { AuditActorType } from "@/app/generated/prisma/enums";
 import { AuditActor } from "@/modules/audit/types/audit.types";
 import { requireAuth } from "@/modules/auth/authorization/require-auth";
-import { toggleRegistrationSchema } from "../../validations/event-control/toggle-registration.schema";
+
 import { eventControlService } from "../../services/event-control.service";
 
 /**
@@ -24,7 +24,7 @@ import { eventControlService } from "../../services/event-control.service";
  * Errors are intentionally not caught here. Validation, authorization,
  * business-state, and unexpected service errors propagate unchanged.
  */
-export async function enableRegistration(input: unknown) {
+export async function enableRegistration() {
   const user = await requireAuth();
 
   const actor: AuditActor = {
@@ -33,8 +33,6 @@ export async function enableRegistration(input: unknown) {
     actorUsername: user.name,
     actorRole: user.role,
   };
-
-  toggleRegistrationSchema.parse(input);
 
   return eventControlService.enableRegistration(actor);
 }
