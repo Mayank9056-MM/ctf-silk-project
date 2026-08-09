@@ -1,5 +1,6 @@
 import { env } from "@/config/env";
 import argon2 from "argon2";
+import { randomBytes } from "crypto";
 
 import { authLogger as log } from "@/lib/logger/logger.scopes";
 
@@ -51,6 +52,19 @@ class PasswordService {
       log.error("needsRehash check threw — likely a malformed hash", error);
       throw error;
     }
+  }
+
+  /**
+   * Generates a cryptographically secure temporary password for
+   * admin-initiated resets. Reuses the same randomBytes/base64url
+   * approach already established by refreshTokenService.generate() —
+   * not a new convention, the existing one applied to a new caller.
+   * Returns plaintext; the caller (player-management.service.ts) is
+   * responsible for hashing it via hash() before persistence and for
+   * treating the return value as single-display, never-logged data.
+   */
+  generateTemporaryPassword(length = 16): string {
+    return randomBytes(length).toString("base64url").slice(0, length);
   }
 }
 
