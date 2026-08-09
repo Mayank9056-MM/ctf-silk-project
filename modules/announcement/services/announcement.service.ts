@@ -4,8 +4,6 @@ import { ApiError } from "@/lib/errors/ApiError";
 import { ErrorCode } from "@/lib/errors/ErrorCode";
 import { announcementLogger as log } from "@/lib/logger/logger.scopes";
 
-import { hasPermission } from "@/modules/auth/authorization/has-permission";
-import { Permission } from "@/modules/auth/authorization/permission";
 import { record } from "@/modules/audit/services/audit.service";
 import type { AuditActor } from "@/modules/audit/types/audit.types";
 import { isArchived, isPublished } from "../utils/announcement-state";
@@ -55,6 +53,7 @@ class AnnouncementService {
         "A resolvable actor is required to create an announcement.",
       );
     }
+    const createdById = actor.actorId;
 
     let created: Announcement;
 
@@ -62,7 +61,7 @@ class AnnouncementService {
       created = await prisma.$transaction(async (tx) => {
         const announcement = await announcementRepository.createAnnouncement(
           tx,
-          { ...input, createdById: actor.actorId as string },
+          { ...input, createdById },
         );
 
         await record(tx, {
