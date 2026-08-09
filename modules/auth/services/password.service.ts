@@ -56,15 +56,22 @@ class PasswordService {
 
   /**
    * Generates a cryptographically secure temporary password for
-   * admin-initiated resets. Reuses the same randomBytes/base64url
-   * approach already established by refreshTokenService.generate() —
-   * not a new convention, the existing one applied to a new caller.
-   * Returns plaintext; the caller (player-management.service.ts) is
-   * responsible for hashing it via hash() before persistence and for
-   * treating the return value as single-display, never-logged data.
+   * admin-initiated resets. crypto.randomBytes, never Math.random() —
+   * same primitive refreshTokenService.generate() already uses for
+   * session tokens, applied here with a shorter byte length: 15 bytes
+   * (120 bits of entropy) base64url-encodes to exactly 20 characters
+   * with no padding (15 is divisible by 3), which is strong enough for
+   * a one-time credential while still short enough for an admin to
+   * relay to a player manually — refreshTokenService's 32 bytes is
+   * calibrated for a machine-only session token, not a human-typed one.
+   *
+   * Returns plaintext to the immediate caller only. Never logs, never
+   * persists — the caller is responsible for hashing via hash() before
+   * any database write and for treating the return value as
+   * single-display, non-audited data.
    */
-  generateTemporaryPassword(length = 16): string {
-    return randomBytes(length).toString("base64url").slice(0, length);
+  generateTemporaryPassword(): string {
+    return randomBytes(15).toString("base64url");
   }
 }
 
