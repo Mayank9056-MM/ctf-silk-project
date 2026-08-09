@@ -63,7 +63,7 @@ class EventControlService {
    */
   async pauseEvent(
     actor: AuditActor,
-    reason: string,
+    reason: string | null,
   ): Promise<EventControlDTO> {
     const event = await this.authorizeAndResolveEvent(actor);
 
@@ -126,6 +126,13 @@ class EventControlService {
    * time the write executed.
    */
   async resumeEvent(actor: AuditActor): Promise<EventControlDTO> {
+    if (!actor.actorId) {
+      throw ApiError.forbidden(
+        ErrorCode.FORBIDDEN,
+        "A resolvable actor is required to resume the event.",
+      );
+    }
+
     const event = await this.authorizeAndResolveEvent(actor);
 
     let updated: EventControl;
@@ -142,6 +149,11 @@ class EventControlService {
             "The event is not currently paused.",
           );
         }
+
+        log.info("Event resumed", {
+          actorId: actor.actorId,
+          eventId: event.id,
+        });
 
         await record(tx, {
           eventKey: "EVENT_RESUMED",
