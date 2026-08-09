@@ -5,6 +5,7 @@ import { requireAuth } from "@/modules/auth/authorization/require-auth";
 import type { AuditActor } from "@/modules/audit/types/audit.types";
 import { PlayerSearchQuery } from "../../types/player-management.types";
 import { playerManagementService } from "../../services/player-management.service";
+import { getPlayersSchema } from "../../validations/player-management/get-players.schema";
 
 /**
  * Gets the paginated player list for the Admin player-management view.
@@ -20,6 +21,8 @@ import { playerManagementService } from "../../services/player-management.servic
 export async function getPlayers(query: PlayerSearchQuery) {
   const user = await requireAuth();
 
+  const validated = getPlayersSchema.parse(query);
+
   const actor: AuditActor = {
     actorType: AuditActorType.ADMIN,
     actorId: user.userId,
@@ -27,5 +30,5 @@ export async function getPlayers(query: PlayerSearchQuery) {
     actorRole: user.role,
   };
 
-  return playerManagementService.getPlayers(actor, query);
+  return playerManagementService.getPlayers(actor, validated);
 }
