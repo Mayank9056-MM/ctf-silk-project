@@ -1,5 +1,7 @@
 import {
   AuditActorType,
+  NotificationPriority,
+  NotificationType,
   Prisma,
   Role,
   User,
@@ -23,6 +25,7 @@ import { toPublicUser } from "../utils/user.mapper";
 
 import * as auditService from "../../audit/services/audit.service";
 import type { AuditActor } from "../../audit/types/audit.types";
+import { notificationService } from "@/modules/notification/services/notification.service";
 
 interface RequestMetadata {
   userAgent?: string;
@@ -41,6 +44,20 @@ type LoginFailureReason =
   | "invalid_credentials"
   | "account_locked"
   | "account_banned";
+
+/**
+ * SYSTEM actor for background-triggered notification calls in this file
+ * (refresh-token reuse, brute-force lockout) — same null-identity shape
+ * auditService.recordSystemEvent() already uses. Requires
+ * notification-access.ts's assertCanCreateNotification() to special-case
+ * AuditActorType.SYSTEM; see that file's own updated doc comment.
+ */
+const SYSTEM_ACTOR: AuditActor = {
+  actorType: AuditActorType.SYSTEM,
+  actorId: null,
+  actorUsername: null,
+  actorRole: null,
+};
 
 class AuthService {
   /**
@@ -286,6 +303,21 @@ class AuthService {
         },
       );
 
+      try {
+        await notificationService.createNotification(SYSTEM_ACTOR, {
+          userId: existingToken.userId,
+          type: NotificationType.SECURITY,
+          priority: NotificationPriority.HIGH,
+          title: "Security alert: suspicious session activity",
+          message:
+            "We detected an attempt to reuse a session that had already been signed out. As a precaution, all of your active sessions have been signed out. If this wasn't you, we recommend changing your password.",
+        });
+      } catch (error) {
+        log.error("Failed to create refresh-token-reuse notification", error, {
+          userId: existingToken.userId,
+        });
+      }
+
       await cookieService.clearAuthCookies();
       throw ApiError.unauthorized(
         ErrorCode.REFRESH_TOKEN_REVOKED,
@@ -362,9 +394,9 @@ class AuthService {
       if (existingToken && !existingToken.revokedAt) {
         await refreshTokenRepository.revoke(prisma, existingToken.id);
 
-          log.info("User logged out", { userId: existingToken.userId });
+        log.info("User logged out", { userId: existingToken.userId });
 
-             await auditService.record(prisma, {
+        await auditService.record(prisma, {
           eventKey: "LOGOUT",
           actor: {
             actorType: AuditActorType.USER,
@@ -388,7 +420,7 @@ class AuthService {
    */
   async logoutAllSessions(userId: string): Promise<void> {
     await refreshTokenRepository.revokeAllForUser(prisma, userId);
-     log.info("All sessions revoked for user", { userId });
+    log.info("All sessions revoked for user", { userId });
   }
 
   /**
@@ -405,41 +437,57 @@ class AuthService {
     const shouldLock =
       currentAttempts + 1 >= AUTH_CONSTANTS.MAX_FAILED_LOGIN_ATTEMPTS;
 
-       log.debug("Incrementing failed login attempts", {
+    log.debug("Incrementing failed login attempts", {
       userId,
       attempts: currentAttempts + 1,
     });
 
-    await prisma.$transaction(async (tx) => {
-
+    const lockedUntilForNotification = await prisma.$transaction(async (tx) => {
       await userRepository.incrementFailedLoginAttempts(tx, userId);
 
-      if (shouldLock) {
-        const lockedUntil = new Date(
-          Date.now() + AUTH_CONSTANTS.ACCOUNT_LOCK_DURATION_MS
-        )
-        await userRepository.lockAccount(
-          tx,
-          userId,
-          lockedUntil,
-        );
-
-                log.warn("Account locked after repeated failed logins", {
-          userId,
-          attempts: currentAttempts + 1,
-        });
- 
-        // The state transition into a lock is what's audit-worthy — not
-        // each increment leading up to it. Joined to the same tx as the
-        // lock write for the same reason LOGIN success is joined above.
-        await auditService.recordSystemEvent(tx, "ACCOUNT_LOCKED", {
-          resourceId: userId,
-          success: true,
-          metadata: { failedAttempts: currentAttempts + 1, lockedUntil },
-        });
-
+      if (!shouldLock) {
+        return null;
       }
+
+      const lockedUntil = new Date(
+        Date.now() + AUTH_CONSTANTS.ACCOUNT_LOCK_DURATION_MS,
+      );
+
+      await userRepository.lockAccount(tx, userId, lockedUntil);
+
+      log.warn("Account locked after repeated failed logins", {
+        userId,
+        attempts: currentAttempts + 1,
+      });
+
+      await auditService.recordSystemEvent(tx, "ACCOUNT_LOCKED", {
+        resourceId: userId,
+        success: true,
+        metadata: {
+          failedAttempts: currentAttempts + 1,
+          lockedUntil,
+        },
+      });
+
+      return lockedUntil;
     });
+
+    if (lockedUntilForNotification) {
+      try {
+        await notificationService.createNotification(SYSTEM_ACTOR, {
+          userId,
+          type: NotificationType.SECURITY,
+          priority: NotificationPriority.HIGH,
+          title: "Account temporarily locked",
+          message:
+            "Your account was temporarily locked after repeated failed login attempts. If this wasn't you, consider changing your password once you regain access.",
+        });
+      } catch (error) {
+        log.error("Failed to create account-locked notification", error, {
+          userId,
+        });
+      }
+    }
   }
 
   /** Shared raw-token/hash/expiry generation used by both login and refresh. */
