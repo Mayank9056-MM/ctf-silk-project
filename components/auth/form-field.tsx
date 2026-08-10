@@ -63,7 +63,8 @@ export function FormField({
         {...(isControlled
           ? {
               value,
-              onChange: (e: ChangeEvent<HTMLInputElement>) => onValueChange?.(e.target.value),
+              onChange: (e: ChangeEvent<HTMLInputElement>) =>
+                onValueChange?.(e.target.value),
             }
           : { defaultValue })}
       />
@@ -73,12 +74,15 @@ export function FormField({
             id={errorId}
             className="sr-error-text"
             role="alert"
-            initial={{ opacity: 0, y: -4, height: 0 }}
-            animate={{ opacity: 1, y: 0, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.2 }}
           >
-            <TriangleAlert className="mr-1 -mt-0.5 inline-block h-3 w-3" aria-hidden="true" />
+            <TriangleAlert
+              className="mr-1 -mt-0.5 inline-block h-3 w-3"
+              aria-hidden="true"
+            />
             {errors![0]}
           </motion.p>
         )}
