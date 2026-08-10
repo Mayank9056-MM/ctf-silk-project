@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { QueryProvider } from "@/providers/query-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { DeviceGate } from "@/components/system/device-gate/device-gate";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,7 +32,9 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <QueryProvider>
-          <TooltipProvider>{children}</TooltipProvider>
+          <TooltipProvider>
+            <DeviceGate>{children}</DeviceGate>
+          </TooltipProvider>
         </QueryProvider>
       </body>
       <link rel="preconnect" href="https://fonts.googleapis.com" />
