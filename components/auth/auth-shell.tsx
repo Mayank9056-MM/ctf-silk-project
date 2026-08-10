@@ -10,14 +10,9 @@ import { HudTop } from "@/components/auth/hud-top";
 import { CaseIdentifier } from "@/components/auth/case-identifier";
 import { AuthNarrativePanel } from "@/components/auth/auth-narrative-panel";
 import { DEFAULT_CASE_ID } from "@/lib/constants/case";
+import { AuthNarrativeStatus } from "./auth.types";
 
 gsap.registerPlugin(useGSAP);
-
-interface AuthNarrativeStatus {
-  label: string;
-  value: string;
-  pulse?: boolean;
-}
 
 interface AuthShellProps {
   children: ReactNode;
@@ -70,6 +65,11 @@ export function AuthShell({
           )
             .from(".sr-anim-panel", { opacity: 0, y: 7, duration: 0.35 }, 0.32)
             .from(
+              ".sr-anim-panel-title",
+              { opacity: 0, y: 4, duration: 0.25 },
+              0.38,
+            )
+            .from(
               ".sr-anim-field",
               { opacity: 0, y: 4, duration: 0.28, stagger: 0.045 },
               0.42,
@@ -104,7 +104,7 @@ export function AuthShell({
         const common = ".sr-anim-bg, .sr-anim-hud, .sr-anim-case, .sr-anim-cta";
         const targets =
           variant === "split"
-            ? `${common}, .sr-anim-narrative, .sr-anim-panel, .sr-anim-field, .sr-anim-checklist`
+            ? `${common}, .sr-anim-narrative, .sr-anim-panel, .sr-anim-panel-title, .sr-anim-field, .sr-anim-checklist`
             : `${common}, .sr-anim-title, .sr-anim-subtitle, .sr-anim-form`;
         gsap.set(targets, {
           opacity: 1,
@@ -144,7 +144,7 @@ export function AuthShell({
               <CaseIdentifier caseId={caseId} variant="badge" />
             </span>
             {panelTitle && (
-              <span className="sr-anim-panel sr-panel-title">
+              <span className="sr-anim-panel-title sr-panel-title">
                 {panelTitle}
                 <span className="sr-panel-title-meta">FORM // 01</span>
               </span>
