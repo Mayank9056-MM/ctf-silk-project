@@ -43,12 +43,28 @@ export default function GlobalError({
           >
             FBI Cyber Division — Critical Failure
           </p>
-          <h1 style={{ fontSize: 26, margin: "0 0 14px" }}>System Compromised</h1>
-          <p style={{ color: "#7d8592", fontSize: 13.5, lineHeight: 1.6, margin: "0 0 22px" }}>
+          <h1 style={{ fontSize: 26, margin: "0 0 14px" }}>
+            System Compromised
+          </h1>
+          <p
+            style={{
+              color: "#7d8592",
+              fontSize: 13.5,
+              lineHeight: 1.6,
+              margin: "0 0 22px",
+            }}
+          >
             The secure channel failed at the root level. This has been logged.
           </p>
           {error.digest && (
-            <p style={{ fontFamily: "monospace", fontSize: 11, color: "#4d545e", margin: "0 0 22px" }}>
+            <p
+              style={{
+                fontFamily: "monospace",
+                fontSize: 11,
+                color: "#4d545e",
+                margin: "0 0 22px",
+              }}
+            >
               Incident Reference: {error.digest}
             </p>
           )}
