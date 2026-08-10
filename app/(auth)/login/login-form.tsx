@@ -2,6 +2,8 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
+import { AnimatePresence, motion } from "motion/react";
+import { ShieldCheck } from "lucide-react";
 
 import { loginAction } from "@/modules/auth/actions/login";
 import { INITIAL_LOGIN_ACTION_STATE } from "@/modules/auth/types/action-state";
@@ -21,26 +23,44 @@ export function LoginForm({ redirectTo, justRegistered }: LoginFormProps) {
 
   return (
     <>
-      <h1 className="sr-title">
+      <h1 className="sr-title sr-anim-title">
         Agent <span>Access</span>
       </h1>
-      <p className="sr-subtitle">
-        Some cases close on paper. Sign in to pick up where you left off.
+      <p className="sr-subtitle sr-anim-subtitle">
+        Some cases close on paper. This one didn&apos;t.
       </p>
 
-      {justRegistered && !state.message && (
-        <div className="sr-form-message sr-success">
-          Account created. Sign in to begin the investigation.
-        </div>
-      )}
+      <AnimatePresence mode="wait">
+        {justRegistered && !state.message && (
+          <motion.div
+            key="registered"
+            className="sr-form-message sr-success"
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+          >
+            <ShieldCheck className="mr-1.5 -mt-0.5 inline-block h-3.5 w-3.5" aria-hidden="true" />
+            Clearance request accepted. Sign in to begin the investigation.
+          </motion.div>
+        )}
 
-      {state.message && (
-        <div className="sr-form-message sr-error" role="alert">
-          {state.message}
-        </div>
-      )}
+        {state.message && (
+          <motion.div
+            key="error"
+            className="sr-form-message sr-error"
+            role="alert"
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+          >
+            {state.message}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <form action={formAction} noValidate>
+      <form action={formAction} noValidate className="sr-anim-form">
         {redirectTo && (
           <input type="hidden" name="redirectTo" value={redirectTo} />
         )}
