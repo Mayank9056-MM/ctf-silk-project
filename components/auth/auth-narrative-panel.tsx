@@ -1,8 +1,4 @@
-interface AuthNarrativeStatus {
-  label: string;
-  value: string;
-  pulse?: boolean;
-}
+import { AuthNarrativeStatus } from "./auth.types";
 
 interface AuthNarrativePanelProps {
   eyebrow: string;
@@ -10,7 +6,6 @@ interface AuthNarrativePanelProps {
   description: string;
   statuses: AuthNarrativeStatus[];
 }
-
 /**
  * Left column of the split (registration) layout. Deliberately sparse —
  * one title, one sentence, a hairline divider, and a short status list.
