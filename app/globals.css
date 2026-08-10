@@ -63,7 +63,8 @@
   background: var(--sr-bg);
   color: var(--sr-text);
   font-family: var(--sr-font-body);
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .sr-vignette {
@@ -619,4 +620,253 @@
   margin-right: 10px;
   vertical-align: middle;
   animation: sr-pulse-dot 1.2s ease-in-out infinite;
+}
+
+/* --- Auth cinematic entrance targets --- */
+.sr-anim-bg,
+.sr-anim-hud,
+.sr-anim-case,
+.sr-anim-title,
+.sr-anim-subtitle,
+.sr-anim-form,
+.sr-anim-cta {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sr-anim-bg,
+  .sr-anim-hud,
+  .sr-anim-case,
+  .sr-anim-title,
+  .sr-anim-subtitle,
+  .sr-anim-form,
+  .sr-anim-cta {
+    opacity: 1; /* CSS-level fallback in case JS is slow to attach */
+  }
+}
+
+/* --- Case identifier --- */
+.sr-case-row {
+  display: inline-block;
+  margin-bottom: 10px;
+}
+.sr-case-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sr-dimmer, #7d8592);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+.sr-case-inline {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.sr-case-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--sr-accent, #c4272a);
+  display: inline-block;
+}
+
+/* --- Field focus/error accent --- */
+.sr-field-focused .sr-input {
+  border-color: var(--sr-accent, #c4272a);
+  box-shadow: 0 0 0 1px var(--sr-accent, #c4272a);
+}
+.sr-field-focused .sr-label {
+  color: var(--sr-accent, #c4272a);
+}
+
+/* --- Password integrity panel --- */
+.sr-checklist-panel {
+  margin: 4px 0 14px;
+}
+.sr-checklist-title {
+  display: block;
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--sr-dimmer, #7d8592);
+  margin-bottom: 6px;
+}
+
+/* --- Split (two-column) auth layout: registration --- */
+.sr-split-content {
+  position: relative;
+  z-index: 5;
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: minmax(260px, 380px) minmax(460px, 620px);
+  align-items: center;
+  justify-content: center;
+  column-gap: clamp(32px, 5vw, 72px);
+  padding: clamp(64px, 10vh, 96px) clamp(20px, 4vw, 48px) clamp(24px, 5vh, 40px);
+}
+
+.sr-narrative {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.2vh, 12px);
+}
+
+.sr-narrative-title {
+  font-family: var(--sr-font-display);
+  font-weight: 800;
+  font-size: clamp(26px, 3vw, 36px);
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  margin: 4px 0 0;
+  background: linear-gradient(180deg, #fff 0%, #d8dade 55%, #8b9096 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.sr-narrative-desc {
+  font-size: 13.5px;
+  font-weight: 300;
+  color: var(--sr-dim);
+  line-height: 1.6;
+  max-width: 30ch;
+  margin: 0;
+}
+
+.sr-narrative-divider {
+  width: 36px;
+  height: 1px;
+  background: var(--sr-hairline);
+  margin: clamp(6px, 1vh, 12px) 0;
+}
+
+.sr-narrative-meta {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.6vh, 16px);
+  margin: 0;
+}
+
+.sr-narrative-meta-row dt {
+  font-family: var(--sr-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sr-dimmer);
+  margin: 0 0 3px;
+}
+
+.sr-narrative-meta-row dd {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--sr-font-ui);
+  font-size: 12.5px;
+  letter-spacing: 0.04em;
+  color: var(--sr-text);
+  margin: 0;
+}
+
+/* --- Registration panel (right column) --- */
+.sr-panel {
+  position: relative;
+  width: 100%;
+  background: linear-gradient(180deg, var(--sr-panel), var(--sr-panel-2));
+  border: 1px solid var(--sr-hairline);
+  border-radius: 8px;
+  padding: clamp(22px, 3vh, 32px) clamp(24px, 3vw, 34px) clamp(20px, 2.6vh, 28px);
+  box-shadow: 0 24px 48px -20px rgba(0, 0, 0, 0.6);
+}
+
+/* corner ticks — the one "structural" detail; nothing glowing, nothing animated */
+.sr-panel::before,
+.sr-panel::after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--sr-hairline);
+  opacity: 0.6;
+}
+.sr-panel::before { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+.sr-panel::after { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+
+
+.sr-panel-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--sr-font-ui);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sr-text);
+  margin: 10px 0 clamp(16px, 2.4vh, 22px);
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--sr-hairline);
+}
+
+/* small mono readout next to the title, e.g. "FORM // 01" — real
+   structural metadata, not a decorative badge */
+.sr-panel-title-meta {
+  font-family: var(--sr-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--sr-dimmer);
+  font-weight: 400;
+  text-transform: none;
+}
+
+/* --- Two-column form grid --- */
+.sr-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 14px;
+}
+
+.sr-field-span-2 {
+  grid-column: 1 / -1;
+}
+
+.sr-form-grid > .sr-field-span-2:last-child {
+  margin-top: 2px;
+}
+
+/* --- Compact password checklist (2x2, no layout shift on state change) --- */
+.sr-checklist-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px 16px;
+  margin: 0;
+}
+
+.sr-checklist-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  flex: none;
+  color: currentColor;
+}
+
+.sr-checklist-icon-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+/* --- Screen must scroll, never clip (fixed decorative layers are unaffected) --- */
+.sr-screen {
+  overflow-y: auto;
+  overflow-x: hidden;
 }
