@@ -3,11 +3,26 @@ import type { Metadata } from "next";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { RegisterForm } from "@/app/(auth)/register/register-form";
 
-export const metadata: Metadata = { title: "Request Access — Operation Silk Road" };
+export const metadata: Metadata = {
+  title: "Request Access — Operation Silk Road",
+};
 
 export default function RegisterPage() {
   return (
-    <AuthShell eyebrow="FBI Cyber Division — New Recruit Intake">
+    <AuthShell
+      variant="split"
+      eyebrow="FBI Cyber Division"
+      panelTitle="Create Clearance Profile"
+      narrative={{
+        title: "New Recruit Intake",
+        description: "He wants answers. Get clearance to help find them.",
+        statuses: [
+          { label: "Case Status", value: "Active" },
+          { label: "Clearance", value: "Level 03" },
+          { label: "Secure Network", value: "Connected", pulse: true },
+        ],
+      }}
+    >
       <RegisterForm />
     </AuthShell>
   );
