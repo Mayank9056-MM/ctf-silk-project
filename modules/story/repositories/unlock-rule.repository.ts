@@ -1,5 +1,8 @@
 import type { UnlockRule } from "@/app/generated/prisma/client";
-import { UnlockTargetType, UnlockConditionType } from "@/app/generated/prisma/enums";
+import {
+  UnlockTargetType,
+  UnlockConditionType,
+} from "@/app/generated/prisma/enums";
 import type { DbClient } from "@/lib/prisma";
 
 /**
@@ -18,21 +21,30 @@ class UnlockRuleRepository {
    * condition) without needing a dedicated `order` column on a table
    * that's authored far less frequently than Scene/Chapter itself.
    */
-  async findRulesForScene(db: DbClient, sceneId: string): Promise<UnlockRule[]> {
+  async findRulesForScene(
+    db: DbClient,
+    sceneId: string,
+  ): Promise<UnlockRule[]> {
     return db.unlockRule.findMany({
       where: { targetType: UnlockTargetType.SCENE, targetId: sceneId },
       orderBy: { createdAt: "asc" },
     });
   }
 
-  async findRulesForChapter(db: DbClient, chapterId: string): Promise<UnlockRule[]> {
+  async findRulesForChapter(
+    db: DbClient,
+    chapterId: string,
+  ): Promise<UnlockRule[]> {
     return db.unlockRule.findMany({
       where: { targetType: UnlockTargetType.CHAPTER, targetId: chapterId },
       orderBy: { createdAt: "asc" },
     });
   }
 
-  async findRulesForEvidence(db: DbClient, evidenceId: string): Promise<UnlockRule[]> {
+  async findRulesForEvidence(
+    db: DbClient,
+    evidenceId: string,
+  ): Promise<UnlockRule[]> {
     return db.unlockRule.findMany({
       where: { targetType: UnlockTargetType.EVIDENCE, targetId: evidenceId },
       orderBy: { createdAt: "asc" },
@@ -74,6 +86,21 @@ class UnlockRuleRepository {
       where: {
         conditionType,
         ...(referenceId !== undefined ? { referenceId } : {}),
+      },
+      orderBy: { createdAt: "asc" },
+    });
+  }
+
+  /** Every rule targeting any of a batch of Evidence ids, in one query — backs the board's bulk evaluation. */
+  async findRulesForEvidenceIds(
+    db: DbClient,
+    evidenceIds: string[],
+  ): Promise<UnlockRule[]> {
+    if (evidenceIds.length === 0) return [];
+    return db.unlockRule.findMany({
+      where: {
+        targetType: UnlockTargetType.EVIDENCE,
+        targetId: { in: evidenceIds },
       },
       orderBy: { createdAt: "asc" },
     });
