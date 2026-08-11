@@ -21,3 +21,4 @@ export const notificationLogger = new Logger({ module: "notification" });
 export const playerManagementLogger = new Logger({
   module: "player-management",
 });
+export const dashboardLogger = new Logger({ module: "dashboard" });
