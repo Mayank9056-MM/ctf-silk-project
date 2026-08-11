@@ -14,6 +14,8 @@ import { storyProgressRepository } from "../repositories/story-progress.reposito
 import type { UnlockEvaluationResult } from "../types/story.types";
 
 import { storyLogger as log } from "@/lib/logger/logger.scopes";
+import { STORY_CONSTANTS } from "../constants/story.constants";
+import { storyCache, storyCacheKeys } from "../cache/story.cache";
 
 /**
  * Evaluates UnlockRules — the general gating mechanism from the domain
@@ -61,6 +63,161 @@ class UnlockService {
     return this.evaluateRules(userId, rules);
   }
 
+  /**
+   * Bulk evidence-unlock evaluation for an entire chapter's worth of
+   * evidence in one call. NOT a second unlock engine — same UnlockRule
+   * table, same AND-across-rules / fail-closed semantics as
+   * evaluateEvidenceUnlock — just evaluated against preloaded per-player
+   * fact sets instead of one query per condition per item. Exists
+   * specifically because getEvidenceBoard() fans out to N evidence
+   * items per request across 2,000+ concurrent players; the single-item
+   * evaluateEvidenceUnlock() stays exactly as-is for getEvidence(),
+   * where one request only ever needs one item.
+   */
+  async evaluateEvidenceAccessForChapter(
+    userId: string,
+    evidenceIds: string[],
+  ): Promise<Map<string, UnlockEvaluationResult>> {
+    const results = new Map<string, UnlockEvaluationResult>();
+    if (evidenceIds.length === 0) return results;
+
+    const rules = await unlockRuleRepository.findRulesForEvidenceIds(
+      prisma,
+      evidenceIds,
+    );
+
+    if (rules.length === 0) {
+      for (const id of evidenceIds)
+        results.set(id, { isUnlocked: true, unmetRuleIds: [] });
+      return results;
+    }
+
+    const rulesByEvidence = new Map<string, UnlockRule[]>();
+    for (const rule of rules) {
+      const list = rulesByEvidence.get(rule.targetId) ?? [];
+      list.push(rule);
+      rulesByEvidence.set(rule.targetId, list);
+    }
+
+    const conditionTypes = new Set(rules.map((r) => r.conditionType));
+
+    // Preload only what the PRESENT condition types actually need — a
+    // chapter whose evidence rules are all SCENE_COMPLETED never touches
+    // submissionRepository at all.
+    const [
+      solvedChallengeIds,
+      completedScenes,
+      selectedChoiceIds,
+      progress,
+      chapters,
+      eventIsLive,
+    ] = await Promise.all([
+      conditionTypes.has(UnlockConditionType.CHALLENGE_SOLVED)
+        ? submissionRepository
+            .findSolvesByUser(prisma, userId)
+            .then((solves) => solves.map((s) => s.challengeId))
+        : Promise.resolve<string[]>([]),
+
+      conditionTypes.has(UnlockConditionType.SCENE_COMPLETED)
+        ? storyProgressRepository.getCompletedScenes(prisma, userId)
+        : Promise.resolve([]),
+
+      conditionTypes.has(UnlockConditionType.CHOICE_SELECTED)
+        ? storyProgressRepository.getSelectedChoiceIds(prisma, userId)
+        : Promise.resolve<string[]>([]),
+
+      conditionTypes.has(UnlockConditionType.CHAPTER_COMPLETED)
+        ? storyProgressRepository.findProgress(prisma, userId)
+        : Promise.resolve(null),
+
+      conditionTypes.has(UnlockConditionType.CHAPTER_COMPLETED)
+        ? storyCache.getOrSet(
+            storyCacheKeys.publishedChapters(),
+            () => storyContentRepository.findPublishedChapters(prisma),
+            STORY_CONSTANTS.CHAPTER_MAP_CACHE_TTL_MS,
+          )
+        : Promise.resolve([]),
+      conditionTypes.has(UnlockConditionType.EVENT_LIVE)
+        ? this.isEventLive()
+        : Promise.resolve(true),
+    ]);
+
+    const solvedChallengeIdSet = new Set(solvedChallengeIds);
+    const completedSceneIdSet = new Set(completedScenes.map((c) => c.sceneId));
+    const selectedChoiceIdSet = new Set(selectedChoiceIds);
+    const chapterOrderById = new Map(chapters.map((c) => [c.id, c.order]));
+    const currentChapterOrder = progress?.currentChapterId
+      ? (chapterOrderById.get(progress.currentChapterId) ?? null)
+      : null;
+    const isStoryCompleted = progress?.status === StoryProgressStatus.COMPLETED;
+
+    const evaluate = (rule: UnlockRule): boolean => {
+      switch (rule.conditionType) {
+        case UnlockConditionType.CHALLENGE_SOLVED:
+          if (!rule.referenceId)
+            return this.failClosed(
+              "CHALLENGE_SOLVED rule missing referenceId",
+              { ruleId: rule.id, userId },
+            );
+          return solvedChallengeIdSet.has(rule.referenceId);
+        case UnlockConditionType.SCENE_COMPLETED:
+          if (!rule.referenceId)
+            return this.failClosed("SCENE_COMPLETED rule missing referenceId", {
+              ruleId: rule.id,
+              userId,
+            });
+          return completedSceneIdSet.has(rule.referenceId);
+        case UnlockConditionType.CHOICE_SELECTED:
+          if (!rule.referenceId)
+            return this.failClosed("CHOICE_SELECTED rule missing referenceId", {
+              ruleId: rule.id,
+              userId,
+            });
+          return selectedChoiceIdSet.has(rule.referenceId);
+        case UnlockConditionType.CHAPTER_COMPLETED: {
+          if (!rule.referenceId)
+            return this.failClosed(
+              "CHAPTER_COMPLETED rule missing referenceId",
+              { ruleId: rule.id, userId },
+            );
+          if (isStoryCompleted) return true;
+          if (currentChapterOrder === null) return false;
+          const targetOrder = chapterOrderById.get(rule.referenceId);
+          if (targetOrder === undefined)
+            return this.failClosed(
+              `CHAPTER_COMPLETED references a missing chapter (${rule.referenceId})`,
+              {
+                ruleId: rule.id,
+                userId,
+              },
+            );
+          return currentChapterOrder > targetOrder;
+        }
+        case UnlockConditionType.EVENT_LIVE:
+          return eventIsLive;
+        default:
+          return this.assertUnreachable(rule.conditionType);
+      }
+    };
+
+    for (const evidenceId of evidenceIds) {
+      const evidenceRules = rulesByEvidence.get(evidenceId) ?? [];
+      if (evidenceRules.length === 0) {
+        results.set(evidenceId, { isUnlocked: true, unmetRuleIds: [] });
+        continue;
+      }
+      const unmetRuleIds = evidenceRules
+        .filter((r) => !evaluate(r))
+        .map((r) => r.id);
+      results.set(evidenceId, {
+        isUnlocked: unmetRuleIds.length === 0,
+        unmetRuleIds,
+      });
+    }
+
+    return results;
+  }
+
   private async evaluateRules(
     userId: string,
     rules: UnlockRule[],
@@ -89,13 +246,13 @@ class UnlockService {
   ): Promise<boolean> {
     switch (rule.conditionType) {
       case UnlockConditionType.CHALLENGE_SOLVED:
-        return this.isChallengeSolved(userId,rule.id, rule.referenceId);
+        return this.isChallengeSolved(userId, rule.id, rule.referenceId);
       case UnlockConditionType.CHAPTER_COMPLETED:
-        return this.isChapterCompleted(userId,rule.id, rule.referenceId);
+        return this.isChapterCompleted(userId, rule.id, rule.referenceId);
       case UnlockConditionType.SCENE_COMPLETED:
-        return this.isSceneCompleted(userId,rule.id, rule.referenceId);
+        return this.isSceneCompleted(userId, rule.id, rule.referenceId);
       case UnlockConditionType.CHOICE_SELECTED:
-        return this.isChoiceSelected(userId,rule.id, rule.referenceId);
+        return this.isChoiceSelected(userId, rule.id, rule.referenceId);
       case UnlockConditionType.EVENT_LIVE:
         return this.isEventLive();
       default:
@@ -113,7 +270,9 @@ class UnlockService {
   ): Promise<boolean> {
     if (!referenceId)
       return this.failClosed("CHALLENGE_SOLVED rule missing referenceId", {
-    ruleId,userId});
+        ruleId,
+        userId,
+      });
     return submissionRepository.existsSolveByUserAndChallenge(
       prisma,
       userId,
@@ -127,8 +286,10 @@ class UnlockService {
     referenceId: string | null,
   ): Promise<boolean> {
     if (!referenceId)
-      return this.failClosed("SCENE_COMPLETED rule missing referenceId",{
-    ruleId, userId});
+      return this.failClosed("SCENE_COMPLETED rule missing referenceId", {
+        ruleId,
+        userId,
+      });
     return storyProgressRepository.hasCompletedScene(
       prisma,
       userId,
