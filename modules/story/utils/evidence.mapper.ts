@@ -1,5 +1,11 @@
 import type { Evidence } from "@/app/generated/prisma/client";
-import type { EvidenceDTO, EvidencePreviewDTO, AdminEvidenceDTO } from "../types/evidence.dto";
+import {
+  EvidenceDTO,
+  EvidencePreviewDTO,
+  AdminEvidenceDTO,
+  EvidenceAccessState,
+  EvidenceBoardItemDTO,
+} from "../types/evidence.dto";
 
 export function toEvidenceDTO(evidence: Evidence): EvidenceDTO {
   return {
@@ -51,4 +57,24 @@ export function toAdminEvidenceDTO(evidence: Evidence): AdminEvidenceDTO {
 
 export function toAdminEvidenceDTOList(items: Evidence[]): AdminEvidenceDTO[] {
   return items.map(toAdminEvidenceDTO);
+}
+
+export function toUnlockedEvidenceBoardItemDTO(
+  evidence: Evidence,
+  state: EvidenceAccessState.AVAILABLE | EvidenceAccessState.DISCOVERED,
+): EvidenceBoardItemDTO {
+  return {
+    id: evidence.id,
+    state,
+    slug: evidence.slug,
+    title: evidence.title,
+    type: evidence.type,
+    attachmentUrl: evidence.attachmentUrl,
+  };
+}
+
+export function toLockedEvidenceBoardItemDTO(
+  evidenceId: string,
+): EvidenceBoardItemDTO {
+  return { id: evidenceId, state: EvidenceAccessState.LOCKED };
 }

@@ -1,4 +1,5 @@
 import type { ContentStatus, EvidenceType } from "@/app/generated/prisma/enums";
+import { ChapterDTO } from "./chapter.dto";
 
 /**
  * One item on the player's investigation board. `content` is markdown/
@@ -17,27 +18,53 @@ export interface EvidenceDTO {
   attachmentUrl: string | null;
 }
 
-export interface EvidenceBoardDTO {
-  items: EvidenceDTO[];
-}
-
-/**
- * A lighter preview shape for embedding inside a SceneDTO — a scene of
- * type EVIDENCE_REVEAL announces which evidence it unlocked without
- * needing the player to separately fetch the full board. Deliberately not
- * the same type as EvidenceDTO even though the fields overlap: this one
- * is scoped to "just unlocked, shown inline in a scene," the other to
- * "the full board view" — keeping them distinct means adding a
- * board-only field later (e.g. a `connections` array for the corkboard's
- * string-linking) never has to ripple into the inline-preview shape that
- * has no use for it.
- */
 export interface EvidencePreviewDTO {
   id: string;
   title: string;
   type: EvidenceType;
 }
 
+/**
+ * A player's investigation-board state for one evidence item, relative
+ * to their OWN progress — never a stored value, always computed fresh
+ * per request (same "derive, don't cache" discipline as
+ * ChapterProgressState).
+ */
+export enum EvidenceAccessState {
+  LOCKED = "LOCKED",
+  AVAILABLE = "AVAILABLE",
+  DISCOVERED = "DISCOVERED",
+}
+
+/**
+ * A discriminated union, not optional fields on a flat shape — a LOCKED
+ * item is structurally incapable of carrying title/type/attachmentUrl.
+ * This is deliberate: the type system, not a runtime `if`, is what
+ * prevents a future edit from accidentally attaching content to a
+ * locked item. Never includes `content` at all, even for unlocked
+ * items — the board is a listing; full content is only ever returned
+ * by evidenceService.getEvidence() once a player actually opens one.
+ */
+export type EvidenceBoardItemDTO =
+  | { id: string; state: EvidenceAccessState.LOCKED }
+  | {
+      id: string;
+      state: EvidenceAccessState.AVAILABLE | EvidenceAccessState.DISCOVERED;
+      slug: string;
+      title: string;
+      type: EvidenceType;
+      attachmentUrl: string | null;
+    };
+
+/**
+ * Player-specific and chapter-scoped — see evidence.service.ts's
+ * getEvidenceBoard for why "chapter" is singular here rather than a
+ * global list.
+ */
+export interface EvidenceBoardDTO {
+  chapter: ChapterDTO;
+  items: EvidenceBoardItemDTO[];
+}
 /**
  * Admin-only — full authoring fidelity, including status and audit
  * timestamps. Never returned from a player-facing action.
