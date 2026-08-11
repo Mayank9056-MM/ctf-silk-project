@@ -1,8 +1,5 @@
 // modules/submission/repositories/submission.repository.ts
-import type {
-  Prisma,
-  ChallengeSolve,
-} from "@/app/generated/prisma/client";
+import type { Prisma, ChallengeSolve } from "@/app/generated/prisma/client";
 import type { DbClient } from "@/lib/prisma";
 import type {
   SubmissionRecord,
