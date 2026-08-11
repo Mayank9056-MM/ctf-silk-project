@@ -203,6 +203,15 @@ class StoryProgressRepository {
     });
     return selection != null;
   }
+
+  /** Every choiceId this user has ever selected, in one query — backs bulk CHOICE_SELECTED evaluation. */
+  async getSelectedChoiceIds(db: DbClient, userId: string): Promise<string[]> {
+    const rows = await db.choiceSelection.findMany({
+      where: { userId },
+      select: { choiceId: true },
+    });
+    return rows.map((r) => r.choiceId);
+  }
 }
 
 export const storyProgressRepository = new StoryProgressRepository();
