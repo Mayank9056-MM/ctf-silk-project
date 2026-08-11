@@ -248,6 +248,43 @@ class StoryContentRepository {
       where: { id: evidenceId, status: ContentStatus.PUBLISHED },
     });
   }
+
+  /**
+   * The EVIDENCE_REVEAL scenes for one chapter, batched — the "which
+   * scene reveals which evidence" lookup for an ENTIRE chapter in one
+   * query, not one query per evidence item. Deliberately narrow select:
+   * the board only ever needs id + evidenceId from these rows.
+   */
+  async findEvidenceRevealScenesForChapter(
+    db: DbClient,
+    chapterId: string,
+  ): Promise<{ id: string; evidenceId: string }[]> {
+    const scenes = await db.scene.findMany({
+      where: {
+        chapterId,
+        type: SceneType.EVIDENCE_REVEAL,
+        status: ContentStatus.PUBLISHED,
+        evidenceId: { not: null },
+      },
+      select: { id: true, evidenceId: true },
+    });
+    // evidenceId is guaranteed non-null by the where clause; narrow the type.
+    return scenes.map((s) => ({
+      id: s.id,
+      evidenceId: s.evidenceId as string,
+    }));
+  }
+
+  /** Published Evidence rows for a batch of ids — one query for the whole board, not one per item. */
+  async findPublishedEvidenceByIds(
+    db: DbClient,
+    evidenceIds: string[],
+  ): Promise<Evidence[]> {
+    if (evidenceIds.length === 0) return [];
+    return db.evidence.findMany({
+      where: { id: { in: evidenceIds }, status: ContentStatus.PUBLISHED },
+    });
+  }
 }
 
 export const storyContentRepository = new StoryContentRepository();
