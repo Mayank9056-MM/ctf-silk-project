@@ -14,7 +14,6 @@ import { useUnreadNotificationCount } from "@/modules/notification/hooks/use-unr
 import type { DashboardDTO } from "@/modules/dashboard/types/dashboard.dto";
 
 interface DashboardContentProps {
-  username: string;
   data: DashboardDTO;
 }
 
@@ -28,22 +27,12 @@ interface DashboardContentProps {
  * mount is the first moment any `.sr-dash-anim-*` class is present —
  * which is exactly when useGSAP needs to run.
  */
-export function DashboardContent({ username, data }: DashboardContentProps) {
+export function DashboardContent({data }: DashboardContentProps) {
   const scopeRef = useDashboardEntrance();
 
-  const { data: unread } = useUnreadNotificationCount(
-    data.notifications?.unreadCount,
-  );
-
   return (
-    <div ref={scopeRef} className="space-y-4">
-      <DashboardHeader
-        username={username}
-        event={data.event}
-        unreadCount={
-          unread?.unreadCount ?? data.notifications?.unreadCount ?? 0
-        }
-      />
+   <div ref={scopeRef} className="space-y-4">
+      <DashboardHeader event={data.event} unreadCount={data.notifications?.unreadCount ?? 0} />
       <DashboardStatusStrip event={data.event} />
       <InvestigationHero
         investigation={data.investigation}

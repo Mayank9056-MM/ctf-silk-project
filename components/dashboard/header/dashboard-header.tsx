@@ -13,34 +13,23 @@ import { DashboardCaseMeta } from "./dashboard-case-meta";
 import { DashboardCountdown } from "./dashboard-countdown";
 import { DashboardEventStatus } from "./dashboard-event-status";
 import { NotificationPanel } from "../notifications/notification-panel";
+import { PlayerMenu } from "./player-menu";
 import type { DashboardEventDTO } from "@/modules/dashboard/types/dashboard.dto";
 
 interface DashboardHeaderProps {
-  username: string;
   event: DashboardEventDTO;
   unreadCount: number;
 }
 
 /**
- * Notification trigger is styled directly with buttonVariants rather
- * than wrapping the Button component inside PopoverTrigger — Base UI's
- * Trigger already renders its own <button>; nesting Button inside it
- * would produce a nested-button violation (see phase 1 notes).
- *
- * Unread badge now uses --sr-crimson-hot (the hero's accent) instead of
- * the base --sr-accent — this is the one header element that gets the
- * cinematic-extension treatment, since it's the same "something needs
- * your attention" signal as the hero's kicker/CTA. Everything else in
- * the header (brand, case meta, event status dot) is untouched.
- *
- * Bell trigger explicitly colors both the button (srButtonIconGhost)
- * and the icon itself (dashboardTheme.text.secondary) — without the
- * icon override, <Bell> inherits currentColor from whatever
- * buttonVariants({variant:"ghost"}) sets as text color, which is the
- * unrouted light-mode foreground token, i.e. a dark icon on a dark
- * panel. Same bug class as the ghost/outline buttons fixed elsewhere.
+ * `username` prop removed — it was sourced from requireAuth().name,
+ * which is always undefined (see require-auth.ts's dead
+ * payload.username read — the JWT payload never carries a username
+ * field). PlayerMenu fetches the real, current username itself via
+ * useSession() instead of trusting a value threaded down from a broken
+ * source.
  */
-export function DashboardHeader({ username, event, unreadCount }: DashboardHeaderProps) {
+export function DashboardHeader({ event, unreadCount }: DashboardHeaderProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -77,7 +66,8 @@ export function DashboardHeader({ username, event, unreadCount }: DashboardHeade
           </PopoverContent>
         </Popover>
 
-        <span className={cn("text-[12.5px]", dashboardTheme.text.secondary, dashboardTheme.font.ui)}>{username}</span>
+        <Separator orientation="vertical" className="h-4" />
+        <PlayerMenu />
       </div>
     </header>
   );
