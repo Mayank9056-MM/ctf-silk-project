@@ -71,7 +71,7 @@ Protagonist and playable investigator. The player experiences the mystery of the
 
 | Field | Value |
 |---|---|
-| Age | 26 ⚠️ *`PROLOGUE.md` proposes 22–23 — unresolved conflict, see note below* |
+| Age | 23 |
 | Occupation | Special Agent, FBI |
 | Rank | Junior Special Agent |
 | Division | Cyber Intelligence Support |
