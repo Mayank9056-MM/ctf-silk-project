@@ -1242,3 +1242,34 @@
 .sr-progress-glow-teal [data-slot="progress-indicator"] {
   box-shadow: 0 0 10px var(--sr-teal-hot-glow);
 }
+
+/* ================================================================
+   OPERATION SILK ROAD — Case Identifier Color Fix
+   .sr-case-inline never had its own color; it relied on inheriting
+   from .sr-screen's ambient `color`, which the dashboard tree never
+   provides. Matches .sr-case-badge's color exactly for consistency.
+   ================================================================ */
+.sr-case-inline {
+  color: var(--sr-dimmer, #7d8592);
+}
+
+/* ================================================================
+   OPERATION SILK ROAD — Hero Backdrop Fix
+   investigation-backdrop.tsx previously referenced five classes
+   (sr-hero-floor, sr-hero-gradient-x/-bottom/-top, sr-hero-grain)
+   that were never defined — dead CSS, silently painting nothing. The
+   hero card's real background is now set directly on its container
+   (see investigation-hero.tsx), so this only needs to define the two
+   fade layers and the grain texture that actually get used below.
+   ================================================================ */
+.sr-hero-fade-top {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, transparent 22%);
+}
+.sr-hero-fade-bottom {
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.4) 0%, transparent 28%);
+}
+.sr-hero-grain {
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
