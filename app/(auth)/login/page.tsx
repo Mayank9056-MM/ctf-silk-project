@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { LoginForm } from "@/app/(auth)/login/login-form";
 
-export const metadata: Metadata = { title: "Secure Access — Operation Silk Road" };
+export const metadata: Metadata = { title: "Secure Access — FBI Cyber Division" };
 
 interface LoginPageProps {
   searchParams: Promise<{ redirectTo?: string; registered?: string }>;

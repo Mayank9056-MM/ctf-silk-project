@@ -4,7 +4,7 @@ import { AuthShell } from "@/components/auth/auth-shell";
 import { RegisterForm } from "@/app/(auth)/register/register-form";
 
 export const metadata: Metadata = {
-  title: "Request Access — Operation Silk Road",
+  title: "Request Access — FBI Cyber Division",
 };
 
 export default function RegisterPage() {
