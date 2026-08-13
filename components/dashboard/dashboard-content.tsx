@@ -10,6 +10,7 @@ import { EvidenceOverview } from "./evidence/evidence-overview";
 import { NextObjective } from "./objective/next-objective";
 import { LeaderboardPreview } from "./leaderboard/leaderboard-preview";
 import { AnnouncementPanel } from "./announcements/announcement-panel";
+import { useUnreadNotificationCount } from "@/modules/notification/hooks/use-unread-notification-count";
 import type { DashboardDTO } from "@/modules/dashboard/types/dashboard.dto";
 
 interface DashboardContentProps {
@@ -30,11 +31,24 @@ interface DashboardContentProps {
 export function DashboardContent({ username, data }: DashboardContentProps) {
   const scopeRef = useDashboardEntrance();
 
+  const { data: unread } = useUnreadNotificationCount(
+    data.notifications?.unreadCount,
+  );
+
   return (
     <div ref={scopeRef} className="space-y-4">
-      <DashboardHeader username={username} event={data.event} unreadCount={data.notifications?.unreadCount ?? 0} />
+      <DashboardHeader
+        username={username}
+        event={data.event}
+        unreadCount={
+          unread?.unreadCount ?? data.notifications?.unreadCount ?? 0
+        }
+      />
       <DashboardStatusStrip event={data.event} />
-      <InvestigationHero investigation={data.investigation} event={data.event} />
+      <InvestigationHero
+        investigation={data.investigation}
+        event={data.event}
+      />
       <IntelligenceOverview data={data} />
 
       <div className="grid grid-cols-3 gap-4">
@@ -42,7 +56,10 @@ export function DashboardContent({ username, data }: DashboardContentProps) {
           <EvidenceOverview evidence={data.evidence} />
           <NextObjective objective={data.nextObjective} />
         </div>
-        <LeaderboardPreview preview={data.leaderboardPreview} currentUserRank={data.rank.rank} />
+        <LeaderboardPreview
+          preview={data.leaderboardPreview}
+          currentUserRank={data.rank.rank}
+        />
         <AnnouncementPanel announcements={data.announcements} />
       </div>
     </div>
