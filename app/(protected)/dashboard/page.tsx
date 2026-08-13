@@ -6,13 +6,21 @@ import { PLATFORM_NAME } from "@/lib/constants/brand";
 
 export const metadata: Metadata = { title: `Mission Control — ${PLATFORM_NAME}` };
 
-/** Thin per spec sections 8/26 — no data fetching here. Identity comes straight from requireAuth() (already includes `name`), the actual dashboard aggregation flows entirely through useDashboard() → getDashboard() → dashboardService, untouched by this file. */
+/**
+ * requireAuth() is kept as a defense-in-depth gate even though this app
+ * already has proxy.ts + presumably a protected-route layout guarding
+ * this segment — matches the same "deliberate second layer, don't trust
+ * the edge check alone" reasoning the auth layout's own comment states
+ * for guest routes. Its return value is no longer used for anything
+ * (see dashboard-header.tsx's doc comment on why `.name` was dead)
+ * — PlayerMenu gets real identity from useSession() client-side instead.
+ */
 export default async function DashboardPage() {
-  const user = await requireAuth();
+  await requireAuth();
 
   return (
     <DashboardShell>
-      <DashboardScreen username={user.name} />
+      <DashboardScreen />
     </DashboardShell>
   );
 }
