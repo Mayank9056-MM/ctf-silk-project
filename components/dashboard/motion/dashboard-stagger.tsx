@@ -1,14 +1,14 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { motion, useReducedMotion, AnimatePresence } from "motion/react";
+import { motion, useReducedMotion, AnimatePresence, type Variants } from "motion/react";
 
-const listVariants = {
+const listVariants: Variants = {
   hidden: {},
   show: { transition: { staggerChildren: 0.05 } },
 };
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 6 },
   show: { opacity: 1, y: 0, transition: { duration: 0.22, ease: "easeOut" } },
 };
