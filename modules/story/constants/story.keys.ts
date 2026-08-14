@@ -1,20 +1,29 @@
-/**
- * TanStack Query key registry for the Story module. All three fixed keys
- * are implicitly scoped to "the caller's own session" — same as
- * submissionKeys.mine and leaderboardKeys.myRank — since every read
- * action (getChapterMap, getCurrentScene, getStoryProgress) derives its
- * subject from requireAuth(), never a client-supplied userId.
- */
 export const storyKeys = {
   chapterMap: ["story", "chapter-map"] as const,
   currentScene: ["story", "current-scene"] as const,
   progress: ["story", "progress"] as const,
 
-  /**
-   * Parameterized by sceneId, unlike the three above — a replayed scene
-   * genuinely varies per scene requested, so each is independently
-   * cacheable, matching challengeKeys.detail(slug)'s pattern rather than
-   * currentScene's single fixed key.
-   */
   replayScene: (sceneId: string) => ["story", "replay-scene", sceneId] as const,
-};
+
+  /**
+   * New — evidenceService.getEvidenceBoard(userId) is chapter-scoped and
+   * derives its subject from the caller's own session (same "implicitly
+   * scoped to the caller" reasoning the header comment on this file
+   * already states for chapterMap/currentScene/progress), so no chapterId
+   * parameter is threaded through the key — there's exactly one board per
+   * authenticated player at any given time, matching the service's own
+   * "always the CURRENT chapter" contract.
+   */
+  evidenceBoard: ["story", "evidence-board"] as const,
+
+  /**
+   * New — parameterized by evidenceId, same reasoning as replayScene:
+   * genuinely varies per item requested, so each is independently
+   * cacheable rather than sharing one key.
+   */
+  evidence: (evidenceId: string) => ["story", "evidence", evidenceId] as const,
+
+  /** New — one history per authenticated player, same "implicitly scoped to the caller" reasoning as chapterMap/currentScene/progress. */
+  history: ["story", "history"] as const,
+} as const;
+
