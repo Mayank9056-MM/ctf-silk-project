@@ -117,7 +117,7 @@ class StoryService {
     );
   }
 
-    /**
+  /**
    * A player's full completion history — "everywhere they've been," per
    * StoryHistoryDTO's own doc comment. Slug is deliberately NOT included
    * per-completion (SceneCompletionDTO carries sceneSlug per its type,
@@ -163,7 +163,7 @@ class StoryService {
           });
         }
         return {
-          sceneSlug: scene?.slug ?? completion.sceneId,
+          sceneSlug: scene?.slug ?? null,
           sceneTitle: scene?.title ?? null,
           completedAt: completion.completedAt,
         };
