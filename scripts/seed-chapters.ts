@@ -10,28 +10,20 @@
 
 import prisma from "@/lib/prisma";
 import { ContentStatus } from "@/app/generated/prisma/enums";
-import "dotenv/config"
+import "dotenv/config";
 
 /**
- * Source-of-truth chapter list. Kept as plain data here rather than
- * parsed from docs/story/*.md at seed time — parsing markdown for
- * structural data (title, order) would make this script's success
- * depend on prose formatting staying stable, which is a documentation
- * concern, not a seeding one. The docs remain the narrative source
- * material a human author works from; this array is what actually
- * gets persisted.
+ * Source-of-truth chapter list. Order 0 is the Prologue (docs/story/PROLOGUE.md),
+ * which is content-complete per its own doc but was missing from the seed —
+ * without it, storyNavigationService.getOrCreateProgress() would bootstrap
+ * new players straight into Chapter 1 with no cold open.
  */
 const CHAPTERS = [
+  { number: 0, slug: "prologue", title: "Prologue: The Call" },
   { number: 1, slug: "chapter-1", title: "The Overdose" },
   { number: 2, slug: "chapter-2", title: "The Ledger" },
 ] as const;
 
-/**
- * Upsert by slug — re-running this script updates title/order on
- * existing chapters without ever creating a duplicate or touching
- * their generated id, which is exactly the stability chapter-map.ts
- * depends on.
- */
 export async function seedChapters(): Promise<void> {
   for (const chapter of CHAPTERS) {
     await prisma.chapter.upsert({
