@@ -14,6 +14,20 @@
 //     Submission via a separate submissionId @unique. A solve is therefore
 //     two rows, written together, not one upsert.
 //   - Notification uses readAt: DateTime | null, not an isRead boolean.
+//
+// ----------------------------------------------------------------------
+// REWRITE NOTE (this pass)
+// ----------------------------------------------------------------------
+// seed-story.ts's Prologue expanded from 3 scenes ("cold-open", "the-call",
+// "the-file") to the full 15-scene PROLOGUE.md breakdown, and two of those
+// scenes are now branching (CHOICE type: "the-supervisor", "the-senior-
+// agent"). This script previously parked the demo user's completed-scenes
+// list at the old 3-scene stub and pulled a choice off "the-call" — both
+// slugs no longer exist. Rewritten below to walk one full path through
+// the new Prologue (picking a side at each branch — see the
+// PROLOGUE_PATH_SLUGS comment) plus the existing Chapter 1 opener, and to
+// record a ChoiceSelection at each branch point actually passed through,
+// not just one.
 // ============================================================================
 
 import prisma from "@/lib/prisma";
@@ -22,22 +36,60 @@ import "dotenv/config";
 
 const PRIMARY_USER_EMAIL = "ethan.test@example.com";
 
+/**
+ * One full walk through the Prologue, in order, choosing the
+ * "persistent / pushback" branch at both forks:
+ *   - the-supervisor  → supervisor-pushback (not supervisor-accept-quietly)
+ *   - the-senior-agent → brooks-full-evidence (not brooks-summary)
+ * This is an arbitrary pick for demo/test purposes, not a narrative
+ * claim about which branch is "canon" — there is no canonical branch,
+ * both are equally valid dummy content.
+ */
+const PROLOGUE_PATH_SLUGS = [
+  "cold-open",
+  "crime-scene",
+  "funeral",
+  "bullpen-three-weeks-later",
+  "the-pattern",
+  "the-supervisor",
+  "supervisor-pushback",
+  "the-senior-agent",
+  "brooks-full-evidence",
+  "the-hidden-phone",
+  "robert-shadows",
+  "noahs-grave",
+  "thesis-statement",
+] as const;
+
+// Branch scene slug → the specific Choice.order taken, so ChoiceSelection
+// rows line up with PROLOGUE_PATH_SLUGS above. Keep these two in sync if
+// the path above ever changes branches.
+const BRANCH_CHOICES: { sceneSlug: string; choiceOrder: number }[] = [
+  { sceneSlug: "the-supervisor", choiceOrder: 1 }, // "There has to be something here."
+  { sceneSlug: "the-senior-agent", choiceOrder: 1 }, // "Lay out every report you found."
+];
+
 export async function seedDemoProgress(): Promise<void> {
   const primaryUser = await prisma.user.findUnique({ where: { email: PRIMARY_USER_EMAIL } });
   if (!primaryUser) {
     throw new Error(`[seed-demo-progress] No user found for ${PRIMARY_USER_EMAIL} — did seed-users run first?`);
   }
 
-  const [chapter1] = await Promise.all([prisma.chapter.findUnique({ where: { slug: "chapter-1" } })]);
+  const chapter1 = await prisma.chapter.findUnique({ where: { slug: "chapter-1" } });
   const currentScene = await prisma.scene.findFirst({ where: { slug: "the-ledger-photo" } });
-  const coldOpen = await prisma.scene.findFirst({ where: { slug: "cold-open" } });
-  const theCall = await prisma.scene.findFirst({ where: { slug: "the-call" } });
-  const theFile = await prisma.scene.findFirst({ where: { slug: "the-file" } });
   const arriving = await prisma.scene.findFirst({ where: { slug: "arriving-at-scene" } });
-  const callChoice = await prisma.choice.findFirst({ where: { sceneId: theCall?.id, order: 1 } });
 
-  if (!chapter1 || !currentScene || !coldOpen || !theCall || !theFile || !arriving) {
-    throw new Error("[seed-demo-progress] Required chapters/scenes missing — did seed-story run first?");
+  const prologueScenes = await prisma.scene.findMany({
+    where: { slug: { in: [...PROLOGUE_PATH_SLUGS] } },
+  });
+  const prologueSceneBySlug = new Map(prologueScenes.map((s) => [s.slug, s]));
+
+  const missingPrologueSlugs = PROLOGUE_PATH_SLUGS.filter((slug) => !prologueSceneBySlug.has(slug));
+  if (!chapter1 || !currentScene || !arriving || missingPrologueSlugs.length > 0) {
+    throw new Error(
+      `[seed-demo-progress] Required chapters/scenes missing (did seed-story run first?)` +
+        (missingPrologueSlugs.length ? ` — missing Prologue slugs: ${missingPrologueSlugs.join(", ")}` : ""),
+    );
   }
 
   // ---- StoryProgress: parked mid-Chapter-1 ----
@@ -58,7 +110,8 @@ export async function seedDemoProgress(): Promise<void> {
   });
 
   // ---- SceneCompletion: everything strictly before currentScene ----
-  for (const scene of [coldOpen, theCall, theFile, arriving]) {
+  const completedScenes = [...PROLOGUE_PATH_SLUGS.map((slug) => prologueSceneBySlug.get(slug)!), arriving];
+  for (const scene of completedScenes) {
     await prisma.sceneCompletion.upsert({
       where: { userId_sceneId: { userId: primaryUser.id, sceneId: scene.id } },
       update: {},
@@ -66,12 +119,21 @@ export async function seedDemoProgress(): Promise<void> {
     });
   }
 
-  // ---- ChoiceSelection: the branch taken in the-call ----
-  if (callChoice) {
+  // ---- ChoiceSelection: the branch taken at each fork actually passed through ----
+  for (const branch of BRANCH_CHOICES) {
+    const scene = prologueSceneBySlug.get(branch.sceneSlug);
+    if (!scene) continue; // already covered by the missing-slug check above; guards TS narrowing only
+
+    const choice = await prisma.choice.findFirst({ where: { sceneId: scene.id, order: branch.choiceOrder } });
+    if (!choice) {
+      console.warn(`[seed-demo-progress] No choice found at order ${branch.choiceOrder} on scene "${branch.sceneSlug}" — skipping.`);
+      continue;
+    }
+
     await prisma.choiceSelection.upsert({
-      where: { userId_sceneId: { userId: primaryUser.id, sceneId: theCall.id } },
-      update: { choiceId: callChoice.id },
-      create: { userId: primaryUser.id, sceneId: theCall.id, choiceId: callChoice.id },
+      where: { userId_sceneId: { userId: primaryUser.id, sceneId: scene.id } },
+      update: { choiceId: choice.id },
+      create: { userId: primaryUser.id, sceneId: scene.id, choiceId: choice.id },
     });
   }
 
