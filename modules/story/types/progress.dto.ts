@@ -22,7 +22,7 @@ export interface StoryProgressDTO {
  * second fetch per row.
  */
 export interface SceneCompletionDTO {
-  sceneSlug: string;
+  sceneSlug: string | null;
   sceneTitle: string | null;
   completedAt: Date;
 }
