@@ -1,0 +1,1 @@
+// TODO: I should you cloudinary or pulic folder i am confused because user before seeing the scene can access the images
