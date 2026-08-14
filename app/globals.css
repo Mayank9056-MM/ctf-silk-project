@@ -1273,3 +1273,98 @@
   mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
+
+/* ================================================================
+   OPERATION SILK ROAD — Story Cinematic Stage
+   Extends the existing --sr-* token set; adds only what didn't
+   already exist (cold investigation blue) plus stage-specific
+   ambient layers (vignette/grain/scanlines/letterbox).
+   ================================================================ */
+:root {
+  --sr-investigation-blue: #476d82;
+  --sr-investigation-blue-dim: #315a73;
+}
+
+.sr-stage-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 50% 42%,
+    transparent 38%,
+    rgba(0, 0, 0, 0.55) 78%,
+    rgba(0, 0, 0, 0.9) 100%
+  );
+}
+
+.sr-stage-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.045;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.sr-stage-scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.03;
+  background: repeating-linear-gradient(0deg, #fff 0 1px, transparent 1px 3px);
+}
+
+.sr-stage-letterbox {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+}
+.sr-stage-letterbox::before,
+.sr-stage-letterbox::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  background: #000;
+  transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.sr-stage-letterbox::before {
+  top: 0;
+}
+.sr-stage-letterbox::after {
+  bottom: 0;
+}
+.sr-stage-letterbox[data-active="true"]::before,
+.sr-stage-letterbox[data-active="true"]::after {
+  height: clamp(28px, 6vh, 64px);
+}
+
+.sr-dialogue-cursor {
+  display: inline-block;
+  width: 0.5ch;
+  animation: sr-cursor-blink 0.9s steps(1) infinite;
+}
+@keyframes sr-cursor-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.sr-stage-anim {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sr-stage-anim {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .sr-stage-letterbox::before,
+  .sr-stage-letterbox::after {
+    transition-duration: 0.01s;
+  }
+  .sr-dialogue-cursor {
+    animation: none;
+  }
+}
