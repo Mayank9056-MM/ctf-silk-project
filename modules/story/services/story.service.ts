@@ -11,7 +11,7 @@ import { sceneService } from "./scene.service";
 import { storyNavigationService } from "./story-navigation.service";
 import { toChapterMapDTO, toStoryProgressDTO } from "../utils/story.mapper";
 import type { ChapterMapDTO } from "../types/chapter.dto";
-import type { StoryProgressDTO } from "../types/progress.dto";
+import type { StoryHistoryDTO, StoryProgressDTO } from "../types/progress.dto";
 import type { SceneDTO } from "../types/scene.dto";
 import type { StoryStateDTO } from "../types/story.dto";
 import { STORY_CONSTANTS } from "../constants/story.constants";
@@ -115,6 +115,60 @@ class StoryService {
       scene?.slug ?? null,
       completions.length,
     );
+  }
+
+    /**
+   * A player's full completion history — "everywhere they've been," per
+   * StoryHistoryDTO's own doc comment. Slug is deliberately NOT included
+   * per-completion (SceneCompletionDTO carries sceneSlug per its type,
+   * but resolving it here would mean a second batch lookup this feature
+   * doesn't need yet — sceneSlug isn't consumed by anything calling this
+   * method today). Wait — StoryProgressDTO uses slug elsewhere in this
+   * module, but SceneCompletionDTO's actual fields are sceneSlug/
+   * sceneTitle/completedAt; matching that exactly below.
+   *
+   * Batches the title lookup via the new findSceneTitlesByIds rather
+   * than one findSceneById call per completion — same discipline
+   * getEvidenceBoard already follows for its own N-item fan-out.
+   *
+   * Returns an empty history (not NOT_FOUND) for a player with no
+   * completions yet — unlike getStoryProgress, "no history" is a
+   * legitimate, displayable empty state here, not something to
+   * distinguish from "never started" via a thrown error.
+   */
+  async getStoryHistory(userId: string): Promise<StoryHistoryDTO> {
+    const completions = await storyProgressRepository.getCompletedScenes(
+      prisma,
+      userId,
+    );
+
+    if (completions.length === 0) {
+      return { completions: [] };
+    }
+
+    const sceneIds = [...new Set(completions.map((c) => c.sceneId))];
+    const scenes = await storyContentRepository.findSceneTitlesByIds(
+      prisma,
+      sceneIds,
+    );
+    const sceneById = new Map(scenes.map((s) => [s.id, s]));
+
+    return {
+      completions: completions.map((completion) => {
+        const scene = sceneById.get(completion.sceneId);
+        if (!scene) {
+          log.warn("Completion references a scene that no longer exists", {
+            userId,
+            sceneId: completion.sceneId,
+          });
+        }
+        return {
+          sceneSlug: scene?.slug ?? completion.sceneId,
+          sceneTitle: scene?.title ?? null,
+          completedAt: completion.completedAt,
+        };
+      }),
+    };
   }
 
   /**

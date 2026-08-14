@@ -116,6 +116,17 @@ class StoryContentRepository {
     return db.scene.findUnique({ where: { id } });
   }
 
+  async findSceneTitlesByIds(
+    db: DbClient,
+    sceneIds: string[],
+  ): Promise<{ id: string; slug: string; title: string | null }[]> {
+    if (sceneIds.length === 0) return [];
+    return db.scene.findMany({
+      where: { id: { in: sceneIds } },
+      select: { id: true, slug: true, title: true },
+    });
+  }
+
   /** Scene's composite unique key is (chapterId, slug) — both required. */
   async findSceneBySlug(
     db: DbClient,
