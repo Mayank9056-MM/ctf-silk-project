@@ -28,6 +28,16 @@ interface ChallengeSeed {
 }
 
 const CHALLENGE_CONTENT: Record<number, ChallengeSeed[]> = {
+  0: [
+    {
+      slug: "the-pattern-tutorial",
+      title: "A Pattern Nobody Saw",
+      difficulty: 1,
+      displayOrder: 1,
+      xpReward: 50, // lower than Chapter 1's challenges — pure tutorial, not a real case
+      flag: "SRCTF{pattern_nobody_saw}",
+    },
+  ],
   1: [
     {
       slug: "the-overdose-report",
@@ -69,7 +79,9 @@ export async function seedChallenges(): Promise<void> {
   const chapterMap = await buildChapterMap(prisma);
   const challengeIdBySlug = new Map<string, string>();
 
-  for (const [chapterNumberStr, challenges] of Object.entries(CHALLENGE_CONTENT)) {
+  for (const [chapterNumberStr, challenges] of Object.entries(
+    CHALLENGE_CONTENT,
+  )) {
     const chapterNumber = Number(chapterNumberStr);
     const chapterId = chapterMap.getId(chapterNumber);
 
@@ -78,7 +90,10 @@ export async function seedChallenges(): Promise<void> {
 
       const row = await prisma.challenge.upsert({
         where: {
-          chapterId_displayOrder: { chapterId, displayOrder: challenge.displayOrder },
+          chapterId_displayOrder: {
+            chapterId,
+            displayOrder: challenge.displayOrder,
+          },
         },
         update: {
           slug: challenge.slug,

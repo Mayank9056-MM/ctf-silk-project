@@ -24,6 +24,13 @@ interface HintSeed {
 }
 
 const HINT_CONTENT: HintSeed[] = [
+   {
+    challengeSlug: "the-pattern-tutorial",
+    level: HintLevel.LEVEL_1,
+    title: "Two files, one wallet",
+    content: "Two of the case files reference the same wallet address under different formatting — normalize before you compare.",
+    xpCost: 10,
+  },
   {
     challengeSlug: "the-overdose-report",
     level: HintLevel.LEVEL_1,
