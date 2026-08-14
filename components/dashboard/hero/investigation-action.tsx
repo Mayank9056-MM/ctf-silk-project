@@ -37,7 +37,7 @@ export function InvestigationAction({
 
   if (investigation.nextAction === "RESUME_INVESTIGATION") {
     const href = investigation.currentChapterSlug
-      ? `/story/${investigation.currentChapterSlug}`
+      ? `/story/chapters/${investigation.currentChapterSlug}`
       : "/story";
     return (
       <Link href={href} className={cta}>
