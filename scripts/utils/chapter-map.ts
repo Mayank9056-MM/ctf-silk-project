@@ -41,7 +41,20 @@ export interface ChapterMap {
  */
 const CHAPTER_SLUG_PATTERN = /^chapter-(\d+)$/;
 
+/**
+ * Chapter.slug is expected in the form "chapter-N" (matching
+ * docs/story/CHAPTER_01.md-style numbering), with one deliberate
+ * exception: "prologue" resolves to chapter number 0. The Prologue is
+ * numbered zero throughout this codebase (seed-chapters.ts's own
+ * CHAPTERS array, the domain docs distinguishing PROLOGUE.md from
+ * CHAPTER_01.md) but its slug is deliberately NOT "chapter-0" — a
+ * player-facing route like /story/chapters/chapter-0 would leak the
+ * numbering convention into a URL where /story/chapters/prologue reads
+ * naturally instead.
+ */
 function parseChapterNumber(slug: string): number | null {
+  if (slug === "prologue") return 0;
+
   const match = CHAPTER_SLUG_PATTERN.exec(slug);
   return match ? Number.parseInt(match[1], 10) : null;
 }
