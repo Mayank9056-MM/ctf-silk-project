@@ -2,30 +2,26 @@
 // seed-users.ts
 // ============================================================================
 //
-// Seeds a small, deterministic set of non-privileged dev/test player
-// accounts. Never touches role: SUPER_ADMIN — that's seed-admin.ts's
-// exclusive responsibility, so "who can become an admin" stays one
-// auditable code path rather than something any content seed could
-// accidentally grant.
+// Seeds non-privileged dev/test player accounts. Never touches
+// role: SUPER_ADMIN — seed-admin.ts's exclusive responsibility.
 // ============================================================================
 
 import prisma from "@/lib/prisma";
 import { Role, UserStatus } from "@/app/generated/prisma/enums";
 import { passwordService } from "@/modules/auth/services/password.service";
-import "dotenv/config"
+import "dotenv/config";
 
 const DEV_USERS = [
-  { username: "ethan_test", email: "ethan.test@example.com", fullName: "Ethan Test" },
+  { username: "ethan_test", email: "ethan.test@example.com", fullName: "Ethan Test" }, // Primary demo account — see seed-demo-progress.ts
   { username: "robert_test", email: "robert.test@example.com", fullName: "Robert Test" },
+  { username: "noah_test", email: "noah.test@example.com", fullName: "Noah Test" },
+  { username: "player_alpha", email: "alpha@example.com", fullName: "Player Alpha" },
+  { username: "player_bravo", email: "bravo@example.com", fullName: "Player Bravo" },
+  { username: "player_charlie", email: "charlie@example.com", fullName: "Player Charlie" },
+  { username: "player_delta", email: "delta@example.com", fullName: "Player Delta" },
+  { username: "player_echo", email: "echo@example.com", fullName: "Player Echo" },
 ] as const;
 
-/**
- * Password is a fixed dev-only value, never read from an env var the
- * way seed-admin.ts's credential is — these accounts have no real
- * privilege, so there's nothing here worth protecting the way a bootstrap
- * admin credential is. Upserted by email so re-running never duplicates
- * a test account or disturbs its id.
- */
 export async function seedUsers(): Promise<void> {
   const passwordHash = await passwordService.hash("dev-password-only");
 
