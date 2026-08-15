@@ -36,7 +36,7 @@ import "dotenv/config"
  */
 export async function seedEvent(): Promise<void> {
   const startsAt = new Date(Date.now()); // +1 day
-  const endsAt = new Date(startsAt.getTime() + 4 * 60 * 60 * 1000); // +4 hours
+  const endsAt = new Date(startsAt.getTime() + 100 * 60 * 60 * 1000); // +100 hours
 
   const event = await prisma.event.upsert({
     where: { singleton: 1 },
