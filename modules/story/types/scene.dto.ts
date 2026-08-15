@@ -38,6 +38,14 @@ export interface SceneDTO {
   dialogueLines: DialogueLineDTO[];
   choices: ChoiceDTO[];
 
+
+  /**
+   * Safe player-facing cinematic asset.
+   * Deliberately exposes only the background URL rather than
+   * the entire authoring metadata object.
+   */
+  backgroundUrl: string | null;
+
   /** Set only for CHALLENGE_GATE scenes — the challenge the player must solve to advance. */
   challengeId: string | null;
   /** Set only for EVIDENCE_REVEAL scenes — the evidence this scene unlocked. */
