@@ -1,4 +1,4 @@
-import type { Chapter, Evidence } from "@/app/generated/prisma/client";
+import type { Chapter } from "@/app/generated/prisma/client";
 import type { ResolvedScene } from "../types/scene.types";
 import type {
   SceneDTO,
@@ -13,6 +13,7 @@ import {
 import { EvidencePreviewDTO } from "../types/evidence.dto";
 import { ChapterMapDTO, ChapterMapEntryDTO, ChapterProgressState } from "../types/chapter.dto";
 import { toChapterDTO } from "./story.mapper";
+import { resolveBackgroundAsset } from "@/lib/assets/story-assets";
 
 function toChoiceDTO(choice: ResolvedScene["choices"][number]): ChoiceDTO {
   return { id: choice.id, order: choice.order, label: choice.label };
@@ -20,6 +21,25 @@ function toChoiceDTO(choice: ResolvedScene["choices"][number]): ChoiceDTO {
 
 function toChoiceDTOList(choices: ResolvedScene["choices"]): ChoiceDTO[] {
   return choices.map(toChoiceDTO);
+}
+
+
+/**
+ * Narrow type guard, not a cast — `Scene.metadata` is Prisma's untyped
+ * `Json?`, which at runtime can be anything a previous authoring session
+ * wrote (or nothing at all). This is the ONE place a player-facing field
+ * gets pulled out of that blob; every other property on `metadata`,
+ * whatever it might contain, is never read here and never reaches
+ * SceneDTO. AdminSceneDTO's `toAdminSceneDTO` remains the only mapper
+ * that forwards the whole object, unchanged by this edit.
+ */
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function extractBackgroundUrl(metadata: unknown): string | null {
+  if (!isPlainObject(metadata)) return null;
+  return resolveBackgroundAsset(metadata.backgroundAssetKey);
 }
 
 interface ToSceneDTOOptions {
@@ -52,6 +72,7 @@ export function toSceneDTO(
     slug: scene.slug,
     title: scene.title,
     type: scene.type,
+    backgroundUrl: extractBackgroundUrl(scene.metadata),
     dialogueLines: scene.dialogueLines.map(toDialogueLineDTO),
     choices: toChoiceDTOList(choices),
     challengeId: scene.challengeId,
