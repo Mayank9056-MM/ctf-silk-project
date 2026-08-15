@@ -66,7 +66,7 @@ export function isKnownBackgroundAssetKey(assetKey: string): boolean {
 // ----------------------------------------------------------------------------
 
 export const CHARACTER_PORTRAITS: Record<string, string> = {
-  "ethan-carter": "", // TODO: Cloudinary URL
+  "ethan-carter": "https://res.cloudinary.com/dp7fychwy/image/upload/v1786777358/ethan-carter-portrait-noir_en2mlr.webp",
   "daniel-brooks": "",
   supervisor: "",
   robert: "", // CHARACTERS.md: no confirmed appearance/portrait yet — leave empty until narrative lead confirms
