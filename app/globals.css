@@ -1368,3 +1368,54 @@
     animation: none;
   }
 }
+
+/* ================================================================
+   OPERATION SILK ROAD — Evidence Corkboard
+   ================================================================ */
+.sr-corkboard {
+  background:
+    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.02) 0, transparent 2px),
+    radial-gradient(circle at 60% 70%, rgba(255, 255, 255, 0.02) 0, transparent 2px),
+    linear-gradient(160deg, #1c150f 0%, #120d09 60%, #0c0906 100%);
+  background-size: 3px 3px, 3px 3px, 100% 100%;
+}
+
+/* Purely decorative diagonal thread texture — NOT tied to specific card
+   positions or implying any particular evidentiary relationship between
+   items (the backend gives us no such relationships to draw). Reads as
+   "pinned to the same board," nothing more specific than that. */
+.sr-corkboard-strings {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.12;
+  mix-blend-mode: screen;
+  background-image:
+    repeating-linear-gradient(118deg, transparent 0 140px, rgba(228, 35, 47, 0.5) 140px 141px, transparent 141px 280px),
+    repeating-linear-gradient(62deg, transparent 0 220px, rgba(228, 35, 47, 0.35) 220px 221px, transparent 221px 440px);
+}
+
+/* --- Scene atmosphere upgrade: dust + light rays, pure CSS --- */
+.sr-atmosphere-rays {
+  opacity: 0.06;
+  mix-blend-mode: screen;
+  background: repeating-conic-gradient(from 200deg at 78% 20%, transparent 0deg 6deg, #fff 6deg 6.4deg, transparent 6.4deg 14deg);
+}
+
+.sr-atmosphere-dust {
+  opacity: 0.35;
+  background-image:
+    radial-gradient(1.5px 1.5px at 12% 20%, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(1px 1px at 34% 60%, rgba(255, 255, 255, 0.35), transparent),
+    radial-gradient(1.5px 1.5px at 58% 30%, rgba(255, 255, 255, 0.4), transparent),
+    radial-gradient(1px 1px at 76% 72%, rgba(255, 255, 255, 0.3), transparent),
+    radial-gradient(1.5px 1.5px at 88% 15%, rgba(255, 255, 255, 0.45), transparent);
+  animation: sr-dust-drift 26s linear infinite;
+}
+@keyframes sr-dust-drift {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(10px, -40px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sr-atmosphere-dust { animation: none; }
+}

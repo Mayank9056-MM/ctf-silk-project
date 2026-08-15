@@ -4,14 +4,21 @@ import { CharacterTransition } from "../character/character-transition";
 import { DialogueLine } from "./dialogue-line";
 import { useDialogueController } from "../hooks/use-dialogue-controller";
 import type { DialogueLineDTO } from "@/modules/story/types/dialogue.dto";
+import { useStoryKeyboard } from "../hooks/use-story-keyboard";
 
 interface DialogueSystemProps {
   lines: DialogueLineDTO[];
   onSequenceComplete: () => void;
 }
 
-export function DialogueSystem({ lines, onSequenceComplete }: DialogueSystemProps) {
-  const { currentLine, displayedText, phase, lineIndex, totalLines, advance } = useDialogueController(lines);
+export function DialogueSystem({
+  lines,
+  onSequenceComplete,
+}: DialogueSystemProps) {
+  const { currentLine, displayedText, phase, lineIndex, totalLines, advance } =
+    useDialogueController(lines);
+
+  useStoryKeyboard(handleAdvance);
 
   function handleAdvance() {
     if (phase === "line-complete" && lineIndex + 1 >= totalLines) {
@@ -25,7 +32,9 @@ export function DialogueSystem({ lines, onSequenceComplete }: DialogueSystemProp
   if (!currentLine) return null;
 
   return (
-    <CharacterTransition speakerKey={currentLine.speaker?.displayName ?? `narration-${lineIndex}`}>
+    <CharacterTransition
+      speakerKey={currentLine.speaker?.displayName ?? `narration-${lineIndex}`}
+    >
       <DialogueLine
         line={currentLine}
         displayedText={displayedText}
