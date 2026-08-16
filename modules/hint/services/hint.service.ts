@@ -17,6 +17,7 @@ import {
 import { hasEnoughXp, normalizeXpCost } from "../utils/hint-pricing";
 import type { HintWithPlayerState } from "../types/hint.types";
 import type { HintListDTO, HintUnlockDTO } from "../types/hint.dto";
+import { challengeAccessService } from "@/modules/challenge/services/challenge-access.service";
 
 // ============================================================================
 // hint.service.ts
@@ -82,7 +83,7 @@ class HintService {
     userId: string,
     challengeId: string,
   ): Promise<HintListDTO> {
-    await this.assertChallengeExists(challengeId);
+    await this.assertChallengeAccessible(userId, challengeId);
 
     const [hints, currentXp] = await Promise.all([
       hintRepository.findChallengeHints(prisma, userId, challengeId),
@@ -90,10 +91,15 @@ class HintService {
     ]);
 
     const dtos = hints.map((state) => {
+      const previousLevelUnlocked = hasUnlockedPreviousLevel(
+        hints,
+        state.hint.level,
+      );
       const isEligible =
-        canUnlockHint(hints, state) &&
+        !isHintUnlocked(state) &&
+        previousLevelUnlocked &&
         hasEnoughXp(currentXp, state.hint.xpCost);
-      return toChallengeHintDTO(state, isEligible);
+      return toChallengeHintDTO(state, isEligible, previousLevelUnlocked);
     });
 
     return { challengeId, hints: dtos };
@@ -111,6 +117,8 @@ class HintService {
     if (!targetHint) {
       throw ApiError.notFound(ErrorCode.NOT_FOUND, "Hint not found.");
     }
+
+    await this.assertChallengeAccessible(userId, targetHint.challengeId);
 
     const hints = await hintRepository.findChallengeHints(
       prisma,
@@ -248,29 +256,34 @@ class HintService {
   // --------------------------------------------------------------------
 
   /**
-   * Confirms a challenge exists before this module does anything
-   * challenge-scoped. Necessary, not decorative: an empty hint list is
-   * a legitimate outcome for a real challenge with no authored hints,
-   * so "zero hints returned" alone can never distinguish "challenge
-   * doesn't exist" from "challenge exists, has none yet." Re-wraps
-   * challengeService's own NOT_FOUND into HINT_MESSAGES.CHALLENGE_NOT_FOUND
-   * rather than passing its message through directly — this module owns
-   * its own user-facing wording independently of how the Challenge
-   * module phrases its own 404s.
+   * Independently re-derives challenge access for hint requests — never
+   * assumes the player legitimately reached this point. Mirrors
+   * SubmissionService.assertChallengeAccessible exactly: same
+   * ChallengeAccessService call, same generic NOT_FOUND regardless of
+   * WHY access was denied (challenge doesn't exist, event not live,
+   * this isn't the player's current gate, an unmet prerequisite) — a
+   * player probing this endpoint learns nothing about which reason
+   * applied. This closes a real gap: hint content is answer-adjacent,
+   * so a player must not be able to view or unlock hints for a
+   * challenge that isn't currently theirs, or whose prerequisites
+   * aren't met, just by supplying its id.
    */
-  private async assertChallengeExists(challengeId: string): Promise<void> {
-    try {
-      await challengeService.getChallengeById(challengeId);
-    } catch (error) {
-      // Only a genuine "no such challenge" gets remapped to this
-      // module's own wording. Any other ApiError (forbidden, rate
-      // limited, an internal failure) is rethrown as-is — swallowing
-      // those into CHALLENGE_NOT_FOUND would hide a different, possibly
-      // more urgent problem behind a misleading 404.
-      if (error instanceof ApiError && error.code === ErrorCode.NOT_FOUND) {
-        throw ApiError.notFound(ErrorCode.NOT_FOUND, "Challenge not found.");
-      }
-      throw error;
+  private async assertChallengeAccessible(
+    userId: string,
+    challengeId: string,
+  ): Promise<void> {
+    const access = await challengeAccessService.evaluateChallengeAccess(
+      userId,
+      challengeId,
+    );
+
+    if (!access.isAuthorized) {
+      log.warn("Hint request denied by ChallengeAccessService", {
+        userId,
+        challengeId,
+        deniedReason: access.deniedReason,
+      });
+      throw ApiError.notFound(ErrorCode.NOT_FOUND, "Challenge not found.");
     }
   }
 
