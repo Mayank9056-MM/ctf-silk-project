@@ -10,8 +10,8 @@ This document is the single source of truth for every character in *The Silk Roa
 > [!NOTE]
 > If a fact is not yet confirmed by the story source material, it is marked `TODO` rather than invented. Do not fill in `TODO` fields with guesses — flag them to the narrative lead instead.
 
-> [!WARNING]
-> This document now contains items marked **🧩 Proposed (Unconfirmed)** — material introduced by the [`PROLOGUE.md`](./PROLOGUE.md) revision pass that has not been reconciled with previously confirmed facts below. Most notably: `PROLOGUE.md` proposes Ethan is 22–23, while this document's confirmed Quick Reference lists him as **26**. Do not treat proposed items as canon until the conflict is resolved by the narrative lead.
+> [!NOTE]
+> **Resolved by narrative lead:** Ethan's age is confirmed as **23**, and the family backstory proposed in [`PROLOGUE.md`](./PROLOGUE.md)'s revision pass (mother died during Noah's birth; father was a "respected FBI agent" killed in an encounter when Ethan was ~17–18 and Noah was ~12; Ethan became Noah's guardian while attending the FBI Academy) is now **confirmed canon**. Items below previously marked 🧩 Proposed (Unconfirmed) for this reason have been updated accordingly. One sub-question remains open: whether the father's death has any connection to Robert's network, or must be explicitly ruled out — see `PROLOGUE.md` → Open Conflicts / TODO.
 
 ---
 
@@ -52,8 +52,8 @@ This document is the single source of truth for every character in *The Silk Roa
 | [Olivia Reed](#olivia-reed-ghost) | Ghost | Hidden Ally / Anonymous Informant | Independent (Former Gray-Hat Hacker) | 🕵️ Hidden Identity |
 | [Robert](#robert) | — | Primary Antagonist | Leader of the underground marketplace | 🧩 TODO |
 | [Noah Carter](#noah-carter-deceased) | — | Inciting Incident / Victim | Civilian | ⚰️ Deceased |
-| [Ethan & Noah's Mother](#unnamed--minor-characters) | — | Deceased Parent | — | ⚰️🧩 Proposed (Unconfirmed) |
-| [Ethan & Noah's Father](#unnamed--minor-characters) | — | Deceased Parent, FBI Agent | FBI (unconfirmed) | ⚰️🧩 Proposed (Unconfirmed) |
+| [Ethan & Noah's Mother](#unnamed--minor-characters) | — | Deceased Parent | — | ⚰️ Confirmed (unnamed) |
+| [Ethan & Noah's Father](#unnamed--minor-characters) | — | Deceased Parent, FBI Agent | FBI (confirmed) | ⚰️ Confirmed (unnamed) |
 
 ---
 
@@ -82,8 +82,8 @@ Protagonist and playable investigator. The player experiences the mystery of the
 | Status | ✅ Active |
 | First Appearance | Prologue — "The Beginning" (see `PROLOGUE.md` Scene 1) |
 
-> [!WARNING]
-> **Open conflict:** `PROLOGUE.md`'s revision pass proposes Ethan is 22–23 (to support a tighter guardian/sibling age gap with Noah). This document's confirmed age is 26. **Do not implement either value in age-dependent content (ID cards, dialogue, VO) until the narrative lead resolves this.** See `PROLOGUE.md` → Open Conflicts / TODO.
+> [!NOTE]
+> **Resolved:** Ethan's age is confirmed as **23**, consistent with the tighter guardian/sibling age gap needed for the confirmed family backstory (see the note at the top of this document). Age-dependent content (ID cards, dialogue, VO) should use 23.
 
 ### Appearance
 
@@ -182,8 +182,8 @@ Ethan must balance his personal grief and obsession with the discipline required
 | Daniel Brooks | Senior agent Ethan admires and trusts early on; Brooks discourages his investigation while secretly reporting on him. |
 | Olivia Reed / Ghost | University friend and CTF rival, whom Ethan remembers as brilliant and competitive. He does not know that his old friend Olivia and the anonymous hacker "Ghost" guiding his investigation are the same person. |
 | Robert | Unaware of each other directly at story start; Robert is monitoring Ethan's progress from the shadows. |
-| Mother (unnamed) | 🧩 **Proposed (Unconfirmed):** Per `PROLOGUE.md`, deceased — proposed to have died during Noah's birth. Not present in any previously confirmed material. |
-| Father (unnamed) | 🧩 **Proposed (Unconfirmed):** Per `PROLOGUE.md`, proposed as a "respected FBI agent" killed in an encounter when Ethan was ~17–18 and Noah was ~12, after which Ethan became Noah's guardian. Not present in any previously confirmed material; also the source of the age conflict noted above. |
+| Mother (unnamed) | ✅ **Confirmed:** Deceased — died during Noah's birth. |
+| Father (unnamed) | ✅ **Confirmed:** A "respected FBI agent," killed in an encounter when Ethan was ~17–18 and Noah was ~12. Ethan became Noah's guardian while attending the FBI Academy. 🧩 Whether his death connects to Robert's network is still an open question — see `PROLOGUE.md` → Open Conflicts / TODO. |
 
 ### Story Arc (Spoilers)
 
@@ -217,10 +217,8 @@ Ethan begins as an unremarkable rookie processing digital evidence. Reviewing ol
 ### Image Generation Prompt
 
 ```
-A realistic portrait of a 26-year-old male FBI special agent, early career, junior investigator archetype. Neutral, approachable, slightly tired but alert facial expression — the look of someone who has been up late reading case files. Short, practical, low-maintenance hairstyle. Attentive, focused eyes that suggest quiet intelligence rather than aggression. Wearing a slightly rumpled, inexpensive dark suit with a loosened tie and a plain FBI-issue lanyard/badge clipped at the waist, sleeves occasionally rolled up. Lean, average build — not physically imposing, more "desk investigator" than "field operator." Environment: a dim, cluttered FBI cyber intelligence office at night — a whiteboard covered in red string and printed photos in the background, a cold cup of black coffee on the desk, a well-worn paper notebook next to a keyboard. Lighting: single desk lamp plus cold monitor glow, moody blue-and-amber contrast, soft shadows. Mood: quiet determination, controlled tension, melancholy resolve. Pose: leaning slightly forward over a desk, one hand resting on an open notebook, looking up and off-camera as if just noticing something. Camera angle: medium shot, slightly low angle to suggest quiet significance without heroism. Realism level: photorealistic, cinematic color grading. Color palette: desaturated blues, ambers, and greys — noir-thriller tone. Style: modern cinematic crime-thriller realism, in the visual tradition of grounded procedural dramas — no stylization, no fantasy elements, no other identifiable real person.
+A realistic portrait of a 23-year-old male FBI special agent, early career, junior investigator archetype. Neutral, approachable, slightly tired but alert facial expression — the look of someone who has been up late reading case files. Short, practical, low-maintenance hairstyle. Attentive, focused eyes that suggest quiet intelligence rather than aggression. Wearing a slightly rumpled, inexpensive dark suit with a loosened tie and a plain FBI-issue lanyard/badge clipped at the waist, sleeves occasionally rolled up. Lean, average build — not physically imposing, more "desk investigator" than "field operator." Environment: a dim, cluttered FBI cyber intelligence office at night — a whiteboard covered in red string and printed photos in the background, a cold cup of black coffee on the desk, a well-worn paper notebook next to a keyboard. Lighting: single desk lamp plus cold monitor glow, moody blue-and-amber contrast, soft shadows. Mood: quiet determination, controlled tension, melancholy resolve. Pose: leaning slightly forward over a desk, one hand resting on an open notebook, looking up and off-camera as if just noticing something. Camera angle: medium shot, slightly low angle to suggest quiet significance without heroism. Realism level: photorealistic, cinematic color grading. Color palette: desaturated blues, ambers, and greys — noir-thriller tone. Style: modern cinematic crime-thriller realism, in the visual tradition of grounded procedural dramas — no stylization, no fantasy elements, no other identifiable real person.
 ```
-
-> ⚠️ If the age conflict above is resolved in favor of 22–23, this prompt's "26-year-old" descriptor must be updated to match before regenerating art.
 
 ### Quick Reference
 
@@ -397,7 +395,7 @@ Hidden ally and anonymous informant. Guides the investigation from the shadows t
 | Rank | N/A (civilian, independent) |
 | Organization | Independent / Unaffiliated |
 | Status | 🕵️ Hidden identity (unknown to Ethan) |
-| First Appearance | 🧩 TODO — not yet appeared in the provided story text; established only via character background so far |
+| First Appearance | Chapter 1 — "The First Clue" (see `CHAPTER_01.md` Task 3: "The Ghost") |
 
 ### Appearance
 
@@ -481,7 +479,7 @@ Ghost knows Ethan is investigating and knows that federal investigators can't si
 
 Before the events of the main investigation, Olivia and Ethan studied together at university, working as a duo in Capture-the-Flag competitions — Ethan on evidence, Olivia on demonstrating exploitable weaknesses. After graduation their paths diverged: Ethan joined the FBI, and Olivia vanished from the cybersecurity community. Separately, years before the current investigation, Olivia — as Ghost — discovered and infiltrated the marketplace's infrastructure, then walked away, telling herself someone else would handle it. That marketplace is the same one responsible for Noah Carter's death. Now, as Ethan investigates, Ghost anonymously feeds him clues without revealing her identity, torn between guilt, self-protection, and her wish to help her old friend.
 
-> 🧩 **TODO** — The chapter in which Ghost first makes contact with Ethan in-story has not yet been provided.
+Ghost's first in-story contact with Ethan is now confirmed as Chapter 1, Task 3 ("The Ghost") — see `CHAPTER_01.md`. She leaves Ethan a carefully hidden clue rather than approaching him directly; he does not yet know who she is or why she's helping.
 
 ### Gameplay Relevance
 
@@ -515,7 +513,7 @@ A realistic portrait of a 25-year-old female independent cybersecurity researche
 | Affiliation | Independent — alias "Ghost" |
 | Story Importance | Anonymous informant; secret identity twin of a key relationship in Ethan's past |
 | Status | 🕵️ Hidden identity |
-| First Appearance | 🧩 TODO |
+| First Appearance | Chapter 1 — "The First Clue" |
 | Signature Quote | "Knowledge is power. Silence is responsibility." |
 
 ---
@@ -652,7 +650,7 @@ Inciting incident / victim. His death is the emotional foundation of Ethan's ent
 
 | Field | Value |
 |---|---|
-| Age | 🧩 TODO — ⚠️ `PROLOGUE.md` proposes 17 (unconfirmed; also depends on resolving the Ethan age conflict above) |
+| Age | 17 (confirmed) |
 | Occupation | 🧩 TODO |
 | Organization | Civilian (not affiliated with any criminal organization — "Noah wasn't a criminal, he was another victim") |
 | Status | ⚰️ Deceased |
@@ -683,8 +681,8 @@ Not applicable — Noah is deceased before the story begins. His death is the mo
 | Character | Relationship |
 |---|---|
 | Ethan Carter | Older brother. Noah's death is the reason Ethan begins his investigation into the underground marketplace. |
-| Mother (unnamed) | 🧩 **Proposed (Unconfirmed):** Per `PROLOGUE.md`, proposed to have died during Noah's birth. |
-| Father (unnamed) | 🧩 **Proposed (Unconfirmed):** Per `PROLOGUE.md`, proposed as a deceased FBI agent; Ethan reportedly became Noah's guardian after his death. |
+| Mother (unnamed) | ✅ **Confirmed:** Died during Noah's birth. |
+| Father (unnamed) | ✅ **Confirmed:** Deceased FBI agent, killed in an encounter when Noah was ~12; Ethan became Noah's guardian after his death. |
 
 ### Story Arc (Spoilers)
 
@@ -692,7 +690,7 @@ Noah Carter was found dead in a rundown apartment on the outskirts of the city. 
 
 `PROLOGUE.md` stages this discovery directly (Scene 2): only Noah's hand and his keychain are shown at the crime scene — his face is deliberately never shown on-page, a staging choice meant to preserve emotional impact without becoming graphic.
 
-> 🧩 **TODO** — If the proposed family backstory in `PROLOGUE.md` is confirmed, this section should be expanded with Noah's relationship to their parents and how their deaths affected him growing up.
+> 🧩 **TODO** — The family backstory is now confirmed canon (see the note at the top of this document); this section still needs expansion covering Noah's relationship to their parents and how their deaths — and being raised by Ethan as guardian from around age 12 — affected him growing up. No specific detail beyond the confirmed facts should be invented until provided.
 
 ### Gameplay Relevance
 
@@ -751,21 +749,21 @@ Noah Carter was found dead in a rundown apartment on the outskirts of the city. 
 |---|---|
 | Name | 🧩 TODO — not named |
 | Role | Deceased parent |
-| Status | ⚰️🧩 **Proposed (Unconfirmed)** |
-| Source | `PROLOGUE.md` revision-pass notes only |
+| Status | ⚰️ **Confirmed** |
+| Source | `PROLOGUE.md` revision-pass notes; confirmed canon by narrative lead |
 
-> 🧩 **TODO** — Proposed to have died during Noah's birth. This is not present in any previously confirmed story material and requires narrative-lead sign-off before treatment as canon. No other detail should be invented beyond this single proposed fact.
+> Confirmed: died during Noah's birth. Name and any further detail remain 🧩 TODO — do not invent beyond this single confirmed fact.
 
 ### Ethan & Noah's Father (unnamed)
 
 | Field | Value |
 |---|---|
 | Name | 🧩 TODO — not named |
-| Role | Deceased parent; proposed as a "respected FBI agent" |
-| Status | ⚰️🧩 **Proposed (Unconfirmed)** |
-| Source | `PROLOGUE.md` revision-pass notes only |
+| Role | Deceased parent; a "respected FBI agent" |
+| Status | ⚰️ **Confirmed** |
+| Source | `PROLOGUE.md` revision-pass notes; confirmed canon by narrative lead |
 
-> 🧩 **TODO** — Proposed to have been killed in an unspecified "encounter" when Ethan was ~17–18 and Noah was ~12, after which Ethan reportedly became Noah's guardian. This is unconfirmed, conflicts with Ethan's documented age of 26 above, and raises an open question about whether his death has any connection to Robert's network — flagged in `PROLOGUE.md` → Open Conflicts / TODO. Do not imply a connection to Robert without explicit narrative-lead confirmation, to avoid accidentally establishing unintended foreshadowing.
+> Confirmed: killed in an unspecified "encounter" when Ethan was ~17–18 and Noah was ~12, after which Ethan became Noah's guardian while attending the FBI Academy. 🧩 **Still open:** whether his death has any connection to Robert's network, or must be explicitly ruled out — flagged in `PROLOGUE.md` → Open Conflicts / TODO. Do not imply a connection to Robert without explicit narrative-lead confirmation, to avoid accidentally establishing unintended foreshadowing.
 
 ---
 
@@ -780,8 +778,8 @@ graph TD
     Robert["Robert 🕵️<br/>Marketplace Leader"]
     Marketplace["The Marketplace<br/>(Underground narcotics network)"]
     Supervisor["Ethan's Supervisor<br/>🧩 Unnamed"]
-    Mother["Mother 🧩⚰️<br/>Proposed / Unconfirmed"]
-    Father["Father 🧩⚰️<br/>Proposed / Unconfirmed<br/>FBI Agent"]
+    Mother["Mother 🧩⚰️<br/>Confirmed / Unnamed"]
+    Father["Father 🧩⚰️<br/>Confirmed / Unnamed<br/>FBI Agent"]
 
     Noah -- "younger brother of" --> Ethan
     Ethan -- "trusts / seeks help from" --> Brooks
@@ -792,22 +790,22 @@ graph TD
     Olivia -- "years earlier, infiltrated" --> Marketplace
     Ethan -- "university friend / CTF rival of" --> Olivia
     Ethan -- "requests access, denied by" --> Supervisor
-    Mother -. "proposed parent of<br/>(unconfirmed)" .-> Ethan
-    Mother -. "proposed parent of<br/>(unconfirmed)" .-> Noah
-    Father -. "proposed parent of<br/>(unconfirmed)" .-> Ethan
-    Father -. "proposed parent of<br/>(unconfirmed)" .-> Noah
+    Mother -- "parent of" --> Ethan
+    Mother -- "parent of" --> Noah
+    Father -- "parent of" --> Ethan
+    Father -- "parent of" --> Noah
 
     classDef deceased fill:#3a3a3a,color:#fff,stroke:#888;
     classDef hidden fill:#1f2a44,color:#fff,stroke:#4a6fa5;
     classDef compromised fill:#4a2020,color:#fff,stroke:#a54a4a;
     classDef antagonist fill:#000,color:#fff,stroke:#a51c1c;
-    classDef proposed fill:#2a2a1a,color:#fff,stroke:#c9a227,stroke-dasharray: 4 3;
+    classDef confirmedparent fill:#1c2e4a,color:#fff,stroke:#4a6fa5;
 
     class Noah deceased;
     class Olivia hidden;
     class Brooks compromised;
     class Robert antagonist;
-    class Mother,Father proposed;
+    class Mother,Father confirmedparent;
 ```
 
 ---
@@ -818,3 +816,4 @@ graph TD
 |---|---|
 | 🧩 TODO | Initial creation from provided Prologue text and character profiles for Ethan Carter, Daniel Brooks, and Olivia Reed. |
 | 🧩 TODO | Integrated `PROLOGUE.md` revision pass: added proposed-and-unconfirmed Mother/Father stub entries, flagged the Ethan/Noah age conflict, added keychain-origin and grave-scene notes to Ethan/Noah story arcs, revised supervisor dialogue note, added near-belief staging note to Brooks. No previously confirmed field values were overwritten. |
+| 2026-08-15 | **Resolved by narrative lead:** Ethan's age set to 23 (Noah's age confirmed as 17); the proposed family backstory (mother died during Noah's birth; father an FBI agent killed when Ethan was ~17–18 / Noah ~12; Ethan became Noah's guardian) is now confirmed canon — Mother and Father entries updated from "Proposed (Unconfirmed)" to "Confirmed" throughout. Ethan's image-generation prompt updated to 23-year-old. Ghost's First Appearance updated to Chapter 1 ("The First Clue") following integration of `CHAPTER_01.md` and `CHALLENGES.md` CH-001–CH-005. The father/Robert-network connection remains explicitly open — see `PROLOGUE.md` → Open Conflicts / TODO. |
