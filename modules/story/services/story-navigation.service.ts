@@ -4,7 +4,7 @@ import {
   type Chapter,
   type Choice,
 } from "@/app/generated/prisma/client";
-import { StoryProgressStatus } from "@/app/generated/prisma/enums";
+import { StoryProgressStatus, SceneType } from "@/app/generated/prisma/enums";
 import { ApiError } from "@/lib/errors/ApiError";
 import { ErrorCode } from "@/lib/errors/ErrorCode";
 import prisma from "@/lib/prisma";
@@ -151,6 +151,105 @@ class StoryNavigationService {
 
     const resolution = await this.safeResolve(currentScene, choice);
     return this.applyTransition(userId, currentScene, resolution, choice.id);
+  }
+
+  /**
+   * Called by SubmissionService immediately after a correct flag
+   * submission is durably recorded — the fix for the "same
+   * CHALLENGE_GATE keeps reappearing" bug. Re-reads StoryProgress
+   * itself; takes NO sceneId/chapterId/challengeId-derived shortcut
+   * from the caller beyond the already-authorized challengeId. Advances
+   * the gate ONLY if the player's CURRENT scene really is the
+   * CHALLENGE_GATE for this exact challenge — everything else is a
+   * safe, logged no-op, never a thrown error, because by the time this
+   * runs SubmissionService's transaction has already committed the
+   * ChallengeSolve. A story-navigation mismatch here must never look
+   * like — or cause — a failed submission.
+   *
+   * Idempotent by construction, which is what makes this safe to call
+   * on every correct submission (including alreadySolved resubmissions,
+   * not just the first solve): it always re-reads the CURRENT
+   * StoryProgress, so if the gate already advanced (this player's
+   * current scene is no longer this CHALLENGE_GATE), the type/challengeId
+   * check below simply fails closed and this returns null without
+   * attempting a second transition. That's also the self-heal path if
+   * an earlier call to this method failed for any reason — the next
+   * correct submission (or even a duplicate-solve resubmission) will
+   * retry it from a fresh read.
+   *
+   * Deliberately mirrors ChallengeAccessService's own proof
+   * (currentScene.type === CHALLENGE_GATE AND
+   * currentScene.challengeId === challengeId) rather than trusting that
+   * SubmissionService already checked it moments ago — story state can
+   * change between requests, and this method has no way to know how
+   * long ago that check ran.
+   */
+  async advanceAfterChallengeSolved(
+    userId: string,
+    challengeId: string,
+  ): Promise<StoryStateDTO | null> {
+    const progress = await storyProgressRepository.findProgress(prisma, userId);
+
+    if (!progress || !progress.currentSceneId) {
+      log.debug(
+        "Post-solve advance skipped — player has no story progress yet",
+        { userId, challengeId },
+      );
+      return null;
+    }
+
+    const [currentScene, choices] = await Promise.all([
+      storyContentRepository.findSceneById(prisma, progress.currentSceneId),
+      storyContentRepository.findSceneChoices(prisma, progress.currentSceneId),
+    ]);
+
+    if (!currentScene) {
+      log.error(
+        "Story progress points at a missing scene during post-solve advance",
+        undefined,
+        { userId, challengeId, sceneId: progress.currentSceneId },
+      );
+      return null;
+    }
+
+    if (currentScene.type !== SceneType.CHALLENGE_GATE) {
+      log.debug(
+        "Post-solve advance skipped — player's current scene is not a challenge gate",
+        { userId, challengeId, sceneId: currentScene.id },
+      );
+      return null;
+    }
+
+    if (currentScene.challengeId !== challengeId) {
+      log.debug(
+        "Post-solve advance skipped — solved challenge does not match the player's current gate",
+        {
+          userId,
+          challengeId,
+          sceneId: currentScene.id,
+          gateChallengeId: currentScene.challengeId,
+        },
+      );
+      return null;
+    }
+
+    if (choices.length > 0) {
+      // Defensive — per this file's own confirmed CHALLENGE_GATE design
+      // decision (see class doc), a challenge gate should never carry
+      // authored choices; the unlock condition lives on the scene
+      // AFTER the gate, not on the gate itself. If content authoring
+      // ever violates that, fail safe rather than silently picking a
+      // branch on the player's behalf.
+      log.error(
+        "CHALLENGE_GATE scene unexpectedly has choices — refusing to auto-advance",
+        undefined,
+        { userId, challengeId, sceneId: currentScene.id },
+      );
+      return null;
+    }
+
+    const resolution = await this.safeResolve(currentScene, null);
+    return this.applyTransition(userId, currentScene, resolution, null);
   }
 
   // ============================================================

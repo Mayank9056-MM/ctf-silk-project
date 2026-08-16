@@ -95,6 +95,19 @@ export interface ChallengeHintDTO {
 
   readonly canUnlock: boolean;
 
+  /**
+   * Whether the level immediately before this one (per HINT_UNLOCK_ORDER)
+   * has already been unlocked by this player — vacuously true for
+   * LEVEL_1. Added specifically so the client can distinguish LOCKED
+   * (order-blocked) from "order is fine, just can't afford it right
+   * now" WITHOUT re-deriving hint-access.ts's own order-walking logic
+   * in React. `canUnlock` alone collapses both cases to `false`; this
+   * field is the one additional fact needed to tell them apart. Always
+   * `true` on a HintUnlockDTO's nested hint (a successful unlock is
+   * only ever possible once order was already satisfied).
+   */
+  readonly previousLevelUnlocked: boolean;
+
   /** Full hint text — present only when `unlocked` is true, `null` otherwise. */
   readonly content: string | null;
 }

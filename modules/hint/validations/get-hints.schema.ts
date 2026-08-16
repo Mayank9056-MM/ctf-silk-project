@@ -10,10 +10,9 @@ import { z } from "zod";
  * confusing "invalid cuid" rejection for what was otherwise a valid id.
  */
 export const getHintsSchema = z.object({
-  challengeId: z
-    .string()
-    .trim()
-    .cuid({ message: "challengeId must be a valid challenge identifier." }),
+  challengeId: z.cuid2({
+    message: "challengeId must be a valid challenge identifier.",
+  }),
 });
 
 export type GetHintsInput = z.infer<typeof getHintsSchema>;

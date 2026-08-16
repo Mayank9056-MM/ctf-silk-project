@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { normalizeFlag } from "../utils/normalize-flag";
 
-const FLAG_PATTERN = /^ctf\{[a-z0-9_]+\}$/;
+const FLAG_PATTERN = /^CTF\{[a-z0-9_]+\}$/;
 const MAX_FLAG_LENGTH = 255;
 
 export const submitFlagSchema = z.object({

@@ -429,6 +429,10 @@ model ChallengeAttachment {
 
   mimeType String? @db.VarChar(100)
 
+  // NOT a literal filesystem path. This is an asset KEY resolved
+  // through lib/assets/challenge-assets.ts's CHALLENGE_ASSETS allowlist
+  // — see that file's header. Never read directly off disk using this
+  // value; always go through resolveChallengeAsset().
   filePath String @db.VarChar(500)
 
   fileSize Int?

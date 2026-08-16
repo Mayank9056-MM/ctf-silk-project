@@ -1,8 +1,6 @@
+// modules/challenge/validations/challenge.schema.ts
 import { z } from "zod";
 
-/**
- * Challenge slug validation.
- */
 export const challengeSlugSchema = z.object({
   slug: z
     .string()
@@ -16,3 +14,14 @@ export const challengeSlugSchema = z.object({
 });
 
 export type ChallengeSlugInput = z.infer<typeof challengeSlugSchema>;
+
+/**
+ * The player-facing challenge lookup is id-based, not slug-based — see
+ * get-challenge.ts's own note. Same cuid2 validator submitFlagSchema
+ * already uses for the same field.
+ */
+export const challengeIdSchema = z.object({
+  challengeId: z.cuid2("Invalid challenge ID."),
+});
+
+export type ChallengeIdInput = z.infer<typeof challengeIdSchema>;

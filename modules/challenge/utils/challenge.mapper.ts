@@ -5,6 +5,8 @@ import type {
 import type {
   PublicChallenge,
   ChallengeListItem,
+  PlayerAttachmentDTO,
+  PlayerChallengeDTO,
 } from "../types/challenge.types";
 
 type ChallengeWithMaybeHash = Omit<Challenge, "flagHash"> &
@@ -61,5 +63,48 @@ export function toChallengeListItem(
     difficulty,
     xpReward,
     createdAt,
+  };
+}
+
+/**
+ * A single attachment → PlayerAttachmentDTO. `filePath` is deliberately
+ * never read here — the download URL is derived purely from
+ * challengeId/attachment.id, never from the stored path, so this mapper
+ * cannot leak storage location even by accident.
+ */
+function toPlayerAttachmentDTO(
+  challengeId: string,
+  attachment: ChallengeAttachment,
+): PlayerAttachmentDTO {
+  return {
+    id: attachment.id,
+    type: attachment.type,
+    fileName: attachment.fileName,
+    mimeType: attachment.mimeType,
+    fileSize: attachment.fileSize,
+    order: attachment.order,
+    downloadUrl: `/api/challenges/${challengeId}/attachments/${attachment.id}`,
+  };
+}
+
+/**
+ * The player-facing challenge mapper — the ONLY function that should
+ * ever produce a PlayerChallengeDTO. Takes a challenge that already had
+ * flagHash omitted at the query level (findBySlug/findById); does not
+ * re-verify that here since toPublicChallenge already provides that
+ * defensive strip for the PublicChallenge path, and this narrows further
+ * from a PublicChallenge-shaped input, never from a raw Challenge.
+ */
+export function toPlayerChallengeDTO(
+  challenge: ChallengeWithAttachmentsInput,
+): PlayerChallengeDTO {
+  const safe = toPublicChallenge(challenge);
+  return {
+    id: safe.id,
+    slug: safe.slug,
+    title: safe.title,
+    difficulty: safe.difficulty,
+    xpReward: safe.xpReward,
+    attachments: safe.attachments.map((a) => toPlayerAttachmentDTO(safe.id, a)),
   };
 }

@@ -75,6 +75,20 @@ export class ChallengeRepository {
       select: { flagHash: true, xpReward: true },
     });
   }
+
+  /**
+   * A single attachment, scoped to its parent challenge — used by the
+   * attachment-download route. Filtering by BOTH challengeId and id (not
+   * just id) is deliberate: it means a caller can never fetch an
+   * attachment by id alone and have it silently resolve under the wrong
+   * challenge, which matters here because the route's authorization
+   * check is performed against `challengeId`, not `attachmentId`.
+   */
+  async findAttachmentForChallenge(challengeId: string, attachmentId: string) {
+    return prisma.challengeAttachment.findFirst({
+      where: { id: attachmentId, challengeId },
+    });
+  }
 }
 
 export const challengeRepository = new ChallengeRepository();
