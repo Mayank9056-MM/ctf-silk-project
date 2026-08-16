@@ -1,32 +1,32 @@
+// modules/submission/hooks/use-submit-flag.ts
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { submitFlag } from "../actions/submit-flag";
 import { submissionKeys } from "../constants/submission.keys";
 import { challengeKeys } from "@/modules/challenge/constants/challenge.keys";
+import { storyKeys } from "@/modules/story/constants/story.keys";
+import type { ErrorCode } from "@/lib/errors/ErrorCode";
 
 interface SubmitFlagVariables {
   challengeId: string;
   flag: string;
 }
 
-/**
- * Deliberately no optimistic update. For a live event deciding a real
- * prize, showing "solved!" before the server has actually confirmed it
- * is the wrong trade-off — a network hiccup or a false-positive UI state
- * at the exact moment a player is racing a countdown is worse than a
- * brief, honest pending state while the request is in flight.
- *
- * Invalidation is split by outcome:
- *   - submissionKeys.mine() always invalidates — every attempt, right or
- *     wrong, is logged, so the history view is stale after any attempt.
- *   - challengeKeys.all only invalidates on a correct answer — a wrong
- *     guess doesn't change anything at the challenge level worth
- *     re-fetching for. This also becomes the natural place challenge
- *     list data picks up a future per-player solved/unlocked field once
- *     getChallengeAccess() exists — invalidating now costs one harmless
- *     extra fetch; skipping it would mean silently stale UI the day that
- *     field ships.
- */
+/** Now also carries `errors` (ActionState's fieldErrors) — VALIDATION_ERROR
+ * failures need the actual Zod message ("Invalid flag format...") not
+ * just the generic ActionState.message ("Please check your submission."). */
+export class SubmitFlagError extends Error {
+  readonly code?: ErrorCode;
+  readonly errors?: Record<string, string[] | undefined>;
+
+  constructor(message: string, code?: ErrorCode, errors?: Record<string, string[] | undefined>) {
+    super(message);
+    this.name = "SubmitFlagError";
+    this.code = code;
+    this.errors = errors;
+  }
+}
+
 export function useSubmitFlag() {
   const queryClient = useQueryClient();
 
@@ -35,7 +35,7 @@ export function useSubmitFlag() {
       const result = await submitFlag(challengeId, flag);
 
       if (!result.success || !result.data) {
-        throw new Error(result.message);
+        throw new SubmitFlagError(result.message, result.code, result.errors);
       }
 
       return result.data;
@@ -45,6 +45,8 @@ export function useSubmitFlag() {
 
       if (data.isCorrect) {
         queryClient.invalidateQueries({ queryKey: challengeKeys.all });
+        queryClient.invalidateQueries({ queryKey: storyKeys.currentScene });
+        queryClient.invalidateQueries({ queryKey: storyKeys.progress });
       }
     },
   });
