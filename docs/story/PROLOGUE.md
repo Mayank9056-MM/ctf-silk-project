@@ -176,8 +176,8 @@ This document was produced from a structural review pass on the original Prologu
 | Closing action beat | Ethan starts to leave the keychain on the grave — then changes his mind and pockets it instead. |
 | Design intent | The action beat (not a line of dialogue) is what should carry the scene. This is the definitive in-fiction origin for the keychain habit in `CHARACTERS.md`. |
 
-> [!WARNING]
-> An **optional extended dialogue pass** for this scene references Ethan and Noah's parents (mother, father) explicitly. This material is **not yet confirmed canon** — see [New / Proposed Canon Additions](#new--proposed-canon-additions) before implementing it.
+> [!NOTE]
+> **Resolved:** The family backstory referenced by the optional extended dialogue pass for this scene (mother, father) is now confirmed canon — see [New / Proposed Canon Additions](#new--proposed-canon-additions). The extended dialogue itself (specific lines referencing "Mom"/"Dad") has not been drafted yet and should still go through the normal revision-pass process before implementation; only the underlying backstory facts are confirmed.
 
 ### Final Scene — Thesis Statement
 
@@ -221,15 +221,15 @@ flowchart TD
 
 ## New / Proposed Canon Additions
 
-> [!WARNING]
-> The following items originate from the review/revision pass, not from previously confirmed material in `CHARACTERS.md` or `TIMELINE.md`. Per this project's documentation policy (see `CHARACTERS.md` legend), these must be flagged rather than silently merged into canon. **Do not implement age-dependent or family-dependent content until reconciled.**
+> [!NOTE]
+> **Status update (narrative lead, 2026-08-15):** Items #1–#3 below are now **confirmed canon**. `CHARACTERS.md` has been updated accordingly (Ethan = 23, Noah = 17, Mother and Father entries moved from "Proposed (Unconfirmed)" to "Confirmed"). Item #4 (specific grave-scene dialogue lines) has not been drafted and still needs a normal revision pass before implementation. The father/Robert-network foreshadowing question noted under item #2 remains open — see [Open Conflicts / TODO](#open-conflicts--todo).
 
-| # | Proposed Addition | Conflict / Risk |
+| # | Addition | Status |
 |---|---|---|
-| 1 | Mother dies during Noah's birth. | No existing document references either parent. Purely additive if approved — low risk. |
-| 2 | Father was a "respected FBI agent," killed in an encounter when Ethan was ~17–18 and Noah was ~12. Ethan becomes Noah's guardian while attending the FBI Academy. | ⚠️ Introduces an unconfirmed FBI-lineage detail for Ethan not present anywhere in `CHARACTERS.md`. Also raises a possible foreshadowing risk: does the father's death connect to Robert's network at all, or is it coincidental? Needs explicit confirm/deny from the narrative lead before use in dialogue or challenge design. |
-| 3 | Proposed ages: **Ethan 22–23, Noah 17.** | 🔴 **Direct conflict.** `CHARACTERS.md` Quick Reference currently lists Ethan's age as **26**. These cannot both be true. Resolve before implementing Scene 1–10 age-sensitive content (ID cards, dialogue referencing "newly graduated," etc.). |
-| 4 | Grave-scene dialogue referencing "Mom" and "Dad" directly. | Contingent on #1 and #2 being approved. If approved, both parents should receive at minimum stub entries in `CHARACTERS.md` (even if mostly `🧩 TODO`) for consistency with how every other named relationship is documented. |
+| 1 | Mother dies during Noah's birth. | ✅ Confirmed canon. |
+| 2 | Father was a "respected FBI agent," killed in an encounter when Ethan was ~17–18 and Noah was ~12. Ethan becomes Noah's guardian while attending the FBI Academy. | ✅ Confirmed canon. 🧩 Still open: does the father's death connect to Robert's network at all, or is it coincidental? Needs explicit confirm/deny from the narrative lead before use in dialogue or challenge design. |
+| 3 | Ages: **Ethan 23, Noah 17.** | ✅ Confirmed canon. `CHARACTERS.md` Quick Reference and image-generation prompt updated to match; the prior conflict with "26" is resolved. |
+| 4 | Grave-scene dialogue referencing "Mom" and "Dad" directly. | 🧩 Still TODO — contingent facts (#1, #2) are now approved, but the specific dialogue lines have not been drafted. Both parents now have stub entries in `CHARACTERS.md` per this row's original recommendation. |
 
 ---
 
@@ -272,11 +272,12 @@ Several scenes are deliberately dialogue-free or near-silent. This is a repeated
 
 ## Open Conflicts / TODO
 
-- 🔴 **Age conflict** — Ethan 22–23 (this document) vs. 26 (`CHARACTERS.md`). Must be resolved by the narrative lead before Scene 1–10 ships.
-- 🧩 Father's cause of death ("killed in an encounter") is vague — clarify whether line-of-duty, and whether any connection to Robert's network is intended or must be explicitly ruled out to avoid accidental foreshadowing.
-- 🧩 Mother's cause of death tied to childbirth — confirm this is intended literally before it's dramatized.
+- ✅ **Age conflict — RESOLVED.** Ethan is confirmed at 23 (Noah at 17). `CHARACTERS.md` updated to match; Scene 1–10 age-sensitive content can now be implemented using 23.
+- 🧩 Father's cause of death ("killed in an encounter") is vague — clarify whether line-of-duty, and whether any connection to Robert's network is intended or must be explicitly ruled out to avoid accidental foreshadowing. (Backstory itself is confirmed; this specific sub-question is still open.)
+- ✅ Mother's cause of death tied to childbirth — confirmed as intended literally.
 - 🧩 `STORY.md` should have its Prologue section updated with a pointer to this document (add to `Related Documents`); the verbatim source prose in `STORY.md` should NOT be overwritten.
 - 🧩 Funeral location (Scene 3) is not yet specified in `WORLD.md` — needs a `Known Locations` entry once confirmed.
+- 🧩 Grave-scene dialogue referencing "Mom" and "Dad" directly (item #4 above) has not been drafted yet, even though the underlying backstory is now confirmed.
 
 ---
 
@@ -285,3 +286,4 @@ Several scenes are deliberately dialogue-free or near-silent. This is a repeated
 | Date | Change |
 |---|---|
 | 🧩 TODO | Initial creation from the approved Prologue revision/review pass; supersedes ad hoc scene notes. Flags age conflict and unconfirmed family-backstory additions for narrative lead review. |
+| 2026-08-15 | Narrative lead resolved the age conflict (Ethan = 23, Noah = 17) and confirmed the proposed family backstory as canon. Updated New / Proposed Canon Additions and Open Conflicts / TODO accordingly; Scene 10's parent-reference warning downgraded to a note. Grave-scene "Mom"/"Dad" dialogue itself remains undrafted. |
