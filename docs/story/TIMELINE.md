@@ -8,8 +8,8 @@
 > [!NOTE]
 > No absolute calendar dates have been provided in the source material. All entries use relative sequencing. Do not assign specific years/dates without confirmation — flag as `TODO` instead.
 
-> [!WARNING]
-> Entries #1–#2 below originate from the [`PROLOGUE.md`](./PROLOGUE.md) revision pass and are marked **🧩 Proposed (Unconfirmed)**. They are not yet reconciled with confirmed character ages in `CHARACTERS.md`. Do not treat them as canon until the narrative lead resolves the conflict.
+> [!NOTE]
+> Entries #1–#2 below originate from the [`PROLOGUE.md`](./PROLOGUE.md) revision pass. They were previously marked 🧩 Proposed (Unconfirmed) pending an age conflict with `CHARACTERS.md`; the narrative lead has since confirmed Ethan's age as 23 and approved this backstory as canon, so both entries are now confirmed.
 
 ---
 
@@ -37,8 +37,8 @@
 
 | Order | Relative Period | Event | Characters Involved | Source |
 |---|---|---|---|---|
-| 1 | 🧩⚠️ Proposed — years before the investigation | **Proposed (Unconfirmed):** Mother dies during Noah's birth. | Noah Carter, Mother (unnamed) | `PROLOGUE.md` (proposed) |
-| 2 | 🧩⚠️ Proposed — Ethan ~17–18, Noah ~12 | **Proposed (Unconfirmed):** Father, a "respected FBI agent," is killed in an unspecified encounter. Ethan becomes Noah's guardian while attending the FBI Academy. ⚠️ Conflicts with Ethan's confirmed age of 26 in `CHARACTERS.md` if Noah's proposed age of 17 is also used — see `PROLOGUE.md` → Open Conflicts / TODO. | Ethan Carter, Noah Carter, Father (unnamed) | `PROLOGUE.md` (proposed) |
+| 1 | 🎬 Years before the investigation | Mother dies during Noah's birth. | Noah Carter, Mother (unnamed) | `PROLOGUE.md` (confirmed) |
+| 2 | 🎬 Ethan ~17–18, Noah ~12 | Father, a "respected FBI agent," is killed in an unspecified encounter. Ethan becomes Noah's guardian while attending the FBI Academy. ✅ Confirmed consistent with Ethan's age of 23 in `CHARACTERS.md`. 🧩 Whether this connects to Robert's network remains open — see `PROLOGUE.md` → Open Conflicts / TODO. | Ethan Carter, Noah Carter, Father (unnamed) | `PROLOGUE.md` (confirmed) |
 | 3 | 🧩 Years before the investigation | Ethan Carter and Olivia Reed study together at university, competing and collaborating in Capture-the-Flag competitions. Ethan focuses on evidence gathering; Olivia focuses on demonstrating exploits (with permission) against lab machines. | Ethan Carter, Olivia Reed | Character backstory |
 | 4 | 🧩 Years before the investigation | Daniel Brooks, during an undercover operation, makes a mistake that costs innocent lives. Someone documents everything; this record later becomes leverage used to compromise him. | Daniel Brooks | Character backstory |
 | 5 | 🧩 Some years before the investigation | Ethan graduates university and joins the FBI. Olivia disappears from the visible cybersecurity community. | Ethan Carter, Olivia Reed | Character backstory |
@@ -52,7 +52,12 @@
 | 13 | 🎬 Immediately after | Once alone, Brooks retrieves a hidden secure encrypted phone and reports Ethan's investigation to Robert. Robert asks whether Ethan can prove anything (not yet) and whether they should "deal with him"; Brooks says no, noting Ethan is inexperienced but asking the right questions. Robert instructs Brooks to keep watching him. | Daniel Brooks, Robert | Prologue / `PROLOGUE.md` Scene 8 |
 | 14 | 🎬 Same period, elsewhere | Robert, operating from a hidden command center in an abandoned industrial complex, receives the warning about the new FBI recruit and reacts with amused confidence: "A rookie... Let's see how far he gets." | Robert | Prologue / `PROLOGUE.md` Scene 9 |
 | 15 | 🎬 Same night | Ethan visits Noah's grave alone. Restrained, private vow to find those responsible; chooses to keep Noah's keychain rather than leave it behind. Closes on the text card "People lie. Evidence doesn't." This scene is not present in `STORY.md`'s condensed prose and is documented only in `PROLOGUE.md` Scene 10 and Final Scene. | Ethan Carter, Noah Carter ⚰️ | `PROLOGUE.md` Scene 10 / Final Scene |
-| 16 | 🧩 TODO | Future chapters — not yet provided. | — | — |
+| 16 | 🎬 Following the Prologue | **Chapter 1 — "The First Clue" begins.** Ethan examines the digital information Noah left behind and discovers his first meaningful digital clue, giving him a direction to continue investigating. Staged as `CHAPTER_01.md` Task 1 — "The First Digital Clue" / `CHALLENGES.md` CH-001. | Ethan Carter | Phase 1 Brief Task 1 / `CHAPTER_01.md` |
+| 17 | 🎬 Shortly after | Ethan encounters information connected to `.onion` websites and realizes the investigation extends beyond the normal internet into anonymous hidden services; he begins to suspect whoever supplied Noah was operating through this hidden layer. Staged as `CHAPTER_01.md` Task 2 — "The Hidden Web" / `CHALLENGES.md` CH-002. | Ethan Carter | Phase 1 Brief Task 2 / `CHAPTER_01.md` |
+| 18 | 🎬 Shortly after | An unknown person using the alias **Ghost** secretly contacts Ethan for the first time, leaving a carefully hidden clue rather than revealing herself. Ethan does not know who Ghost is or why she is helping him. This is Ghost's (Olivia Reed's) confirmed first in-story appearance. Staged as `CHAPTER_01.md` Task 3 — "The Ghost" / `CHALLENGES.md` CH-003. | Ethan Carter, Olivia Reed / Ghost | Phase 1 Brief Task 3 / `CHAPTER_01.md` |
+| 19 | 🎬 Shortly after | Ethan researches the Dark Web and its role in anonymous communication and hidden services to better understand the environment he is investigating. Staged as `CHAPTER_01.md` Task 4 — "Understanding the Dark Web" / `CHALLENGES.md` CH-004. | Ethan Carter | Phase 1 Brief Task 4 / `CHAPTER_01.md` |
+| 20 | 🎬 Later in the same chapter | Ethan obtains a larger collection of overdose case records and, comparing them across different victims, cities, and suppliers, begins to notice a pattern — realizing for the first time that Noah's death may not have been isolated and that a larger organization may be responsible. Staged as `CHAPTER_01.md` Task 5 — "The Pattern in the Data" / `CHALLENGES.md` CH-005. ⚠️ **Flagged for reconciliation:** this beat closely mirrors `PROLOGUE.md` Scene 5 ("The Pattern"), which already stages a cross-case overdose-report pattern discovery as the Prologue's own tutorial beat and origin of `EVID-003`. Narrative lead should clarify whether Chapter 1 Task 5 deepens/confirms that same discovery or is a distinct, later re-discovery — see `CHAPTER_01.md` → Open Conflicts / TODO. | Ethan Carter | Phase 1 Brief Task 5 / `CHAPTER_01.md` |
+| 21 | 🧩 TODO | Phase 2 and beyond — not yet provided. Per the Phase 1 brief's closing narrative question: "If an anonymous marketplace is responsible for connecting these cases, how large has it become — and who is controlling it?" | — | Phase 1 Brief (closing) |
 
 ---
 
@@ -61,9 +66,9 @@
 ```mermaid
 timeline
     title The Silk Road Investigation — Confirmed & Proposed Event Order
-    section Family Backstory (Proposed / Unconfirmed)
-        Mother's Death : Proposed — dies during Noah's birth
-        Father's Death : Proposed — FBI agent killed in an encounter; Ethan becomes Noah's guardian
+    section Family Backstory (Confirmed)
+        Mother's Death : Dies during Noah's birth
+        Father's Death : FBI agent killed in an encounter; Ethan becomes Noah's guardian
     section Backstory (Years Before)
         University CTF Partnership : Ethan & Olivia collaborate at university
         Brooks' Undercover Mistake : Fatal error later used as leverage against Brooks
@@ -79,6 +84,12 @@ timeline
         Brooks Reports to Robert : Ethan is marked for observation
         Robert Reacts : "Let's see how far he gets"
         Noah's Grave : Ethan's private vow; keeps the keychain
+    section Chapter 1 — The First Clue
+        First Digital Clue : Ethan examines Noah's digital footprint
+        The Hidden Web : Ethan discovers .onion site references
+        The Ghost : Ghost secretly contacts Ethan for the first time
+        Understanding the Dark Web : Ethan researches anonymous networks
+        The Pattern in the Data : Ethan compares overdose cases and finds a pattern
 ```
 
 ---
