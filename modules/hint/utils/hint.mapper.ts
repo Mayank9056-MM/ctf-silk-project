@@ -85,6 +85,7 @@ import type { ChallengeHintDTO, HintUnlockDTO } from "../types/hint.dto";
 export function toChallengeHintDTO(
   state: HintWithPlayerState,
   isEligible: boolean,
+  previousLevelUnlocked: boolean,
 ): ChallengeHintDTO {
   const { hint, playerHint } = state;
   const unlocked = playerHint !== null;
@@ -97,8 +98,7 @@ export function toChallengeHintDTO(
     unlocked,
     unlockedAt: playerHint?.unlockedAt ?? null,
     canUnlock: !unlocked && isEligible,
-    // Withheld unless unlocked — the entire reason this DTO exists
-    // separately from a raw Hint row in the first place.
+    previousLevelUnlocked,
     content: unlocked ? hint.content : null,
   };
 }
@@ -123,7 +123,10 @@ export function toChallengeHintDTO(
  */
 export function toHintUnlockDTO(result: HintUnlockResult): HintUnlockDTO {
   return {
-    hint: toChallengeHintDTO(result, false),
+    // previousLevelUnlocked is always true here — a successful unlock
+    // is only reachable once hint.service.ts already confirmed order
+    // eligibility (hasUnlockedPreviousLevel) before the transaction ran.
+    hint: toChallengeHintDTO(result, false, true),
     xpSpent: result.playerHint.xpSpent,
   };
 }
