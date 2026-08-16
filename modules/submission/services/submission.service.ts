@@ -17,6 +17,7 @@ import { SUBMISSION_CONSTANTS } from "../constants/submission.constants";
 import type { SubmitFlagInput } from "../validations/submit-flag.schema";
 import type { SubmitFlagOutcome } from "../types/submission.types";
 import type { SubmissionDTO } from "../types/submission.dto";
+import { leaderboardRepository } from "@/modules/leaderboard/repositories/leaderboard.repository";
 
 /**
  * Owns the write path for every flag attempt and the read path for a
@@ -57,7 +58,7 @@ class SubmissionService {
    *      transaction — the P2002 catch below is what actually enforces
    *      "first correct solve only," not a prior SELECT.
    */
-  async submitFlag(
+    async submitFlag(
     userId: string,
     input: SubmitFlagInput,
   ): Promise<SubmitFlagOutcome> {
@@ -70,11 +71,6 @@ class SubmissionService {
     );
 
     if (!challenge) {
-      // Defensive — ChallengeAccessService already confirmed this
-      // challenge exists moments ago. Reaching this branch would mean
-      // the challenge was deleted in the narrow window between that
-      // check and this read; treated the same as any other
-      // not-found, never surfaced differently.
       log.error(
         "Challenge vanished between access check and flag verification",
         undefined,
@@ -86,7 +82,16 @@ class SubmissionService {
     const isCorrect = await flagService.verify(input.flag, challenge.flagHash);
     const submittedFlagHash = isCorrect ? await hashFlag(input.flag) : null;
 
-   try {
+    // Single timestamp shared by ChallengeSolve.solvedAt and
+    // LeaderboardEntry.lastSolvedAt — generated once here rather than
+    // letting each write independently call now() (Prisma's own
+    // @default(now()) for the former, upsertForSolve's ${solvedAt}
+    // parameter for the latter), so the two rows can never disagree by
+    // even a few milliseconds despite being written in the same
+    // transaction.
+    const solvedAt = new Date();
+
+    try {
       const outcome = await prisma.$transaction(async (tx) => {
         const submission = await submissionRepository.createSubmission(tx, {
           isCorrect,
@@ -102,9 +107,27 @@ class SubmissionService {
         try {
           await submissionRepository.createSolve(tx, {
             xpAwarded: challenge.xpReward,
+            solvedAt,
             user: { connect: { id: userId } },
             challenge: { connect: { id: input.challengeId } },
             submission: { connect: { id: submission.id } },
+          });
+
+          // Was previously missing entirely — ChallengeSolve.xpAwarded
+          // was recorded correctly, but nothing ever wrote the
+          // account-level running total in LeaderboardEntry, which is
+          // what the dashboard and leaderboard actually read (see
+          // leaderboard.repository.ts's own doc comment: this is meant
+          // to run "inside the SAME transaction as the ChallengeSolve
+          // create" — it just was never called). Only reached on a
+          // genuine first solve, never on the duplicate-solve branch
+          // below, so a resubmission can never double-count XP.
+          await leaderboardRepository.upsertForSolve(tx, {
+            userId,
+            xpAwarded: challenge.xpReward,
+            chapter: challenge.chapter.order,
+            displayOrder: challenge.displayOrder,
+            solvedAt,
           });
 
           return {
@@ -134,6 +157,7 @@ class SubmissionService {
       throw error;
     }
   }
+
 
   /**
    * Best-effort post-solve story advance. See

@@ -14,7 +14,11 @@ import type { SubmitFlagResultDTO } from "@/modules/submission/types/submission.
 
 interface ChallengeFlagFormProps {
   challengeId: string;
-  mutation: UseMutationResult<SubmitFlagResultDTO, Error, { challengeId: string; flag: string }>;
+  mutation: UseMutationResult<
+    SubmitFlagResultDTO,
+    Error,
+    { challengeId: string; flag: string }
+  >;
 }
 
 interface FlagFieldValues {
@@ -34,7 +38,10 @@ const COOLDOWN_TICK_MS = 200;
 /** How long the "you can try again" confirmation stays visible before the status region goes quiet. */
 const RECOVERY_MESSAGE_MS = 4000;
 
-export function ChallengeFlagForm({ challengeId, mutation }: ChallengeFlagFormProps) {
+export function ChallengeFlagForm({
+  challengeId,
+  mutation,
+}: ChallengeFlagFormProps) {
   const inputId = useId();
 
   const {
@@ -45,9 +52,13 @@ export function ChallengeFlagForm({ challengeId, mutation }: ChallengeFlagFormPr
   } = useForm<FlagFieldValues>({ defaultValues: { flag: "" } });
 
   const isSubmitting = mutation.isPending;
-  const submitError = mutation.error instanceof SubmitFlagError ? mutation.error : undefined;
+  const submitError =
+    mutation.error instanceof SubmitFlagError ? mutation.error : undefined;
   const errorCode = submitError?.code;
-  const isUnavailable = errorCode === "FORBIDDEN" || errorCode === "UNAUTHORIZED" || errorCode === "NOT_FOUND";
+  const isUnavailable =
+    errorCode === "FORBIDDEN" ||
+    errorCode === "UNAUTHORIZED" ||
+    errorCode === "NOT_FOUND";
   const isValidationError = errorCode === "VALIDATION_ERROR";
   const isIncorrect = mutation.isSuccess && !mutation.data.isCorrect;
 
@@ -58,7 +69,9 @@ export function ChallengeFlagForm({ challengeId, mutation }: ChallengeFlagFormPr
   // gate; this only controls how a stale 429 mutation result is
   // *presented* and *cleared*, without a page reload.
   // ------------------------------------------------------------------
-  const [cooldownExpiresAt, setCooldownExpiresAt] = useState<number | null>(null);
+  const [cooldownExpiresAt, setCooldownExpiresAt] = useState<number | null>(
+    null,
+  );
   const [remainingMs, setRemainingMs] = useState(0);
   const [justRecovered, setJustRecovered] = useState(false);
 
@@ -83,9 +96,14 @@ export function ChallengeFlagForm({ challengeId, mutation }: ChallengeFlagFormPr
     if (!error || error === handledErrorRef.current) return;
     handledErrorRef.current = error;
 
-    if (error instanceof SubmitFlagError && error.code === "TOO_MANY_REQUESTS") {
+    if (
+      error instanceof SubmitFlagError &&
+      error.code === "TOO_MANY_REQUESTS"
+    ) {
       setJustRecovered(false);
-      setCooldownExpiresAt(Date.now() + SUBMISSION_CONSTANTS.RATE_LIMIT_WINDOW_MS);
+      setCooldownExpiresAt(
+        Date.now() + SUBMISSION_CONSTANTS.RATE_LIMIT_WINDOW_MS,
+      );
     }
     // No `else` — every other error kind (incorrect, validation,
     // unavailable, generic) is fully owned by its own render branch
@@ -97,11 +115,12 @@ export function ChallengeFlagForm({ challengeId, mutation }: ChallengeFlagFormPr
   useEffect(() => {
     if (cooldownExpiresAt === null) return;
 
+    const expiresAt = cooldownExpiresAt;
     let cancelled = false;
 
     function tick() {
       if (cancelled) return;
-      const remaining = Math.max(0, cooldownExpiresAt - Date.now());
+      const remaining = Math.max(0, expiresAt - Date.now());
       setRemainingMs(remaining);
 
       if (remaining <= 0) {
@@ -123,17 +142,25 @@ export function ChallengeFlagForm({ challengeId, mutation }: ChallengeFlagFormPr
   // its own cleanup, never interacts with the cooldown interval above.
   useEffect(() => {
     if (!justRecovered) return;
-    const timeoutId = setTimeout(() => setJustRecovered(false), RECOVERY_MESSAGE_MS);
+    const timeoutId = setTimeout(
+      () => setJustRecovered(false),
+      RECOVERY_MESSAGE_MS,
+    );
     return () => clearTimeout(timeoutId);
   }, [justRecovered]);
 
   const isRateLimited = cooldownExpiresAt !== null;
   const isGenericError =
-    mutation.isError && !isRateLimited && !isUnavailable && !isValidationError && errorCode !== "TOO_MANY_REQUESTS";
+    mutation.isError &&
+    !isRateLimited &&
+    !isUnavailable &&
+    !isValidationError &&
+    errorCode !== "TOO_MANY_REQUESTS";
 
   // The server's actual Zod message for the flag field, falling back to
   // the ActionState-level message if no field-level error came through.
-  const validationMessage = submitError?.errors?.flag?.[0] ?? submitError?.message;
+  const validationMessage =
+    submitError?.errors?.flag?.[0] ?? submitError?.message;
   const remainingSeconds = Math.ceil(remainingMs / 1000);
 
   function onSubmit(values: FlagFieldValues) {
@@ -149,10 +176,18 @@ export function ChallengeFlagForm({ challengeId, mutation }: ChallengeFlagFormPr
   const isDisabled = isSubmitting || isRateLimited;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-3">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      noValidate
+      className="flex flex-col gap-3"
+    >
       <label
         htmlFor={inputId}
-        className={cn("text-[10px] tracking-[0.14em] uppercase", storyTheme.text.muted, storyTheme.font.mono)}
+        className={cn(
+          "text-[10px] tracking-[0.14em] uppercase",
+          storyTheme.text.muted,
+          storyTheme.font.mono,
+        )}
       >
         Submit Flag
       </label>
@@ -166,7 +201,9 @@ export function ChallengeFlagForm({ challengeId, mutation }: ChallengeFlagFormPr
           spellCheck={false}
           placeholder="CTF{...}"
           disabled={isDisabled}
-          aria-invalid={Boolean(errors.flag) || isIncorrect || isValidationError}
+          aria-invalid={
+            Boolean(errors.flag) || isIncorrect || isValidationError
+          }
           aria-describedby={`${inputId}-result`}
           className={cn(
             "w-full rounded-md border bg-(--sr-bg-void) px-3 py-2.5 text-sm outline-none transition-colors",
@@ -201,17 +238,34 @@ export function ChallengeFlagForm({ challengeId, mutation }: ChallengeFlagFormPr
         </button>
       </div>
 
-      <div id={`${inputId}-result`} role="status" aria-live="polite" className="min-h-[1.25rem]">
-        {errors.flag && <p className="text-[12px] text-(--sr-crimson-hot)">{errors.flag.message}</p>}
+      <div
+        id={`${inputId}-result`}
+        role="status"
+        aria-live="polite"
+        className="min-h-[1.25rem]"
+      >
+        {errors.flag && (
+          <p className="text-[12px] text-(--sr-crimson-hot)">
+            {errors.flag.message}
+          </p>
+        )}
 
         {isValidationError && (
-          <p className="text-[12px] text-(--sr-crimson-hot)">{validationMessage}</p>
+          <p className="text-[12px] text-(--sr-crimson-hot)">
+            {validationMessage}
+          </p>
         )}
 
         {isIncorrect && (
           <div className="flex items-center justify-between gap-3 text-[12px]">
-            <p className={cn(storyTheme.text.secondary)}>Incorrect flag. The submitted flag is not valid.</p>
-            <button type="button" onClick={handleTryAgain} className="shrink-0 text-(--sr-investigation-blue) underline underline-offset-2">
+            <p className={cn(storyTheme.text.secondary)}>
+              Incorrect flag. The submitted flag is not valid.
+            </p>
+            <button
+              type="button"
+              onClick={handleTryAgain}
+              className="shrink-0 text-(--sr-investigation-blue) underline underline-offset-2"
+            >
               Try Again
             </button>
           </div>
@@ -219,13 +273,15 @@ export function ChallengeFlagForm({ challengeId, mutation }: ChallengeFlagFormPr
 
         {isRateLimited && (
           <p className="text-[12px] text-(--sr-status-warning)">
-            {submitError?.message ?? "Too many submissions."} Try again in {remainingSeconds}{" "}
-            second{remainingSeconds === 1 ? "" : "s"}.
+            {submitError?.message ?? "Too many submissions."} Try again in{" "}
+            {remainingSeconds} second{remainingSeconds === 1 ? "" : "s"}.
           </p>
         )}
 
         {!isRateLimited && justRecovered && (
-          <p className="text-[12px] text-(--sr-investigation-blue)">You can try submitting again.</p>
+          <p className="text-[12px] text-(--sr-investigation-blue)">
+            You can try submitting again.
+          </p>
         )}
 
         {isUnavailable && (
@@ -236,8 +292,14 @@ export function ChallengeFlagForm({ challengeId, mutation }: ChallengeFlagFormPr
 
         {isGenericError && (
           <div className="flex items-center justify-between gap-3 text-[12px]">
-            <p className="text-(--sr-crimson-hot)">Submission failed. Please try again.</p>
-            <button type="button" onClick={handleTryAgain} className="shrink-0 text-(--sr-investigation-blue) underline underline-offset-2">
+            <p className="text-(--sr-crimson-hot)">
+              Submission failed. Please try again.
+            </p>
+            <button
+              type="button"
+              onClick={handleTryAgain}
+              className="shrink-0 text-(--sr-investigation-blue) underline underline-offset-2"
+            >
               Retry
             </button>
           </div>

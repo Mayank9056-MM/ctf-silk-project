@@ -68,11 +68,23 @@ export class ChallengeRepository {
   /**
    * The ONLY method allowed to return flagHash. Every other method omits
    * it at the query level, not via downstream destructuring.
+   *
+   * Also carries displayOrder + chapter.order — not for flag
+   * verification itself, but because submissionService.submitFlag needs
+   * both to call leaderboardRepository.upsertForSolve() in the same
+   * transaction right after a correct solve, and this is already the
+   * one challenge read that call makes per submission. Selecting them
+   * here avoids a second challenge lookup solely for that purpose.
    */
   async getFlagVerificationData(id: string) {
     return prisma.challenge.findUnique({
       where: { id },
-      select: { flagHash: true, xpReward: true },
+      select: {
+        flagHash: true,
+        xpReward: true,
+        displayOrder: true,
+        chapter: { select: { order: true } },
+      },
     });
   }
 
@@ -89,6 +101,8 @@ export class ChallengeRepository {
       where: { id: attachmentId, challengeId },
     });
   }
+
+
 }
 
 export const challengeRepository = new ChallengeRepository();
