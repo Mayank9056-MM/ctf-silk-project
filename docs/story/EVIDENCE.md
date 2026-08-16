@@ -54,6 +54,12 @@ The Prologue establishes several recurring categories of evidence that define th
 | EVID-003 | Cross-Case Overdose Report Pattern | Hundreds of overdose case files across different cities/suppliers that Ethan connects via recurring anomalies. | Ethan Carter | 🎬 Confirmed in Prologue |
 | EVID-004 | Secure Encrypted Phone (Brooks) | Hidden inside Brooks' desk; used to report directly to Robert. | Daniel Brooks, Robert | 🎬 Confirmed in Prologue |
 | EVID-005 | Old Newspaper Clipping (Brooks) | Kept hidden in Brooks' desk; relates to his failed undercover operation. Exact contents not yet described. | Daniel Brooks | 🎬 Referenced in character backstory — content 🧩 TODO |
+| EVID-006 | Noah's Keychain | Kept by Ethan; introduced at the crime scene (`PROLOGUE.md` Scene 2) and again at Noah's grave (`PROLOGUE.md` Scene 10), where Ethan chooses to pocket it rather than leave it behind. Recurring emotional prop, not a puzzle artifact. | Ethan Carter, Noah Carter | 🎬 Confirmed in `PROLOGUE.md` — logged here for the first time; previously referenced by `CHARACTERS.md` without a catalog entry |
+| EVID-007 | Noah's Recovered Cloud Backup | Digital effects (phone export, laptop backup, cloud archive) released to Ethan under next-of-kin authorization. Contains a recovered file with metadata pointing to a non-standard domain suffix. | Ethan Carter, Noah Carter | 🎬 Confirmed in `CHAPTER_01.md` Task 1 |
+| EVID-008 | Onion Service Reference | A partial, obscured `.onion` address surfaced from browser/network artifacts tied to the same account as EVID-007. Incomplete — not independently usable. | Ethan Carter | 🎬 Confirmed in `CHAPTER_01.md` Task 2 |
+| EVID-009 | Ghost's First Contact | Anonymous, unsigned message to Ethan's work inbox containing a hidden/encoded clue that completes the partial address in EVID-008. Olivia Reed / Ghost's first confirmed in-story contact. | Ethan Carter, Olivia Reed / Ghost | 🎬 Confirmed in `CHAPTER_01.md` Task 3 |
+| EVID-010 | Dark Web Primer / Annotated Hidden-Service Descriptor | Ethan's own annotated research notes on Tor and hidden services, produced while working through EVID-008/EVID-009. | Ethan Carter | 🎬 Confirmed in `CHAPTER_01.md` Task 4 |
+| EVID-011 | Multi-City Case Comparison Set | A larger overdose case record set (multiple cities/suppliers) that, cross-referenced against EVID-003 and EVID-007–EVID-010, surfaces a shared low-value cryptocurrency touchpoint linking Noah's supply chain to at least two other victims. | Ethan Carter | 🎬 Confirmed in `CHAPTER_01.md` Task 5 |
 
 ---
 
@@ -91,3 +97,4 @@ Use this table to log new evidence items as challenges are built. Copy the row f
 | Date | Change |
 |---|---|
 | 🧩 TODO | Initial creation; five named evidence items logged from confirmed Prologue and character material. |
+| 2026-08-15 | Logged EVID-006 (Noah's keychain), previously referenced by `CHARACTERS.md`/`PROLOGUE.md` but never catalogued here. Added EVID-007–EVID-011 from `CHAPTER_01.md` Tasks 1–5. No previously confirmed entries altered. |
