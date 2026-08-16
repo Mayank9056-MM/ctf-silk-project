@@ -24,6 +24,7 @@ import { seedAdmin } from "./seed-admin";
 import { seedAnnouncements } from "./seed-announcements";
 import { seedDemoProgress } from "./seed-demo-progress";
 import "dotenv/config";
+import { seedChallengeAttachments } from "./seed-challenge-attachments";
 
 interface SeedStep {
   name: string;
@@ -34,6 +35,7 @@ const STEPS: SeedStep[] = [
   { name: "event", run: seedEvent },
   { name: "chapters", run: seedChapters },
   { name: "challenges", run: seedChallenges },
+  { name: "challenge-attachments", run: seedChallengeAttachments },
   { name: "hints", run: seedHints },
   { name: "story", run: seedStory },
   { name: "users", run: seedUsers },

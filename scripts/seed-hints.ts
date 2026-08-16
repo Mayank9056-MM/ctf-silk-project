@@ -29,7 +29,7 @@ const HINT_CONTENT: HintSeed[] = [
     level: HintLevel.LEVEL_1,
     title: "Two files, one wallet",
     content: "Two of the case files reference the same wallet address under different formatting — normalize before you compare.",
-    xpCost: 10,
+    xpCost: 0,
   },
   {
     challengeSlug: "the-overdose-report",
