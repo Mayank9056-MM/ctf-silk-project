@@ -174,7 +174,7 @@ class UnlockService {
               userId,
             });
           return selectedChoiceIdSet.has(rule.referenceId);
-        case UnlockConditionType.CHAPTER_COMPLETED: {
+         case UnlockConditionType.CHAPTER_COMPLETED: {
           if (!rule.referenceId)
             return this.failClosed(
               "CHAPTER_COMPLETED rule missing referenceId",
@@ -191,7 +191,8 @@ class UnlockService {
                 userId,
               },
             );
-          return currentChapterOrder > targetOrder;
+          // >= — same fix, same reasoning as isChapterCompleted above.
+          return currentChapterOrder >= targetOrder;
         }
         case UnlockConditionType.EVENT_LIVE:
           return eventIsLive;
@@ -306,7 +307,7 @@ class UnlockService {
    * story.mapper.ts uses for the campaign map, rather than a second,
    * different definition of "chapter done."
    */
-  private async isChapterCompleted(
+ private async isChapterCompleted(
     userId: string,
     ruleId: string,
     referenceId: string | null,
@@ -338,7 +339,16 @@ class UnlockService {
       );
     }
 
-    return currentChapter.order > targetChapter.order;
+    // >= not > : this is evaluated by applyTransition BEFORE the
+    // StoryProgress write that moves the player off `referenceId`'s
+    // chapter and into the next one — at the moment a player is
+    // leaving referenceId's final scene, currentChapterId still equals
+    // referenceId, so a strict `>` can never pass at the one moment it
+    // exists to permit. Chapters are strictly linear (no rule targets
+    // a chapter with itself as reference), so "current order >= target
+    // order" is a safe, correct proxy for "target chapter's content has
+    // been passed through."
+    return currentChapter.order >= targetChapter.order;
   }
 
   private async isChoiceSelected(
