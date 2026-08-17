@@ -22,6 +22,9 @@ export const metadata: Metadata = {
   },
   description:
     "A live cybersecurity investigation. Solve forensic challenges, uncover evidence, and follow the case to its end.",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
