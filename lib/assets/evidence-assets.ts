@@ -1,23 +1,12 @@
 // ============================================================================
 // lib/assets/evidence-assets.ts
 // ============================================================================
-//
-// Seed-time convenience map only — see story-assets.ts's file header for
-// why this is NOT a runtime allowlist resolver the way backgrounds are.
-// Evidence.attachmentUrl is a typed schema column; there is no
-// client-controlled Json blob in this path to guard against.
-//
-// Deliberately does NOT include anything challenge-related — challenge
-// attachments stay in server /public per your instruction, untouched by
-// this file, so they can't drift if a Cloudinary asset gets swapped.
-// ============================================================================
-
 export const EVIDENCE_ATTACHMENTS: Record<string, string> = {
-  "toxicology-report": "", // TODO: Cloudinary URL
-  "wallet-ledger-photo": "",
-  "burner-phone-tower-logs": "",
+  "toxicology-report": "https://res.cloudinary.com/dp7fychwy/image/upload/v1786948692/toxicology-report_z8fzmk.png", // paste Cloudinary URL here
+  "wallet-ledger-photo": "https://res.cloudinary.com/dp7fychwy/image/upload/v1786949482/wallet-ledger-photo_gdg6a0.webp",
+  "burner-phone-tower-logs": "https://res.cloudinary.com/dp7fychwy/image/upload/v1786949628/burner-phone-tower-logs_cds8hs.png",
   "secure-encrypted-phone": "",
-  "noahs-keychain": "", // intentionally may stay "" — PROLOGUE.md Scene 3 treats this as a personal item, not a photographed exhibit
+  "noahs-keychain": "https://res.cloudinary.com/dp7fychwy/image/upload/v1786949837/ChatGPT_Image_Aug_17_2026_12_26_35_PM_k85b8b.png", // leave "" if you decide this stays image-less, per PROLOGUE.md
 };
 
 /** `""` means "not authored yet" — resolves to null. */
