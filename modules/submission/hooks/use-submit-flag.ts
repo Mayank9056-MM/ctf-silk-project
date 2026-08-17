@@ -12,9 +12,6 @@ interface SubmitFlagVariables {
   flag: string;
 }
 
-/** Now also carries `errors` (ActionState's fieldErrors) — VALIDATION_ERROR
- * failures need the actual Zod message ("Invalid flag format...") not
- * just the generic ActionState.message ("Please check your submission."). */
 export class SubmitFlagError extends Error {
   readonly code?: ErrorCode;
   readonly errors?: Record<string, string[] | undefined>;
@@ -40,11 +37,23 @@ export function useSubmitFlag() {
 
       return result.data;
     },
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: submissionKeys.mine });
 
       if (data.isCorrect) {
         queryClient.invalidateQueries({ queryKey: challengeKeys.all });
+        // FIX: challengeKeys.all (["challenges"]) and
+        // challengeKeys.detail(challengeId) (["challenge", challengeId])
+        // are unrelated key roots — invalidating one never touches the
+        // other (TanStack's default prefix matching only cascades to
+        // keys that literally start with the invalidated key). Without
+        // this, useChallenge(challengeId)'s cached, pre-solve
+        // "authorized" response for THIS exact challenge kept being
+        // served on revisit — full page renders fine, only the
+        // (uncached) submit mutation correctly gets rejected. This is
+        // the query that actually backs the challenge detail page; it
+        // must be invalidated by its own real key.
+        queryClient.invalidateQueries({ queryKey: challengeKeys.detail(variables.challengeId) });
         queryClient.invalidateQueries({ queryKey: storyKeys.currentScene });
         queryClient.invalidateQueries({ queryKey: storyKeys.progress });
       }
