@@ -103,6 +103,7 @@ export function toPlayerChallengeDTO(
     id: safe.id,
     slug: safe.slug,
     title: safe.title,
+    description: safe.description,
     difficulty: safe.difficulty,
     xpReward: safe.xpReward,
     attachments: safe.attachments.map((a) => toPlayerAttachmentDTO(safe.id, a)),
