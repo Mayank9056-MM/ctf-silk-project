@@ -16,7 +16,11 @@ export class SubmitFlagError extends Error {
   readonly code?: ErrorCode;
   readonly errors?: Record<string, string[] | undefined>;
 
-  constructor(message: string, code?: ErrorCode, errors?: Record<string, string[] | undefined>) {
+  constructor(
+    message: string,
+    code?: ErrorCode,
+    errors?: Record<string, string[] | undefined>,
+  ) {
     super(message);
     this.name = "SubmitFlagError";
     this.code = code;
@@ -42,18 +46,24 @@ export function useSubmitFlag() {
 
       if (data.isCorrect) {
         queryClient.invalidateQueries({ queryKey: challengeKeys.all });
-        // FIX: challengeKeys.all (["challenges"]) and
-        // challengeKeys.detail(challengeId) (["challenge", challengeId])
-        // are unrelated key roots — invalidating one never touches the
-        // other (TanStack's default prefix matching only cascades to
-        // keys that literally start with the invalidated key). Without
-        // this, useChallenge(challengeId)'s cached, pre-solve
-        // "authorized" response for THIS exact challenge kept being
-        // served on revisit — full page renders fine, only the
-        // (uncached) submit mutation correctly gets rejected. This is
-        // the query that actually backs the challenge detail page; it
-        // must be invalidated by its own real key.
-        queryClient.invalidateQueries({ queryKey: challengeKeys.detail(variables.challengeId) });
+        // refetchType: "none" — this challenge's detail query must be
+        // marked stale (so a FUTURE mount — revisiting this URL after
+        // navigating away, e.g. via back button — correctly refetches
+        // and gets denied by ChallengeAccessService now that the story
+        // has moved past this gate) without forcing an ACTIVE refetch
+        // right now. The player is still looking at THIS exact
+        // ChallengeScreen instance when this fires; a default active
+        // refetch immediately re-runs getChallengeForPlayer, which
+        // (correctly) now denies access to the just-solved gate,
+        // flips useChallenge into isError, and ChallengeScreen tears
+        // down the whole success view — including ChallengeResult —
+        // in favor of ChallengeUnavailable, seconds after a correct
+        // solve. The access denial itself is right; forcing it to
+        // fire against the still-mounted success page is not.
+        queryClient.invalidateQueries({
+          queryKey: challengeKeys.detail(variables.challengeId),
+          refetchType: "none",
+        });
         queryClient.invalidateQueries({ queryKey: storyKeys.currentScene });
         queryClient.invalidateQueries({ queryKey: storyKeys.progress });
       }
