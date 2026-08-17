@@ -1,6 +1,29 @@
 // scripts/seed-challenges.ts
-// (only change: CHALLENGE_CONTENT and ChallengeSeed are now exported —
-// everything else is identical to what you already have)
+// ============================================================================
+// seed-challenges.ts
+// ============================================================================
+//
+// Owns Challenge, ChallengeAttachment, ChallengePrerequisite exclusively.
+// Never writes Scene/Chapter/UnlockRule content.
+//
+// DEPENDENCY NOTE: this now runs BEFORE seed-story.ts, not after. Scene's
+// CHALLENGE_GATE type carries a real challengeId, and UnlockRule rows of
+// conditionType CHALLENGE_SOLVED carry a real challenge id as referenceId
+// — both need this data to already exist. seed.ts's step order reflects
+// that.
+//
+// DESCRIPTION CONTENT NOTE (this pass): every challenge below now carries
+// a `description` — the narrative briefing text ChallengeObjective
+// renders on the player-facing challenge page. Same status as Chapter
+// 1/2's scene dialogue in seed-story.ts: NOT sourced from
+// docs/story/CHALLENGES.md (I don't have that file's contents), written
+// now in matching noir-investigative tone, and should be treated as
+// placeholder until real authored copy replaces it. This includes
+// "the-pattern-tutorial" even though it belongs to the doc-sourced
+// Prologue chapter — PROLOGUE.md's own "the-pattern" scene has generic
+// dialogue but no separately authored challenge-briefing text to pull
+// this from.
+// ============================================================================
 
 import prisma from "@/lib/prisma";
 import { buildChapterMap } from "./utils/chapter-map";
@@ -10,11 +33,12 @@ import "dotenv/config";
 export interface ChallengeSeed {
   slug: string;
   title: string;
+  description: string;
   difficulty: number;
   displayOrder: number;
   xpReward: number;
   flag: string; // Plaintext ONLY at seed-authoring time — hashed below before any write.
-  prerequisiteSlugs?: string[];
+  prerequisiteSlugs?: string[]; // Other challenges (same or earlier chapter) that must be solved first.
 }
 
 export const CHALLENGE_CONTENT: Record<number, ChallengeSeed[]> = {
@@ -22,28 +46,34 @@ export const CHALLENGE_CONTENT: Record<number, ChallengeSeed[]> = {
     {
       slug: "the-pattern-tutorial",
       title: "A Pattern Nobody Saw",
+      description:
+        "The case files sprawl across your desk — dozens of overdose reports from a dozen different cities. On paper, they're unconnected. But something about the wallet addresses keeps repeating. Cross-reference what the summaries left out, and see if a pattern survives the noise.",
       difficulty: 1,
       displayOrder: 1,
-      xpReward: 50,
-      flag: "CTF{pattern_nobody_saw}",
+      xpReward: 50, // lower than Chapter 1's challenges — pure tutorial, not a real case
+      flag: "SRCTF{pattern_nobody_saw}",
     },
   ],
   1: [
     {
       slug: "the-overdose-report",
       title: "The Overdose Report",
+      description:
+        "The toxicology report sits open under the desk lamp. Officially, this was an accident — a synthetic contamination, nothing more. But the timeline in the header doesn't line up with the 911 call. Read the numbers literally. Find where the official story stops matching the evidence.",
       difficulty: 1,
       displayOrder: 1,
       xpReward: 100,
-      flag: "CTF{toxicology_never_lies}",
+      flag: "SRCTF{toxicology_never_lies}",
     },
     {
       slug: "burner-phone-forensics",
       title: "Burner Phone Forensics",
+      description:
+        "A cheap burner phone, wiped down but not wiped clean. The SIM is gone, but the carrier's tower logs survived the attempt to erase it. Triangulate the pings — three points is all you need — and place whoever was carrying this phone at the moment it mattered most.",
       difficulty: 2,
       displayOrder: 2,
       xpReward: 250,
-      flag: "CTF{ping_tower_triangulation}",
+      flag: "SRCTF{ping_tower_triangulation}",
       prerequisiteSlugs: ["the-overdose-report"],
     },
   ],
@@ -51,14 +81,22 @@ export const CHALLENGE_CONTENT: Record<number, ChallengeSeed[]> = {
     {
       slug: "the-wallet-ledger",
       title: "The Wallet Ledger",
+      description:
+        "One wallet address. Three separate buyers. Six hours between the first transaction and the last. On the surface, three unrelated deals — but the ledger doesn't know how to lie. Trace every transaction back to its source and prove they all point to the same hand.",
       difficulty: 3,
       displayOrder: 1,
       xpReward: 400,
-      flag: "CTF{same_wallet_three_buyers}",
+      flag: "SRCTF{same_wallet_three_buyers}",
     },
   ],
 };
 
+/**
+ * Two passes: challenges first (so every slug→id resolves), then
+ * ChallengePrerequisite rows — a prerequisite can reference a challenge
+ * seeded later in iteration order within the same chapter, so this can't
+ * be a single pass.
+ */
 export async function seedChallenges(): Promise<void> {
   const chapterMap = await buildChapterMap(prisma);
   const challengeIdBySlug = new Map<string, string>();
@@ -77,6 +115,7 @@ export async function seedChallenges(): Promise<void> {
         update: {
           slug: challenge.slug,
           title: challenge.title,
+          description: challenge.description,
           difficulty: challenge.difficulty,
           xpReward: challenge.xpReward,
           flagHash,
@@ -85,6 +124,7 @@ export async function seedChallenges(): Promise<void> {
           chapterId,
           slug: challenge.slug,
           title: challenge.title,
+          description: challenge.description,
           difficulty: challenge.difficulty,
           displayOrder: challenge.displayOrder,
           xpReward: challenge.xpReward,
