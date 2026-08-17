@@ -1621,3 +1621,111 @@
     transform: none !important;
   }
 }
+
+/* ================================================================
+   OPERATION SILK ROAD — Landing Page
+   ================================================================ */
+.sr-landing-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid var(--sr-hairline);
+  padding: clamp(48px, 8vh, 88px) clamp(24px, 5vw, 64px);
+}
+
+.sr-landing-title {
+  font-family: var(--sr-font-display);
+  font-weight: 800;
+  font-size: clamp(40px, 7vw, 76px);
+  line-height: 0.98;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  margin: 14px 0 10px;
+  background: linear-gradient(180deg, #fff 0%, #d8dade 55%, #8b9096 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.sr-landing-title span {
+  color: var(--sr-crimson-hot, var(--sr-accent));
+  -webkit-text-fill-color: var(--sr-crimson-hot, var(--sr-accent));
+  filter: drop-shadow(0 0 20px var(--sr-crimson-hot-glow, var(--sr-accent-glow)));
+}
+
+.sr-landing-tagline {
+  font-family: var(--sr-font-ui);
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--sr-teal-hot, var(--sr-teal));
+}
+
+.sr-landing-blurb {
+  max-width: 56ch;
+  margin: 18px 0 0;
+  font-size: 14.5px;
+  font-weight: 300;
+  line-height: 1.7;
+  color: var(--sr-dim);
+}
+
+.sr-landing-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sr-landing-stat dt {
+  font-family: var(--sr-font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sr-dimmer);
+}
+.sr-landing-stat dd {
+  font-family: var(--sr-font-ui);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--sr-text);
+  margin: 0;
+}
+
+.sr-landing-rule-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: 1px solid var(--sr-hairline);
+  background: rgba(196, 39, 42, 0.08);
+  color: var(--sr-crimson-hot, var(--sr-accent));
+  flex: none;
+}
+
+.sr-landing-anim-bg,
+.sr-landing-anim-hud,
+.sr-landing-anim-case,
+.sr-landing-anim-title,
+.sr-landing-anim-tagline,
+.sr-landing-anim-blurb,
+.sr-landing-anim-stats,
+.sr-landing-anim-cta,
+.sr-landing-anim-rules-title,
+.sr-landing-anim-rule {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sr-landing-anim-bg,
+  .sr-landing-anim-hud,
+  .sr-landing-anim-case,
+  .sr-landing-anim-title,
+  .sr-landing-anim-tagline,
+  .sr-landing-anim-blurb,
+  .sr-landing-anim-stats,
+  .sr-landing-anim-cta,
+  .sr-landing-anim-rules-title,
+  .sr-landing-anim-rule {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
