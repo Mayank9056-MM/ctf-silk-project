@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Operation Silk Road",
-    template: "%s | Operation Silk Road",
+    default: "FBI Cyber Division",
+    template: "%s | FBI Cyber Division",
   },
   description:
     "A live cybersecurity investigation. Solve forensic challenges, uncover evidence, and follow the case to its end.",
