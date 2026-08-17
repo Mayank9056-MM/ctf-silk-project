@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { storyTheme } from "@/components/story/story-theme";
 import { useChallenge } from "@/modules/challenge/hooks/use-challenge";
 
+import { ChallengeBackLink } from "./navigation/challenge-back-link";
 import { ChallengeHeader } from "./header/challenge-header";
 import { ChallengeMetadata } from "./header/challenge-metadata";
 import { ChallengeObjective } from "./objective/challenge-objective";
@@ -44,6 +45,8 @@ export function ChallengeScreen({ challengeId }: ChallengeScreenProps) {
   return (
     <div className={cn("min-h-dvh", storyTheme.background.void)}>
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-5 py-10 sm:px-8 sm:py-14">
+        <ChallengeBackLink />
+
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 flex flex-col gap-4">
           <ChallengeHeader title={challenge.title} slug={challenge.slug} />
           <ChallengeMetadata
@@ -56,7 +59,7 @@ export function ChallengeScreen({ challengeId }: ChallengeScreenProps) {
           className="animate-in fade-in slide-in-from-bottom-2 duration-500"
           style={{ animationDelay: "80ms", animationFillMode: "backwards" }}
         >
-          <ChallengeObjective />
+          <ChallengeObjective description={challenge.description} />
         </div>
 
         <div
