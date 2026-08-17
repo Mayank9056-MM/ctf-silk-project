@@ -1,3 +1,4 @@
+// components/story/navigation/exit-story.tsx
 "use client";
 
 import { useState } from "react";
@@ -7,7 +8,17 @@ import { AnimatePresence, motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { storyTheme } from "../story-theme";
 
-/** Custom overlay rather than shadcn Dialog/AlertDialog — dialog.tsx/alert-dialog.tsx weren't inspected this session, and a full-viewport cinematic stage reads better with an in-stage confirmation than a boxed modal anyway. */
+/**
+ * Custom overlay rather than shadcn Dialog/AlertDialog.
+ *
+ * `relative z-30 pointer-events-auto` on the trigger button and
+ * `z-[60] pointer-events-auto` on the confirmation overlay (bumped from
+ * z-[40]) — explicit, not relying on stacking-context inheritance from
+ * StoryNavigation's wrapper. CinematicLetterbox sits at z-20 and
+ * SceneVignette is unindexed-but-pointer-events-none, so z-[60] clears
+ * every known stage layer with margin, rather than just barely beating
+ * the letterbox at 20.
+ */
 export function ExitStory() {
   const [confirming, setConfirming] = useState(false);
 
@@ -17,7 +28,10 @@ export function ExitStory() {
         type="button"
         onClick={() => setConfirming(true)}
         aria-label="Exit investigation"
-        className={cn("rounded-full p-1.5 transition-colors hover:bg-(--sr-bg-surface)", storyTheme.text.muted)}
+        className={cn(
+          "relative z-30 pointer-events-auto rounded-full p-1.5 transition-colors hover:bg-(--sr-bg-surface)",
+          storyTheme.text.muted,
+        )}
       >
         <X className="size-4" aria-hidden="true" />
       </button>
@@ -28,7 +42,7 @@ export function ExitStory() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[40] flex items-center justify-center bg-black/80"
+            className="pointer-events-auto fixed inset-0 z-[60] flex items-center justify-center bg-black/80"
             role="alertdialog"
             aria-modal="true"
           >
