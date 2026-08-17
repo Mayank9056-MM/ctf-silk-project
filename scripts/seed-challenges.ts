@@ -51,7 +51,7 @@ export const CHALLENGE_CONTENT: Record<number, ChallengeSeed[]> = {
       difficulty: 1,
       displayOrder: 1,
       xpReward: 50, // lower than Chapter 1's challenges — pure tutorial, not a real case
-      flag: "SRCTF{pattern_nobody_saw}",
+      flag: "CTF{pattern_nobody_saw}",
     },
   ],
   1: [
@@ -63,7 +63,7 @@ export const CHALLENGE_CONTENT: Record<number, ChallengeSeed[]> = {
       difficulty: 1,
       displayOrder: 1,
       xpReward: 100,
-      flag: "SRCTF{toxicology_never_lies}",
+      flag: "CTF{toxicology_never_lies}",
     },
     {
       slug: "burner-phone-forensics",
@@ -73,7 +73,7 @@ export const CHALLENGE_CONTENT: Record<number, ChallengeSeed[]> = {
       difficulty: 2,
       displayOrder: 2,
       xpReward: 250,
-      flag: "SRCTF{ping_tower_triangulation}",
+      flag: "CTF{ping_tower_triangulation}",
       prerequisiteSlugs: ["the-overdose-report"],
     },
   ],
@@ -86,7 +86,7 @@ export const CHALLENGE_CONTENT: Record<number, ChallengeSeed[]> = {
       difficulty: 3,
       displayOrder: 1,
       xpReward: 400,
-      flag: "SRCTF{same_wallet_three_buyers}",
+      flag: "CTF{same_wallet_three_buyers}",
     },
   ],
 };
