@@ -1,4 +1,4 @@
-// modules/story/hooks/use-story-navigation.ts
+// components/story/hooks/use-story-navigation.ts
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -17,14 +17,26 @@ const STORY_ROUTE = "/story";
  * on the next mount. A caller passing in a "next scene" would defeat
  * the entire point of this hook existing.
  *
- * invalidateQueries (not setQueryData) is deliberate — this hook has no
- * server response to seed the cache with; it only knows "the player's
- * story-relevant state may have changed," so it marks the relevant
- * story query keys stale and lets useStory() (via useCurrentScene)
- * refetch fresh on the next render of StoryScreen. Same pattern
- * useSubmitFlag already uses for challengeKeys.all.
+ * CHANGED: now awaits a forced refetch (via `refetchQueries` with
+ * `type: "all"`) BEFORE navigating, instead of firing invalidateQueries
+ * and immediately calling router.push. invalidateQueries only refetches
+ * queries that currently have an ACTIVE OBSERVER — at the moment this
+ * runs, the Story route hasn't mounted yet, so storyKeys.currentScene
+ * has no observer, and invalidation alone just flags it stale without
+ * forcing a fetch. StoryScreen only guards on `isLoading` (not
+ * `isFetching`), so it was rendering straight from the STALE cache the
+ * instant it mounted — the old CHALLENGE_GATE scene — while the real
+ * refetch happened in the background. A player clicking the resulting
+ * (stale) "Proceed to Challenge" CTA before that background fetch
+ * resolved would re-enter a challenge the server had already moved
+ * past. `refetchQueries({ ..., type: "all" })` — unlike the default
+ * `type: "active"` — refetches the query in the cache regardless of
+ * whether anything currently observes it, and its returned promise
+ * only resolves once that fetch completes. Awaiting it before
+ * router.push means the cache already holds fresh data by the time
+ * StoryScreen mounts, so there's no stale-first-render window at all.
  *
- * Both currentScene and progress are invalidated — currentScene because
+ * Both currentScene and progress are refetched — currentScene because
  * that's literally what determines what StoryScreen renders next, and
  * progress because completedSceneCount (used by ProgressIndicator in
  * StoryNavigation) can change independently of which scene is current.
@@ -33,9 +45,11 @@ export function useStoryNavigation() {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  function continueInvestigation() {
-    queryClient.invalidateQueries({ queryKey: storyKeys.currentScene });
-    queryClient.invalidateQueries({ queryKey: storyKeys.progress });
+  async function continueInvestigation() {
+    await Promise.all([
+      queryClient.refetchQueries({ queryKey: storyKeys.currentScene, type: "all" }),
+      queryClient.refetchQueries({ queryKey: storyKeys.progress, type: "all" }),
+    ]);
     router.push(STORY_ROUTE);
   }
 
