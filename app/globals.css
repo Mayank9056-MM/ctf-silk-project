@@ -1550,3 +1550,74 @@
 .sr-field-focused .sr-input-action:focus-visible {
   color: var(--sr-teal);
 }
+
+/* ================================================================
+   OPERATION SILK ROAD — Leaderboard Cinematic Backdrop
+   ================================================================ */
+.sr-lb-backdrop {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 60% 60% at 50% 0%, rgba(217, 164, 65, 0.16) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 50% at 85% 100%, rgba(111, 224, 255, 0.10) 0%, transparent 72%),
+    radial-gradient(ellipse 40% 50% at 5% 100%, rgba(228, 35, 47, 0.10) 0%, transparent 70%);
+  mix-blend-mode: screen;
+}
+
+.sr-lb-beam {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(217, 164, 65, 0.14) 0%, transparent 40%);
+  mix-blend-mode: screen;
+  opacity: 0.9;
+}
+
+.sr-lb-podium-glow-gold {
+  box-shadow: 0 0 0 1px rgba(217, 164, 65, 0.35), 0 20px 50px -20px rgba(217, 164, 65, 0.45), 0 0 40px rgba(217, 164, 65, 0.12);
+}
+.sr-lb-podium-glow-steel {
+  box-shadow: 0 0 0 1px rgba(109, 118, 131, 0.35), 0 16px 40px -18px rgba(109, 118, 131, 0.35);
+}
+.sr-lb-podium-glow-crimson {
+  box-shadow: 0 0 0 1px rgba(228, 35, 47, 0.3), 0 16px 40px -18px rgba(228, 35, 47, 0.35);
+}
+
+.sr-lb-row-highlight {
+  position: relative;
+}
+.sr-lb-row-highlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(228, 35, 47, 0.1), transparent 60%);
+  pointer-events: none;
+}
+
+.sr-lb-rank-pulse {
+  animation: sr-lb-pulse 2s ease-in-out infinite;
+}
+@keyframes sr-lb-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sr-lb-rank-pulse { animation: none; }
+}
+
+.sr-lb-anim-bg,
+.sr-lb-anim-hero,
+.sr-lb-anim-podium,
+.sr-lb-anim-table {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sr-lb-anim-bg,
+  .sr-lb-anim-hero,
+  .sr-lb-anim-podium,
+  .sr-lb-anim-table {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
