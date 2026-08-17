@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="80" y1="40" x2="430" y2="470" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#151515"/>
+      <stop offset="1" stop-color="#050505"/>
+    </linearGradient>
+    <linearGradient id="red" x1="150" y1="150" x2="360" y2="360" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ff3b30"/>
+      <stop offset="1" stop-color="#8b0000"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Noir circular badge -->
+  <circle cx="256" cy="256" r="238" fill="url(#bg)" stroke="#3a3a3a" stroke-width="10"/>
+  <circle cx="256" cy="256" r="218" stroke="#8f8f8f" stroke-width="2" opacity=".45"/>
+
+  <!-- Minimal flag -->
+  <path d="M122 112 L122 300" stroke="#b8b8b8" stroke-width="12" stroke-linecap="round"/>
+  <path d="M128 116 C190 88 236 122 292 104 C330 92 361 98 394 116
+           L374 205 C330 184 300 190 260 201 C207 216 171 190 128 204 Z"
+        fill="#0a0a0a" stroke="#bdbdbd" stroke-width="4"/>
+  <path d="M146 174 C208 148 255 176 311 156 C335 148 356 150 374 158"
+        stroke="url(#red)" stroke-width="10" stroke-linecap="round"/>
+
+  <!-- Hood -->
+  <path d="M126 394 C139 327 167 276 205 251
+           C222 239 239 233 256 233
+           C273 233 290 239 307 251
+           C345 276 373 327 386 394
+           Z"
+        fill="#090909" stroke="#777" stroke-width="5"/>
+
+  <!-- Face shadow -->
+  <path d="M191 293 C198 258 221 241 256 241
+           C291 241 314 258 321 293
+           C305 323 284 339 256 342
+           C228 339 207 323 191 293 Z"
+        fill="#020202"/>
+
+  <!-- Eyes -->
+  <path d="M211 292 L239 285 L229 300 Z" fill="#eee"/>
+  <path d="M301 292 L273 285 L283 300 Z" fill="#eee"/>
+
+  <!-- Laptop -->
+  <rect x="177" y="335" width="158" height="91" rx="7"
+        fill="#111" stroke="#8a8a8a" stroke-width="5"/>
+  <path d="M162 426 H350 L367 442 H145 Z"
+        fill="#090909" stroke="#777" stroke-width="4"/>
+
+  <!-- Terminal symbol -->
+  <path d="M201 365 L218 380 L201 395" stroke="url(#red)" stroke-width="7"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M229 396 H278" stroke="#aaa" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- CTF mark -->
+  <text x="256" y="142" text-anchor="middle"
+        font-family="Arial, Helvetica, sans-serif"
+        font-size="48" font-weight="900" letter-spacing="8"
+        fill="#f2f2f2">CTF</text>
+
+  <!-- Small red accent -->
+  <path d="M198 158 H314" stroke="#d71920" stroke-width="6" stroke-linecap="round"
+        filter="url(#glow)"/>
+
+  <!-- Subtle corner marks -->
+  <path d="M92 360 L108 360 M92 360 L92 344
+           M420 360 L404 360 M420 360 L420 344"
+        stroke="#666" stroke-width="3"/>
+</svg>

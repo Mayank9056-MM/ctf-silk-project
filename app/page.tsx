@@ -1,9 +1,5 @@
-import React from 'react'
+import { LandingScreen } from "@/components/landing/landing-screen";
 
-const Home = () => {
-  return (
-    <div>Home</div>
-  )
+export default function Home() {
+  return <LandingScreen />;
 }
-
-export default Home
