@@ -1,9 +1,5 @@
-import React from 'react'
+import { LeaderboardScreen } from "@/components/leaderboard/leaderboard-screen";
 
-const page = () => {
-  return (
-    <div>page</div>
-  )
+export default function LeaderboardPage() {
+  return <LeaderboardScreen />;
 }
-
-export default page
