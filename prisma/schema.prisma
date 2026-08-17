@@ -390,6 +390,9 @@ model Challenge {
   title String @db.VarChar(150)
   slug  String @unique @db.VarChar(160)
 
+  description String @db.Text @default("")
+
+
   // Organization — chapterId replaces the old bare `chapter Int`
   chapterId    String
   displayOrder Int
