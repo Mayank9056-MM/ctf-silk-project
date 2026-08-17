@@ -10,7 +10,11 @@ import type { SubmitFlagResultDTO } from "@/modules/submission/types/submission.
 import { useStoryNavigation } from "@/components/story/hooks/use-story-navigation";
 
 interface ChallengeResultProps {
-  mutation: UseMutationResult<SubmitFlagResultDTO, Error, { challengeId: string; flag: string }>;
+  mutation: UseMutationResult<
+    SubmitFlagResultDTO,
+    Error,
+    { challengeId: string; flag: string }
+  >;
   xpReward: number;
 }
 
@@ -43,18 +47,35 @@ export function ChallengeResult({ mutation }: ChallengeResultProps) {
       )}
     >
       <div className="flex items-center gap-2">
-        <CheckCircle2 className="size-5 text-(--sr-investigation-blue)" aria-hidden="true" />
-        <p className={cn("text-sm font-semibold tracking-[0.08em] uppercase", storyTheme.text.primary, storyTheme.font.ui)}>
+        <CheckCircle2
+          className="size-5 text-(--sr-investigation-blue)"
+          aria-hidden="true"
+        />
+        <p
+          className={cn(
+            "text-sm font-semibold tracking-[0.08em] uppercase",
+            storyTheme.text.primary,
+            storyTheme.font.ui,
+          )}
+        >
           Challenge Solved
         </p>
       </div>
 
-      <p className={cn("text-[13px]", storyTheme.text.secondary, storyTheme.font.body)}>
+      <p
+        className={cn(
+          "text-[13px]",
+          storyTheme.text.secondary,
+          storyTheme.font.body,
+        )}
+      >
         {alreadySolved ? "Evidence already verified." : "Evidence verified."}
       </p>
 
       {!alreadySolved && (
-        <p className="text-lg font-semibold text-(--sr-crimson-hot)">+{xpAwarded} XP</p>
+        <p className="text-lg font-semibold text-(--sr-teal-hot)">
+          +{xpAwarded} XP
+        </p>
       )}
 
       <button
