@@ -55,16 +55,19 @@ export interface PlayerAttachmentDTO {
 /**
  * The explicit player-facing challenge contract — NOT
  * Omit<Challenge, "flagHash">. Only fields the challenge UI actually
- * needs. No `description` field: Challenge has none in the schema, and
- * one is not invented here. No chapterId/displayOrder/createdAt/
- * updatedAt: authoring/organizational metadata a player has no use for
- * and that adds unnecessary surface area to a response an unauthorized
- * player must never distinguishably receive.
+ * needs.
+ *
+ * `description` is now included — the narrative briefing text shown by
+ * ChallengeObjective. No chapterId/displayOrder/createdAt/updatedAt:
+ * authoring/organizational metadata a player has no use for and that
+ * adds unnecessary surface area to a response an unauthorized player
+ * must never distinguishably receive.
  */
 export interface PlayerChallengeDTO {
   id: string;
   slug: string;
   title: string;
+  description: string;
   difficulty: number;
   xpReward: number;
   attachments: PlayerAttachmentDTO[];
