@@ -5,5 +5,5 @@
  * later is a one-line change in this file, not a find-and-replace
  * across components.
  */
-export const PLATFORM_NAME = "Please Replace Me";
+export const PLATFORM_NAME = "OPERATION: TRACE";
 export const PLATFORM_TAGLINE = "Cyber Intelligence Division";
