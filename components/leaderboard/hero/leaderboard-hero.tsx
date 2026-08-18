@@ -1,9 +1,14 @@
 "use client";
 
+import { Trophy, Lock, Radio } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { dashboardTheme } from "@/components/dashboard/dashboard-theme";
-import { srBadgeBase, srBadgeGold, srBadgeTeal } from "@/components/dashboard/dashboard-badge";
-import { Trophy, Lock, Radio } from "lucide-react";
+import {
+  srBadgeBase,
+  srBadgeGold,
+  srBadgeTeal,
+} from "@/components/dashboard/dashboard-badge";
+import { LeaderboardBackLink } from "../navigation/leaderboard-back-link";
 import type { UserRankDTO } from "@/modules/leaderboard/types/leaderboard.dto";
 
 interface LeaderboardHeroProps {
@@ -12,7 +17,11 @@ interface LeaderboardHeroProps {
   isFetching: boolean;
 }
 
-export function LeaderboardHero({ isFrozen, myRank, isFetching }: LeaderboardHeroProps) {
+export function LeaderboardHero({
+  isFrozen,
+  myRank,
+  isFetching,
+}: LeaderboardHeroProps) {
   return (
     <div
       className={cn(
@@ -23,6 +32,10 @@ export function LeaderboardHero({ isFrozen, myRank, isFetching }: LeaderboardHer
     >
       <div className="relative z-[1] flex flex-wrap items-end justify-between gap-6">
         <div>
+          <div className="mb-3">
+            <LeaderboardBackLink />
+          </div>
+
           <span
             className={cn(
               "flex items-center gap-2 text-[10px] tracking-[0.28em] uppercase",
@@ -30,13 +43,20 @@ export function LeaderboardHero({ isFrozen, myRank, isFetching }: LeaderboardHer
               dashboardTheme.font.mono,
             )}
           >
-            <span className="h-2.5 w-[3px] rounded-full bg-(--sr-crimson-hot)" aria-hidden="true" />
+            <span
+              className="h-2.5 w-[3px] rounded-full bg-(--sr-crimson-hot)"
+              aria-hidden="true"
+            />
             Operation Silk Road
           </span>
           <h1
-            className={cn("mt-2 text-[34px] font-extrabold uppercase leading-none tracking-[0.01em]", dashboardTheme.font.display)}
+            className={cn(
+              "mt-2 text-[34px] font-extrabold uppercase leading-none tracking-[0.01em]",
+              dashboardTheme.font.display,
+            )}
             style={{
-              backgroundImage: "linear-gradient(180deg, #fff 0%, #d8dade 55%, #8b9096 100%)",
+              backgroundImage:
+                "linear-gradient(180deg, #fff 0%, #d8dade 55%, #8b9096 100%)",
               WebkitBackgroundClip: "text",
               backgroundClip: "text",
               color: "transparent",
@@ -44,7 +64,13 @@ export function LeaderboardHero({ isFrozen, myRank, isFetching }: LeaderboardHer
           >
             {isFrozen ? "Standings — Frozen" : "Live Standings"}
           </h1>
-          <p className={cn("mt-2 max-w-[52ch] text-[12.5px]", dashboardTheme.text.secondary, dashboardTheme.font.body)}>
+          <p
+            className={cn(
+              "mt-2 max-w-[52ch] text-[12.5px]",
+              dashboardTheme.text.secondary,
+              dashboardTheme.font.body,
+            )}
+          >
             {isFrozen
               ? "Final rankings are locked. Results will be announced when the investigation concludes."
               : "Every solved challenge moves the board. Standings update automatically."}
@@ -52,7 +78,9 @@ export function LeaderboardHero({ isFrozen, myRank, isFetching }: LeaderboardHer
         </div>
 
         <div className="flex items-center gap-4">
-          <span className={cn(srBadgeBase, isFrozen ? srBadgeGold : srBadgeTeal)}>
+          <span
+            className={cn(srBadgeBase, isFrozen ? srBadgeGold : srBadgeTeal)}
+          >
             {isFrozen ? (
               <Lock className="size-2.5" aria-hidden="true" />
             ) : (
@@ -62,7 +90,13 @@ export function LeaderboardHero({ isFrozen, myRank, isFetching }: LeaderboardHer
           </span>
 
           {isFetching && !isFrozen && (
-            <span className={cn("text-[9.5px] tracking-[0.14em] uppercase", dashboardTheme.text.muted, dashboardTheme.font.mono)}>
+            <span
+              className={cn(
+                "text-[9.5px] tracking-[0.14em] uppercase",
+                dashboardTheme.text.muted,
+                dashboardTheme.font.mono,
+              )}
+            >
               Syncing…
             </span>
           )}
@@ -74,15 +108,35 @@ export function LeaderboardHero({ isFrozen, myRank, isFetching }: LeaderboardHer
               dashboardTheme.background.surfaceStrong,
             )}
           >
-            <Trophy className={cn("size-4", dashboardTheme.status.warning)} aria-hidden="true" />
+            <Trophy
+              className={cn("size-4", dashboardTheme.status.warning)}
+              aria-hidden="true"
+            />
             <div>
-              <p className={cn("text-[9px] tracking-[0.14em] uppercase", dashboardTheme.text.muted, dashboardTheme.font.mono)}>
+              <p
+                className={cn(
+                  "text-[9px] tracking-[0.14em] uppercase",
+                  dashboardTheme.text.muted,
+                  dashboardTheme.font.mono,
+                )}
+              >
                 Your Rank
               </p>
-              <p className={cn("text-[15px] font-semibold tabular-nums", dashboardTheme.text.primary, dashboardTheme.font.ui)}>
+              <p
+                className={cn(
+                  "text-[15px] font-semibold tabular-nums",
+                  dashboardTheme.text.primary,
+                  dashboardTheme.font.ui,
+                )}
+              >
                 {myRank?.rank ? `#${myRank.rank}` : "Unranked"}
                 {myRank && (
-                  <span className={cn("ml-2 text-[11px] font-normal tabular-nums", dashboardTheme.text.muted)}>
+                  <span
+                    className={cn(
+                      "ml-2 text-[11px] font-normal tabular-nums",
+                      dashboardTheme.text.muted,
+                    )}
+                  >
                     {myRank.totalXp.toLocaleString()} XP
                   </span>
                 )}
