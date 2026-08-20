@@ -5,6 +5,7 @@ import { Select as SelectPrimitive } from "@base-ui/react/select"
 
 import { cn } from "@/lib/utils"
 import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from "lucide-react"
+import { usePortalContainer } from "@/providers/portal-container-context"
 
 const Select = SelectPrimitive.Root
 
@@ -70,8 +71,13 @@ function SelectContent({
     SelectPrimitive.Positioner.Props,
     "align" | "alignOffset" | "side" | "sideOffset" | "alignItemWithTrigger"
   >) {
+  // undefined (not null) when there's no ambient container — Base UI's
+  // Portal then falls back to its own default (document.body), which
+  // is exactly today's behavior for every non-admin usage of Select.
+  const container = usePortalContainer()
+
   return (
-    <SelectPrimitive.Portal>
+    <SelectPrimitive.Portal container={container}>
       <SelectPrimitive.Positioner
         side={side}
         sideOffset={sideOffset}
