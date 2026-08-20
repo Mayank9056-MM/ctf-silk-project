@@ -2,88 +2,94 @@
 
 ## 1. Overview
 
-The audit module records and queries important administrative and security-relevant events.
+The audit module provides persistent records for administrative and security-relevant domain events and admin-facing audit-log query views.
 
 ## 2. Responsibilities
 
-- Own the module-specific data contract, service orchestration, repository calls, and UI hooks/actions present under `modules/audit`.
-- Keep client DTOs separate from Prisma records.
-- Enforce authorization and validation at server boundaries where actions exist.
+- Define audit action/resource/actor taxonomy.
+- Record audit events from domain services.
+- Redact structured metadata before persistence where applicable.
+- Provide paginated/filterable audit reads and detail lookups.
+- Support admin audit UI through actions/hooks/DTOs.
 
 ## 3. Non-Responsibilities
 
-- Does not own unrelated gameplay modules.
-- Does not expose protected story text, flags, answers, or secrets in documentation or DTOs.
-- Does not replace service-level validation in dependent modules.
+- Does not replace typed domain tables such as `Submission`, `ChallengeSolve`, or `PlayerHint`.
+- Does not guarantee every domain mutation is audited.
+- Does not currently propagate request IDs or session IDs.
+- Does not implement external SIEM forwarding.
 
 ## 4. Features
 
-Implemented: audit model/enums/constants, best-effort record service, paginated/filterable audit log actions/hooks/UI, detail view.
+Implemented: `AuditLog` schema, enums/constants, best-effort record service, audit query service, list/detail actions, filters, hooks, and admin table/detail UI.
 
 ## 5. Architecture
 
 ```text
-UI component/page
+Domain service mutation
  ↓
-module hook
+auditService.record(...)
  ↓
-Server Action (where present)
+AuditRepository
  ↓
-Service
+AuditLog table
+
+Admin audit page
  ↓
-Repository / dependent service
+Audit hooks/actions
  ↓
-Prisma model(s)
+AuditQueryService
+ ↓
+AuditRepository
 ```
 
 ## 6. Data Flow
 
-The module follows the repository convention used throughout the app: actions validate and authorize, services coordinate business rules, repositories perform Prisma operations, and mappers shape DTOs.
+Domain services build an `AuditActor` and event key, then call the record service. Query actions validate filters and require audit permission before returning DTOs to the admin UI.
 
 ## 7. API / Interfaces
 
-See the `actions/` folder for Server Action names, `hooks/` for client query/mutation usage, and `types/` for DTO contracts. There is no separate REST API unless explicitly documented elsewhere.
+Server Actions: `getAuditLog`, `getAuditLogById`. Service interface: `record(...)` and system-event helpers where implemented.
 
 ## 8. Data Model
 
-See [Database](../database/README.md) for complete Prisma relationships. Module-specific tables are represented in `prisma/schema.prisma` and should be extended through migrations.
+`AuditLog` stores actor identity snapshot, action, success flag, reason, resource type/id/name, request metadata placeholders, redacted before/after/metadata JSON, and timestamp.
 
 ## 9. State Management
 
-Client state uses React component state and TanStack Query hooks where hooks exist. Server state is PostgreSQL via Prisma.
+Admin audit filters and selected detail state are UI-level. Audit data is fetched through TanStack Query hooks.
 
 ## 10. Security
 
-Server-side authorization is required for privileged reads/writes. Sensitive fields should be omitted at the repository or mapper boundary. Never trust client state for game progression or admin decisions.
+Audit reads are admin-only. Audit metadata can contain sensitive operational context, so redaction is required before storing structured payloads.
 
 ## 11. Error Handling
 
-Expected domain errors are represented through `ApiError`/`ErrorCode` or action state objects. Unexpected errors are logged and should not leak internals to players.
+The record service is best-effort in current code: callers should not assume failed audit writes roll back domain writes unless the error is explicitly propagated by the calling service.
 
 ## 12. Performance
 
-Pagination and selective queries are used where current repository methods support them. No external cache or real-time bus is implemented for this module unless noted.
+Indexes exist for occurrence time, actor, action, resource type, and resource ID. Query UI should remain paginated.
 
 ## 13. Testing
 
-No module-specific test suite was found. Add service-level tests before changing critical flows.
+No tests found. Add tests for filter validation, redaction, permission denial, and best-effort failure behavior.
 
 ## 14. Dependencies
 
-Dependencies are explicit imports in the module's service/action files and should remain one-directional where possible.
+Used by Auth, Admin, Announcement, Leaderboard, Story restart, and future security operations.
 
 ## 15. Extension Points
 
-Extend through validations, services, repositories, and DTO mappers together. Do not add UI-only logic for server-authoritative decisions.
+Add new auditable actions by updating enum/constants, then wire recording at the domain service that owns the mutation.
 
 ## 16. Known Limitations
 
-Request ID/session ID fields exist but are currently not propagated. Some audit enum values are placeholders for unimplemented CMS/security features.
+Request/session IDs are provisioned but not populated. Some enum values are for unimplemented CMS/security workflows.
 
 ## 17. Future Improvements
 
-Add automated tests, operator-facing observability, and clearer separation for any feature that grows beyond the current module boundary.
-
+Add request correlation, export tooling, retention policy, external forwarding, and integrity checks.
 
 ## Related documentation
 - [Module map](../README.md)

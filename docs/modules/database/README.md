@@ -2,88 +2,85 @@
 
 ## 1. Overview
 
-The database module is the Prisma schema, migrations, generated client configuration, and seed/reset scripts.
+The database layer is PostgreSQL accessed through Prisma 7. The schema defines auth, event, challenge, submission, leaderboard, story, hint, announcement, notification, audit, admin-control, and planned security-operation models.
 
 ## 2. Responsibilities
 
-- Own the module-specific data contract, service orchestration, repository calls, and UI hooks/actions present under `modules/database`.
-- Keep client DTOs separate from Prisma records.
-- Enforce authorization and validation at server boundaries where actions exist.
+- Define persistent models/enums/relationships in `prisma/schema.prisma`.
+- Maintain migrations under `prisma/migrations`.
+- Generate Prisma Client into `app/generated/prisma`.
+- Provide seed/reset scripts for local/event setup.
+- Enforce uniqueness and relational integrity for critical gameplay invariants.
 
 ## 3. Non-Responsibilities
 
-- Does not own unrelated gameplay modules.
-- Does not expose protected story text, flags, answers, or secrets in documentation or DTOs.
-- Does not replace service-level validation in dependent modules.
+- Does not encode all domain authorization rules; services do that.
+- Does not provide production backup/restore automation.
+- Does not validate untyped `UnlockRule.referenceId` relationships at the database level.
 
 ## 4. Features
 
-Implemented: PostgreSQL datasource, Prisma 7 generated client output, migrations, seed scripts for event/story/challenges/users/admin/announcements/hints/attachments, local reset script.
+Implemented: PostgreSQL datasource, Prisma generated client config, migration history, local Docker Postgres, seed scripts for event/story/challenges/users/admin/announcements/hints/attachments, and reset script.
 
 ## 5. Architecture
 
 ```text
-UI component/page
+Domain repositories
  ↓
-module hook
+lib/prisma.ts DbClient
  ↓
-Server Action (where present)
+Generated Prisma Client in app/generated/prisma
  ↓
-Service
- ↓
-Repository / dependent service
- ↓
-Prisma model(s)
+PostgreSQL
 ```
 
 ## 6. Data Flow
 
-The module follows the repository convention used throughout the app: actions validate and authorize, services coordinate business rules, repositories perform Prisma operations, and mappers shape DTOs.
+Repositories receive either the global Prisma client or a transaction client. Services open transactions when a use case spans multiple tables, such as submissions updating solves/leaderboard or hint unlocks deducting XP.
 
 ## 7. API / Interfaces
 
-See the `actions/` folder for Server Action names, `hooks/` for client query/mutation usage, and `types/` for DTO contracts. There is no separate REST API unless explicitly documented elsewhere.
+Developer commands: `npx prisma generate`, `npx prisma migrate deploy`, `npm run db:reset`, and `npm run seed*` scripts documented in development docs.
 
 ## 8. Data Model
 
-See [Database](../database/README.md) for complete Prisma relationships. Module-specific tables are represented in `prisma/schema.prisma` and should be extended through migrations.
+Core relationships include `User` to auth/gameplay records, singleton `Event` to `EventControl`, `Chapter` to `Scene`/`Challenge`, `Challenge` to submissions/solves/hints/attachments/prerequisites, and admin/audit operational tables.
 
 ## 9. State Management
 
-Client state uses React component state and TanStack Query hooks where hooks exist. Server state is PostgreSQL via Prisma.
+The database is the source of truth. In-memory story cache is an optimization for selected published content reads, not authoritative mutable state.
 
 ## 10. Security
 
-Server-side authorization is required for privileged reads/writes. Sensitive fields should be omitted at the repository or mapper boundary. Never trust client state for game progression or admin decisions.
+Sensitive values such as passwords, refresh tokens, and flags are stored as hashes. Raw secrets must not be inserted into docs or logs. Prisma parameterized raw queries are used for leaderboard ranking/upserts.
 
 ## 11. Error Handling
 
-Expected domain errors are represented through `ApiError`/`ErrorCode` or action state objects. Unexpected errors are logged and should not leak internals to players.
+Prisma unique-constraint errors are used as authoritative race protection in solve and hint flows. Missing singleton seed rows fail critical services closed.
 
 ## 12. Performance
 
-Pagination and selective queries are used where current repository methods support them. No external cache or real-time bus is implemented for this module unless noted.
+Indexes support audit filters, rate-limit expiry, submissions, leaderboard ordering, story scene/chapter ordering, hints, notifications, and admin queries. Frozen leaderboard aggregation may need a snapshot table at larger scale.
 
 ## 13. Testing
 
-No module-specific test suite was found. Add service-level tests before changing critical flows.
+No database integration test suite found. Add migration tests, seed smoke tests, and transaction/race tests for gameplay invariants.
 
 ## 14. Dependencies
 
-Dependencies are explicit imports in the module's service/action files and should remain one-directional where possible.
+All domain modules depend on Prisma models either directly through repositories or indirectly through services.
 
 ## 15. Extension Points
 
-Extend through validations, services, repositories, and DTO mappers together. Do not add UI-only logic for server-authoritative decisions.
+Schema changes require Prisma migrations, generated-client updates, seed updates where content-backed, and documentation updates.
 
 ## 16. Known Limitations
 
-No production backup/restore scripts or automated migration pipeline were found.
+Single-event assumption, untyped unlock references, no team schema, no production backup scripts, and planned-but-unimplemented security operations tables.
 
 ## 17. Future Improvements
 
-Add automated tests, operator-facing observability, and clearer separation for any feature that grows beyond the current module boundary.
-
+Add backup/restore runbooks, migration CI, seed validation, and materialized leaderboard snapshots for high-scale events.
 
 ## Related documentation
 - [Module map](../README.md)

@@ -2,88 +2,94 @@
 
 ## 1. Overview
 
-The announcements module lets admins create, update, archive, and list event messages that can be surfaced to players through the dashboard.
+The announcements module manages event-wide messages created by admins and surfaced to players, including dashboard previews.
 
 ## 2. Responsibilities
 
-- Own the module-specific data contract, service orchestration, repository calls, and UI hooks/actions present under `modules/announcements`.
-- Keep client DTOs separate from Prisma records.
-- Enforce authorization and validation at server boundaries where actions exist.
+- Create announcements with title, message, and priority.
+- Update announcement content and priority.
+- Archive announcements instead of deleting them through the exposed workflow.
+- Provide paginated announcement lists and detail reads.
+- Map announcement records to DTOs and record mutation audit events.
 
 ## 3. Non-Responsibilities
 
-- Does not own unrelated gameplay modules.
-- Does not expose protected story text, flags, answers, or secrets in documentation or DTOs.
-- Does not replace service-level validation in dependent modules.
+- Does not send push notifications, email, or websocket messages.
+- Does not target announcements to specific users/teams.
+- Does not own dashboard layout; dashboard only consumes announcement previews.
 
 ## 4. Features
 
-Implemented: create, update, archive, detail/list reads, priority/status, admin access checks, audit events for mutations.
+Implemented: create, update, archive, list, detail, priority, published/archived status, admin access checks, dashboard preview consumption.
 
 ## 5. Architecture
 
 ```text
-UI component/page
+Admin announcement components / dashboard preview
  ↓
-module hook
+modules/announcement/hooks
  ↓
-Server Action (where present)
+modules/announcement/actions
  ↓
-Service
+AnnouncementService
  ↓
-Repository / dependent service
+AnnouncementRepository
  ↓
-Prisma model(s)
+Announcement table
 ```
 
 ## 6. Data Flow
 
-The module follows the repository convention used throughout the app: actions validate and authorize, services coordinate business rules, repositories perform Prisma operations, and mappers shape DTOs.
+Admin actions validate payloads and require announcement-management permission before service calls. Mutations persist announcement changes and record audit events. Dashboard reads a small page of announcements and degrades to `null` if announcement retrieval fails.
 
 ## 7. API / Interfaces
 
-See the `actions/` folder for Server Action names, `hooks/` for client query/mutation usage, and `types/` for DTO contracts. There is no separate REST API unless explicitly documented elsewhere.
+Server Actions: `createAnnouncement`, `updateAnnouncement`, `archiveAnnouncement`, `getAnnouncement`, `getAnnouncements`.
 
 ## 8. Data Model
 
-See [Database](../database/README.md) for complete Prisma relationships. Module-specific tables are represented in `prisma/schema.prisma` and should be extended through migrations.
+```mermaid
+erDiagram
+    User ||--o{ Announcement : creates
+```
+
+`Announcement` stores title, message, priority, status, creator, and timestamps.
 
 ## 9. State Management
 
-Client state uses React component state and TanStack Query hooks where hooks exist. Server state is PostgreSQL via Prisma.
+Announcement hooks use TanStack Query list/detail keys and mutation invalidation. Admin dialog state is component-local.
 
 ## 10. Security
 
-Server-side authorization is required for privileged reads/writes. Sensitive fields should be omitted at the repository or mapper boundary. Never trust client state for game progression or admin decisions.
+Create/update/archive are admin-only. Player-facing dashboard data should only expose published, player-safe announcement fields.
 
 ## 11. Error Handling
 
-Expected domain errors are represented through `ApiError`/`ErrorCode` or action state objects. Unexpected errors are logged and should not leak internals to players.
+Validation errors are returned for malformed inputs. Missing announcements return not found. Already-archived mutations should be treated as conflicts by the service.
 
 ## 12. Performance
 
-Pagination and selective queries are used where current repository methods support them. No external cache or real-time bus is implemented for this module unless noted.
+List queries are paginated and indexed by status/created time. There is no push delivery or external cache.
 
 ## 13. Testing
 
-No module-specific test suite was found. Add service-level tests before changing critical flows.
+No tests found. Add tests for admin authorization, archive behavior, pagination, dashboard degradation, and audit event recording.
 
 ## 14. Dependencies
 
-Dependencies are explicit imports in the module's service/action files and should remain one-directional where possible.
+Depends on Auth authorization, Audit, Dashboard, and Prisma.
 
 ## 15. Extension Points
 
-Extend through validations, services, repositories, and DTO mappers together. Do not add UI-only logic for server-authoritative decisions.
+Scheduling, targeting, and notification fan-out should be added explicitly rather than implied by the current announcement model.
 
 ## 16. Known Limitations
 
-No scheduling, targeting, or push delivery found; dashboard reads announcements as preview data.
+No scheduling, targeting, push delivery, markdown sanitizer policy, or expiry field was found.
 
 ## 17. Future Improvements
 
-Add automated tests, operator-facing observability, and clearer separation for any feature that grows beyond the current module boundary.
-
+Add scheduled publishing, audience targeting, read receipts, and optional notification generation.
 
 ## Related documentation
 - [Module map](../README.md)

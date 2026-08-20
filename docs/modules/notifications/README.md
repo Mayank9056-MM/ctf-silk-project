@@ -2,88 +2,93 @@
 
 ## 1. Overview
 
-The notification module stores per-user messages with priority/type/resource metadata and read state.
+The notification module stores in-app, per-user messages with read state. It is used by dashboard previews and selected system/admin flows such as ban notifications.
 
 ## 2. Responsibilities
 
-- Own the module-specific data contract, service orchestration, repository calls, and UI hooks/actions present under `modules/notifications`.
-- Keep client DTOs separate from Prisma records.
-- Enforce authorization and validation at server boundaries where actions exist.
+- Create notifications for a target user.
+- List a user's notifications with pagination.
+- Fetch notification detail.
+- Count unread notifications.
+- Mark one notification or all notifications as read.
+- Map notification records to player-safe DTOs.
 
 ## 3. Non-Responsibilities
 
-- Does not own unrelated gameplay modules.
-- Does not expose protected story text, flags, answers, or secrets in documentation or DTOs.
-- Does not replace service-level validation in dependent modules.
+- Does not deliver email, SMS, push, or websocket notifications.
+- Does not replace announcements; announcements are event-wide content.
+- Does not own admin moderation decisions that may create notifications.
 
 ## 4. Features
 
-Implemented: create notification, list/detail, unread count, mark one/all read. Used by dashboard and some admin/security flows such as player ban messages.
+Implemented: create, list, detail, unread count, mark-one-read, mark-all-read, resource metadata, priority/type fields.
 
 ## 5. Architecture
 
 ```text
-UI component/page
+Dashboard notification components / system service call
  ↓
-module hook
+modules/notification/hooks or direct service call
  ↓
-Server Action (where present)
+Notification actions/service
  ↓
-Service
+NotificationRepository
  ↓
-Repository / dependent service
- ↓
-Prisma model(s)
+Notification table
 ```
 
 ## 6. Data Flow
 
-The module follows the repository convention used throughout the app: actions validate and authorize, services coordinate business rules, repositories perform Prisma operations, and mappers shape DTOs.
+Dashboard builds a minimal actor for the current user, retrieves unread count and recent notifications, and degrades if notification reads fail. Write actions validate notification IDs or payloads and scope reads/writes to the authenticated actor or authorized creator.
 
 ## 7. API / Interfaces
 
-See the `actions/` folder for Server Action names, `hooks/` for client query/mutation usage, and `types/` for DTO contracts. There is no separate REST API unless explicitly documented elsewhere.
+Server Actions: `createNotification`, `getNotifications`, `getNotification`, `getUnreadNotificationCount`, `markNotificationAsRead`, `markAllNotificationsAsRead`.
 
 ## 8. Data Model
 
-See [Database](../database/README.md) for complete Prisma relationships. Module-specific tables are represented in `prisma/schema.prisma` and should be extended through migrations.
+```mermaid
+erDiagram
+    User ||--o{ Notification : receives
+```
+
+Notifications store type, priority, title, message, optional resource type/id, `readAt`, and `createdAt`.
 
 ## 9. State Management
 
-Client state uses React component state and TanStack Query hooks where hooks exist. Server state is PostgreSQL via Prisma.
+Notification hooks use TanStack Query list/detail/unread keys. Read mutations should invalidate unread count and relevant lists.
 
 ## 10. Security
 
-Server-side authorization is required for privileged reads/writes. Sensitive fields should be omitted at the repository or mapper boundary. Never trust client state for game progression or admin decisions.
+User reads and read-state mutations must remain self-scoped. Notification creation is permission-guarded for admin/system use cases.
 
 ## 11. Error Handling
 
-Expected domain errors are represented through `ApiError`/`ErrorCode` or action state objects. Unexpected errors are logged and should not leak internals to players.
+Missing notification IDs return not found. Unauthorized cross-user access should be rejected without exposing another user's notification data.
 
 ## 12. Performance
 
-Pagination and selective queries are used where current repository methods support them. No external cache or real-time bus is implemented for this module unless noted.
+Indexes support `(userId, readAt)` and `(userId, createdAt desc)`. Lists should remain paginated.
 
 ## 13. Testing
 
-No module-specific test suite was found. Add service-level tests before changing critical flows.
+No tests found. Add tests for self-scoping, unread counts, mark-all behavior, and dashboard degradation.
 
 ## 14. Dependencies
 
-Dependencies are explicit imports in the module's service/action files and should remain one-directional where possible.
+Depends on Auth/AuditActor semantics, Dashboard, Admin player management, and Prisma.
 
 ## 15. Extension Points
 
-Extend through validations, services, repositories, and DTO mappers together. Do not add UI-only logic for server-authoritative decisions.
+Add delivery channels behind explicit services so in-app persistence remains independent of email/push concerns.
 
 ## 16. Known Limitations
 
-No external delivery channel, push notifications, or email integration found.
+No external delivery, broadcast fan-out, retention policy, or notification preferences were found.
 
 ## 17. Future Improvements
 
-Add automated tests, operator-facing observability, and clearer separation for any feature that grows beyond the current module boundary.
-
+Add notification preferences, realtime updates, retention/cleanup, and resource-specific deep links.
 
 ## Related documentation
 - [Module map](../README.md)

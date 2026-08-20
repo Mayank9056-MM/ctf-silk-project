@@ -2,88 +2,97 @@
 
 ## 1. Overview
 
-The hints module exposes answer-adjacent help for currently accessible challenges and records per-player hint unlocks with optional XP spending.
+The hints module exposes progressive assistance for the player's currently accessible challenge and records hint unlocks with optional XP cost.
 
 ## 2. Responsibilities
 
-- Own the module-specific data contract, service orchestration, repository calls, and UI hooks/actions present under `modules/hints`.
-- Keep client DTOs separate from Prisma records.
-- Enforce authorization and validation at server boundaries where actions exist.
+- List published hints for a challenge from a player's perspective.
+- Enforce challenge access before showing or unlocking hints.
+- Enforce sequential hint unlock order.
+- Check current XP affordability.
+- Create `PlayerHint` records and deduct XP for paid hints.
+- Return DTOs that distinguish locked/unlocked/eligible states.
 
 ## 3. Non-Responsibilities
 
-- Does not own unrelated gameplay modules.
-- Does not expose protected story text, flags, answers, or secrets in documentation or DTOs.
-- Does not replace service-level validation in dependent modules.
+- Does not author hint content through a UI.
+- Does not validate flags or solve challenges.
+- Does not create audit events for hint unlocks; `PlayerHint` is the typed record.
 
 ## 4. Features
 
-Implemented: published hint listing, sequential level unlocks, free/paid hints, `PlayerHint` persistence, XP deduction through leaderboard repository, duplicate unlock protection.
+Implemented: challenge-scoped hint listing, level ordering, free/paid hint costs, affordability checks, duplicate unlock handling, XP deduction transaction.
 
 ## 5. Architecture
 
 ```text
-UI component/page
+Challenge hints UI
  ↓
-module hook
+modules/hint/hooks
  ↓
-Server Action (where present)
+getChallengeHints / unlockHint actions
  ↓
-Service
+HintService
  ↓
-Repository / dependent service
+HintRepository + ChallengeAccessService + LeaderboardRepository
  ↓
-Prisma model(s)
+Hint / PlayerHint / LeaderboardEntry
 ```
 
 ## 6. Data Flow
 
-The module follows the repository convention used throughout the app: actions validate and authorize, services coordinate business rules, repositories perform Prisma operations, and mappers shape DTOs.
+Reads first verify challenge access, then fetch published hints and current XP to compute eligibility. Unlocks verify the target hint, re-check challenge access, confirm previous-level unlock state and affordability, then create `PlayerHint` and decrement XP in one transaction for paid hints.
 
 ## 7. API / Interfaces
 
-See the `actions/` folder for Server Action names, `hooks/` for client query/mutation usage, and `types/` for DTO contracts. There is no separate REST API unless explicitly documented elsewhere.
+Server Actions: `getChallengeHints`, `unlockHint`.
 
 ## 8. Data Model
 
-See [Database](../database/README.md) for complete Prisma relationships. Module-specific tables are represented in `prisma/schema.prisma` and should be extended through migrations.
+```mermaid
+erDiagram
+    Challenge ||--o{ Hint : has
+    User ||--o{ PlayerHint : unlocks
+    Hint ||--o{ PlayerHint : unlocked_as
+```
+
+`Hint` has a unique `(challengeId, level)`. `PlayerHint` has a composite `(userId, hintId)` primary key.
 
 ## 9. State Management
 
-Client state uses React component state and TanStack Query hooks where hooks exist. Server state is PostgreSQL via Prisma.
+Hint hooks use TanStack Query and mutation invalidation. Unlock state is persisted in `PlayerHint`, not local storage.
 
 ## 10. Security
 
-Server-side authorization is required for privileged reads/writes. Sensitive fields should be omitted at the repository or mapper boundary. Never trust client state for game progression or admin decisions.
+Hints are answer-adjacent and must never be accessible by direct ID alone. The service re-derives challenge access through the same access service used by challenge/submission flows.
 
 ## 11. Error Handling
 
-Expected domain errors are represented through `ApiError`/`ErrorCode` or action state objects. Unexpected errors are logged and should not leak internals to players.
+Missing or inaccessible hints/challenges return not found or generic errors. Already-unlocked and out-of-order hints return conflicts. Concurrent duplicate unlocks are resolved by the composite key.
 
 ## 12. Performance
 
-Pagination and selective queries are used where current repository methods support them. No external cache or real-time bus is implemented for this module unless noted.
+Reads batch hint state and XP rank lookup. Paid unlocks use one transaction for hint creation and XP deduction.
 
 ## 13. Testing
 
-No module-specific test suite was found. Add service-level tests before changing critical flows.
+No tests found. Add tests for access denial, level order, affordability races, duplicate unlocks, and free hints for users with zero XP.
 
 ## 14. Dependencies
 
-Dependencies are explicit imports in the module's service/action files and should remain one-directional where possible.
+Depends on ChallengeAccess, Leaderboard, Prisma, and challenge content.
 
 ## 15. Extension Points
 
-Extend through validations, services, repositories, and DTO mappers together. Do not add UI-only logic for server-authoritative decisions.
+Additional hint pricing rules should live in hint pricing/access utilities and preserve server-side affordability enforcement.
 
 ## 16. Known Limitations
 
-No admin hint CMS UI found. Hint XP deductions reduce leaderboard total XP but do not change solve count.
+No admin hint CMS found. Hint spending reduces XP balance but does not change solve count or historical solves.
 
 ## 17. Future Improvements
 
-Add automated tests, operator-facing observability, and clearer separation for any feature that grows beyond the current module boundary.
-
+Add hint analytics, admin authoring, per-event pricing policies, and audit/telemetry for suspicious hint scraping.
 
 ## Related documentation
 - [Module map](../README.md)

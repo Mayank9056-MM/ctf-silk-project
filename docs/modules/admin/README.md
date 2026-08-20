@@ -2,88 +2,90 @@
 
 ## 1. Overview
 
-The admin module provides operational controls for super admins, including event control and player management, with UI shell components under `components/admin`.
+The admin module is the operational control surface for `SUPER_ADMIN` users. It is implemented as admin pages/components plus domain-specific admin actions for event control and player management. Admin leaderboard, audit, and announcement pages reuse their owning modules rather than duplicating their business rules here.
 
 ## 2. Responsibilities
 
-- Own the module-specific data contract, service orchestration, repository calls, and UI hooks/actions present under `modules/admin`.
-- Keep client DTOs separate from Prisma records.
-- Enforce authorization and validation at server boundaries where actions exist.
+- Gate `/admin` routes through admin layout/access checks.
+- Provide event pause/resume and registration enable/disable actions.
+- Provide player search, player detail, ban/unban, and reset-password actions.
+- Compose the admin shell, sidebar, status strip, tables, dialogs, and empty/error states.
+- Delegate audit, announcement, and leaderboard behavior to their owning modules.
 
 ## 3. Non-Responsibilities
 
-- Does not own unrelated gameplay modules.
-- Does not expose protected story text, flags, answers, or secrets in documentation or DTOs.
-- Does not replace service-level validation in dependent modules.
+- Does not own player authentication or session issuance.
+- Does not own challenge/story content management; no implemented challenge CMS or story CMS was found.
+- Does not implement security alert/incident workflows even though future Prisma models exist.
+- Does not bypass module services for leaderboard, audit, announcements, or notifications.
 
 ## 4. Features
 
-Implemented: admin layout/shell, event pause/resume, registration enable/disable, player listing/detail, ban/unban, reset password, admin leaderboard, audit and announcement pages.
+Implemented: admin shell, event control card/dialogs, player table/search/status filter, ban/unban, reset player password, admin leaderboard page, audit page, and announcements page.
 
 ## 5. Architecture
 
 ```text
-UI component/page
+app/admin/* pages
  ↓
-module hook
+components/admin/*
  ↓
-Server Action (where present)
+modules/admin/hooks/*
  ↓
-Service
+modules/admin/actions/event-control + player-management
  ↓
-Repository / dependent service
+EventControlService / PlayerManagementService
  ↓
-Prisma model(s)
+EventControlRepository / PlayerManagementRepository / shared auth repositories
 ```
 
 ## 6. Data Flow
 
-The module follows the repository convention used throughout the app: actions validate and authorize, services coordinate business rules, repositories perform Prisma operations, and mappers shape DTOs.
+Admin Server Actions resolve the authenticated actor, validate input with admin schemas, assert admin access, then call services. Event-control mutations use conditional `updateMany` calls inside transactions. Player moderation uses conditional user updates, refresh-token revocation where required, best-effort audit writes, and notifications for ban events.
 
 ## 7. API / Interfaces
 
-See the `actions/` folder for Server Action names, `hooks/` for client query/mutation usage, and `types/` for DTO contracts. There is no separate REST API unless explicitly documented elsewhere.
+Event-control actions: `getEventControl`, `pauseEvent`, `resumeEvent`, `enableRegistration`, `disableRegistration`. Player-management actions: `getPlayers`, `getPlayer`, `banPlayer`, `unbanPlayer`, `resetPlayerPassword`.
 
 ## 8. Data Model
 
-See [Database](../database/README.md) for complete Prisma relationships. Module-specific tables are represented in `prisma/schema.prisma` and should be extended through migrations.
+Admin operations primarily mutate `EventControl` and `User`. They also touch `RefreshToken`, `AuditLog`, and `Notification` as side effects.
 
 ## 9. State Management
 
-Client state uses React component state and TanStack Query hooks where hooks exist. Server state is PostgreSQL via Prisma.
+Admin hooks use TanStack Query for event-control and player-management data. Dialog form state is local to admin components.
 
 ## 10. Security
 
-Server-side authorization is required for privileged reads/writes. Sensitive fields should be omitted at the repository or mapper boundary. Never trust client state for game progression or admin decisions.
+Admin actions require super-admin access. Player-management repository queries intentionally scope to `Role.USER` so admin accounts are not managed through player moderation. Temporary passwords returned by reset operations are sensitive one-time operational data.
 
 ## 11. Error Handling
 
-Expected domain errors are represented through `ApiError`/`ErrorCode` or action state objects. Unexpected errors are logged and should not leak internals to players.
+Invalid redundant event transitions return conflicts. Missing players return not found. Concurrent player state changes return conflicts. Audit failures are best-effort and must not be documented as guaranteed transaction rollback triggers.
 
 ## 12. Performance
 
-Pagination and selective queries are used where current repository methods support them. No external cache or real-time bus is implemented for this module unless noted.
+Player lists are paginated and sorted deterministically. Event-control reads are singleton reads. No real-time admin operations channel exists.
 
 ## 13. Testing
 
-No module-specific test suite was found. Add service-level tests before changing critical flows.
+No admin test suite was found. Add tests for authorization, moderation race behavior, reset revocation, and event transition idempotency/conflicts.
 
 ## 14. Dependencies
 
-Dependencies are explicit imports in the module's service/action files and should remain one-directional where possible.
+Depends on Auth, Event, Audit, Notification, Leaderboard, Announcement, and Prisma.
 
 ## 15. Extension Points
 
-Extend through validations, services, repositories, and DTO mappers together. Do not add UI-only logic for server-authoritative decisions.
+Add new admin features as thin admin actions that delegate to the owning domain service. Do not turn the admin module into a second business-logic implementation.
 
 ## 16. Known Limitations
 
-Security alert/incident models exist but no admin UI/actions for them were found. No challenge CMS despite permission/audit enum placeholders.
+No challenge CMS, story CMS, team admin, bulk moderation, security alert UI, incident workflow, or export UI was found.
 
 ## 17. Future Improvements
 
-Add automated tests, operator-facing observability, and clearer separation for any feature that grows beyond the current module boundary.
-
+Add richer operator dashboards, audit correlation, exports, and explicit runbooks for live-event interventions.
 
 ## Related documentation
 - [Module map](../README.md)

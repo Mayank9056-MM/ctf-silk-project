@@ -7,7 +7,7 @@ The story module is the investigation engine. It manages chapters, scenes, dialo
 ## 2. Responsibilities
 
 - Bootstrap and maintain `StoryProgress` for each player.
-- Render/current-scene data through DTOs.
+- Render current-scene data through DTOs.
 - Advance linear scenes and process branching choices.
 - Record completed scenes and selected choices.
 - Evaluate unlock rules for chapters, scenes, and evidence.

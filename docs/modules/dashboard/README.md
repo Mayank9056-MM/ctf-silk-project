@@ -2,88 +2,90 @@
 
 ## 1. Overview
 
-The dashboard module composes player-facing overview data from event, story, evidence, leaderboard, announcement, and notification services.
+The dashboard module is a player-facing composition layer. It does not own domain state; it aggregates event, story, evidence, leaderboard, announcement, and notification summaries into one DTO for the dashboard UI.
 
 ## 2. Responsibilities
 
-- Own the module-specific data contract, service orchestration, repository calls, and UI hooks/actions present under `modules/dashboard`.
-- Keep client DTOs separate from Prisma records.
-- Enforce authorization and validation at server boundaries where actions exist.
+- Fetch event summary/countdown/access state.
+- Fetch nullable story progress without bootstrapping a new story run.
+- Fetch chapter map and evidence overview when available.
+- Fetch current player rank and leaderboard preview.
+- Fetch announcement and notification previews as optional/degradable data.
+- Map the composed result into a dashboard DTO.
 
 ## 3. Non-Responsibilities
 
-- Does not own unrelated gameplay modules.
-- Does not expose protected story text, flags, answers, or secrets in documentation or DTOs.
-- Does not replace service-level validation in dependent modules.
+- Does not mutate gameplay state.
+- Does not start story progress merely because the dashboard loads.
+- Does not own announcement, notification, leaderboard, evidence, or event rules.
 
 ## 4. Features
 
-Implemented: event summary, story progress nullable state, chapter/evidence overview, rank, leaderboard preview, announcement preview, notification preview/unread count.
+Implemented: dashboard aggregate action/service/hook, event summary, story-progress null handling, evidence-board null handling, rank/leaderboard preview, optional announcements/notifications.
 
 ## 5. Architecture
 
 ```text
-UI component/page
+app/(protected)/dashboard/page.tsx
  ↓
-module hook
+Dashboard components
  ↓
-Server Action (where present)
+modules/dashboard/hooks/use-dashboard
  ↓
-Service
+getDashboard action
  ↓
-Repository / dependent service
+DashboardService
  ↓
-Prisma model(s)
+EventService + StoryService + EvidenceService + LeaderboardService + AnnouncementService + NotificationService
 ```
 
 ## 6. Data Flow
 
-The module follows the repository convention used throughout the app: actions validate and authorize, services coordinate business rules, repositories perform Prisma operations, and mappers shape DTOs.
+The service fetches core event/story/rank data in parallel. Expected `NOT_FOUND` states for not-started story/evidence are converted to `null`. Announcement and notification failures are logged and degraded to `null` so optional widgets do not block the dashboard.
 
 ## 7. API / Interfaces
 
-See the `actions/` folder for Server Action names, `hooks/` for client query/mutation usage, and `types/` for DTO contracts. There is no separate REST API unless explicitly documented elsewhere.
+Server Action: `getDashboard` for the authenticated user.
 
 ## 8. Data Model
 
-See [Database](../database/README.md) for complete Prisma relationships. Module-specific tables are represented in `prisma/schema.prisma` and should be extended through migrations.
+No dashboard table exists. The dashboard DTO is composed from Event, StoryProgress, Evidence, LeaderboardEntry/ChallengeSolve, Announcement, and Notification data.
 
 ## 9. State Management
 
-Client state uses React component state and TanStack Query hooks where hooks exist. Server state is PostgreSQL via Prisma.
+The dashboard hook uses TanStack Query. Countdown rendering may use local component state, but event timing authority is server-derived.
 
 ## 10. Security
 
-Server-side authorization is required for privileged reads/writes. Sensitive fields should be omitted at the repository or mapper boundary. Never trust client state for game progression or admin decisions.
+The dashboard action is authenticated and self-scoped. It should never call story current-scene bootstrap as a side effect.
 
 ## 11. Error Handling
 
-Expected domain errors are represented through `ApiError`/`ErrorCode` or action state objects. Unexpected errors are logged and should not leak internals to players.
+Core service failures fail the dashboard. Optional announcement/notification failures degrade to null and are logged.
 
 ## 12. Performance
 
-Pagination and selective queries are used where current repository methods support them. No external cache or real-time bus is implemented for this module unless noted.
+Parallel composition avoids serial fan-out. The leaderboard preview size is capped by dashboard constants.
 
 ## 13. Testing
 
-No module-specific test suite was found. Add service-level tests before changing critical flows.
+No tests found. Add tests for no-progress dashboard state, optional subsystem degradation, and self-scoping.
 
 ## 14. Dependencies
 
-Dependencies are explicit imports in the module's service/action files and should remain one-directional where possible.
+Depends on Event, Story, Evidence, Leaderboard, Announcement, Notification, Auth, and Prisma indirectly.
 
 ## 15. Extension Points
 
-Extend through validations, services, repositories, and DTO mappers together. Do not add UI-only logic for server-authoritative decisions.
+Add dashboard widgets by consuming existing domain services and marking whether the widget is core or optional/degradable.
 
 ## 16. Known Limitations
 
-Dashboard is an orchestrator only; optional announcement/notification failures degrade to null while core event/story/rank failures can fail the dashboard.
+No personalized team widgets because teams are not implemented. No realtime refresh mechanism found.
 
 ## 17. Future Improvements
 
-Add automated tests, operator-facing observability, and clearer separation for any feature that grows beyond the current module boundary.
-
+Add widget-level loading/error telemetry, configurable previews, and realtime leaderboard/notification updates.
 
 ## Related documentation
 - [Module map](../README.md)
