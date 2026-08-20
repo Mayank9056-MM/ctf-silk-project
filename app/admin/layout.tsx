@@ -7,6 +7,7 @@ import { Permission } from "@/modules/auth/authorization/permission";
 import { ApiError } from "@/lib/errors/ApiError";
 import { ErrorCode } from "@/lib/errors/ErrorCode";
 import { AuthProvider } from "@/providers/auth-provider";
+import { AdminShell } from "@/components/admin/shell/admin-shell";
 
 /**
  * Guards everything under /admin. Two failure modes, two different
@@ -22,6 +23,12 @@ import { AuthProvider } from "@/providers/auth-provider";
  * MANAGE_EVENTS stands in as "can operate the admin area at all." If a
  * future ADMIN tier is introduced with a narrower set of admin
  * permissions, this line doesn't change; only permissions.ts does.
+ *
+ * ADDED: wraps children in AdminShell (sidebar/topbar/status strip) —
+ * the only change from the version this was handed off as. The
+ * already-resolved `user` from requirePermission() is passed straight
+ * through as the shell's adminName, so there's no second identity
+ * lookup.
  */
 export default async function AdminLayout({
   children,
@@ -40,5 +47,9 @@ export default async function AdminLayout({
     redirect("/login");
   }
 
-  return <AuthProvider user={user}>{children}</AuthProvider>;
+  return (
+    <AuthProvider user={user}>
+      <AdminShell adminName={user.name}>{children}</AdminShell>
+    </AuthProvider>
+  );
 }

@@ -6,6 +6,7 @@ import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
+import { usePortalContainer } from "@/providers/portal-container-context"
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />
@@ -16,7 +17,18 @@ function DialogTrigger({ ...props }: DialogPrimitive.Trigger.Props) {
 }
 
 function DialogPortal({ ...props }: DialogPrimitive.Portal.Props) {
-  return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />
+  // undefined (not null) when there's no ambient container — Base UI's
+  // Portal then falls back to its own default (document.body), which
+  // is exactly today's behavior for every non-admin usage of Dialog.
+  const container = usePortalContainer()
+
+  return (
+    <DialogPrimitive.Portal
+      data-slot="dialog-portal"
+      container={container}
+      {...props}
+    />
+  )
 }
 
 function DialogClose({ ...props }: DialogPrimitive.Close.Props) {

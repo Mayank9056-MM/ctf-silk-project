@@ -1729,3 +1729,418 @@
     transform: none !important;
   }
 }
+
+/* ================================================================
+   OPERATION SILK ROAD — Admin Ops Console
+   ================================================================
+   Deliberately separate from globals.css's sr-* player-facing theme.
+   Player screens are cinematic/noir by design; this is a live-ops
+   instrument an admin stares at during a running event — density and
+   legibility win over atmosphere. No grain, no vignette, no glow.
+   Reuses the brand's already-loaded fonts (JetBrains Mono / Chakra
+   Petch / Inter) so the two surfaces still feel like one product, just
+   dressed for a different job.
+   ================================================================ */
+
+:root {
+  --ops-bg: #0a0b0d;
+  --ops-bg-elevated: #101216;
+  --ops-surface: #15171c;
+  --ops-surface-strong: #1c1f26;
+
+  --ops-border: rgba(255, 255, 255, 0.08);
+  --ops-border-strong: rgba(255, 255, 255, 0.16);
+
+  --ops-text: #e6e8eb;
+  --ops-text-dim: #8b909b;
+  --ops-text-faint: #565b64;
+
+  /* Status vocabulary — used consistently for LIVE/PAUSED/OK/WARN/CRITICAL
+     across every panel, never a one-off color per component. */
+  --ops-live: #39c0ed;
+  --ops-live-bg: rgba(57, 192, 237, 0.12);
+  --ops-ok: #3ddc84;
+  --ops-ok-bg: rgba(61, 220, 132, 0.12);
+  --ops-warn: #f2a93b;
+  --ops-warn-bg: rgba(242, 169, 59, 0.12);
+  --ops-critical: #e5484d;
+  --ops-critical-bg: rgba(229, 72, 77, 0.14);
+  --ops-neutral: #6d7683;
+  --ops-neutral-bg: rgba(109, 118, 131, 0.12);
+
+  --ops-font-mono: "JetBrains Mono", monospace;
+  --ops-font-ui: "Chakra Petch", sans-serif;
+  --ops-font-body: "Inter", sans-serif;
+}
+
+.ops-root {
+  background: var(--ops-bg);
+  color: var(--ops-text);
+  font-family: var(--ops-font-body);
+  min-height: 100dvh;
+}
+
+/* --- Shell layout: fixed sidebar + topbar, scrolling content --- */
+.ops-shell {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "sidebar topbar"
+    "sidebar main";
+  min-height: 100dvh;
+}
+@media (max-width: 900px) {
+  .ops-shell {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "topbar"
+      "main";
+  }
+  .ops-sidebar {
+    display: none;
+  }
+}
+
+.ops-sidebar {
+  grid-area: sidebar;
+  background: var(--ops-bg-elevated);
+  border-right: 1px solid var(--ops-border);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+}
+
+.ops-brand {
+  padding: 18px 18px 14px;
+  border-bottom: 1px solid var(--ops-border);
+}
+.ops-brand-title {
+  font-family: var(--ops-font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ops-text);
+}
+.ops-brand-subtitle {
+  font-family: var(--ops-font-mono);
+  font-size: 10.5px;
+  color: var(--ops-text-faint);
+  letter-spacing: 0.06em;
+  margin-top: 2px;
+}
+
+.ops-nav {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.ops-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-family: var(--ops-font-ui);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--ops-text-dim);
+  text-decoration: none;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
+}
+.ops-nav-link:hover {
+  background: var(--ops-surface);
+  color: var(--ops-text);
+}
+.ops-nav-link[data-active="true"] {
+  background: var(--ops-surface-strong);
+  color: var(--ops-text);
+  box-shadow: inset 2px 0 0 var(--ops-live);
+}
+.ops-nav-link svg {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  opacity: 0.85;
+}
+
+/* --- Topbar: persistent live event status strip --- */
+.ops-topbar {
+  grid-area: topbar;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--ops-bg-elevated);
+  border-bottom: 1px solid var(--ops-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.ops-status-strip {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.ops-status-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--ops-font-mono);
+  font-size: 11.5px;
+  color: var(--ops-text-dim);
+  white-space: nowrap;
+}
+.ops-status-item strong {
+  color: var(--ops-text);
+  font-weight: 600;
+}
+
+.ops-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  flex: none;
+  background: var(--ops-neutral);
+}
+.ops-dot[data-tone="live"] {
+  background: var(--ops-live);
+  box-shadow: 0 0 8px rgba(57, 192, 237, 0.6);
+  animation: ops-pulse 1.8s ease-in-out infinite;
+}
+.ops-dot[data-tone="warn"] {
+  background: var(--ops-warn);
+  box-shadow: 0 0 8px rgba(242, 169, 59, 0.55);
+}
+.ops-dot[data-tone="critical"] {
+  background: var(--ops-critical);
+  box-shadow: 0 0 8px rgba(229, 72, 77, 0.6);
+  animation: ops-pulse 1.2s ease-in-out infinite;
+}
+.ops-dot[data-tone="ok"] {
+  background: var(--ops-ok);
+}
+@keyframes ops-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ops-dot {
+    animation: none !important;
+  }
+}
+
+/* --- Main content --- */
+.ops-main {
+  grid-area: main;
+  padding: 22px 24px 60px;
+  max-width: 1400px;
+  width: 100%;
+}
+
+.ops-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.ops-page-title {
+  font-family: var(--ops-font-ui);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--ops-text);
+}
+.ops-page-subtitle {
+  font-size: 13px;
+  color: var(--ops-text-dim);
+  margin-top: 4px;
+}
+
+/* --- Cards / panels --- */
+.ops-card {
+  background: var(--ops-surface);
+  border: 1px solid var(--ops-border);
+  border-radius: 8px;
+}
+.ops-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--ops-border);
+}
+.ops-card-title {
+  font-family: var(--ops-font-ui);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ops-text);
+}
+.ops-card-body {
+  padding: 16px;
+}
+
+.ops-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+.ops-stat-card {
+  background: var(--ops-surface);
+  border: 1px solid var(--ops-border);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+.ops-stat-label {
+  font-family: var(--ops-font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ops-text-faint);
+}
+.ops-stat-value {
+  font-family: var(--ops-font-ui);
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--ops-text);
+  margin-top: 4px;
+}
+
+/* --- Badges --- */
+.ops-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-family: var(--ops-font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.ops-badge[data-tone="live"] {
+  color: var(--ops-live);
+  background: var(--ops-live-bg);
+}
+.ops-badge[data-tone="ok"] {
+  color: var(--ops-ok);
+  background: var(--ops-ok-bg);
+}
+.ops-badge[data-tone="warn"] {
+  color: var(--ops-warn);
+  background: var(--ops-warn-bg);
+}
+.ops-badge[data-tone="critical"] {
+  color: var(--ops-critical);
+  background: var(--ops-critical-bg);
+}
+.ops-badge[data-tone="neutral"] {
+  color: var(--ops-text-dim);
+  background: var(--ops-neutral-bg);
+}
+
+/* --- Dense data table --- */
+.ops-table-wrap {
+  overflow-x: auto;
+}
+.ops-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.ops-table th {
+  text-align: left;
+  font-family: var(--ops-font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ops-text-faint);
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--ops-border);
+  white-space: nowrap;
+}
+.ops-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--ops-border);
+  color: var(--ops-text);
+  vertical-align: middle;
+}
+.ops-table tbody tr:hover {
+  background: var(--ops-surface-strong);
+}
+.ops-table-mono {
+  font-family: var(--ops-font-mono);
+  font-size: 11.5px;
+  color: var(--ops-text-dim);
+}
+
+.ops-empty {
+  padding: 40px 16px;
+  text-align: center;
+  color: var(--ops-text-dim);
+  font-size: 13px;
+}
+
+.ops-divider {
+  height: 1px;
+  background: var(--ops-border);
+  border: none;
+  margin: 0;
+}
+
+/* ================================================================
+   OPERATION SILK ROAD — Admin Ops Console: shadcn token overrides
+   Button/Switch/etc. read the global shadcn tokens (--background,
+   --primary, --input, ...), which globals.css only defines for LIGHT
+   mode in :root. The ops console never applies the .dark class, so
+   every shadcn primitive here was rendering with light-mode colors on
+   top of the dark --ops-* palette — invisible buttons, invisible
+   switch track. This scopes the exact same values already defined in
+   .dark to .ops-root, so shadcn components resolve correctly without
+   touching switch.tsx / button.tsx / any admin component.
+   ================================================================ */
+.ops-root {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+}
+ 

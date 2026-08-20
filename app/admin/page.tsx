@@ -1,9 +1,24 @@
-import React from 'react'
+import { EventControlCard } from "@/components/admin/event-control/event-control-card";
+import { OverviewStats } from "@/components/admin/overview/overview-stats";
 
-const AdminPage = () => {
+
+export default function AdminOverviewPage() {
   return (
-    <div>AdminPage</div>
-  )
-}
+    <div className="space-y-6">
+      <div className="ops-page-header">
+        <div>
+          <h1 className="ops-page-title">Overview</h1>
+          <p className="ops-page-subtitle">
+            Live operational status for the current event.
+          </p>
+        </div>
+      </div>
 
-export default AdminPage
+      <OverviewStats />
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <EventControlCard />
+      </div>
+    </div>
+  );
+}
