@@ -13,7 +13,7 @@
 
 import prisma from "@/lib/prisma";
 import { EventOperationalMode } from "@/app/generated/prisma/enums";
-import "dotenv/config"
+import "dotenv/config";
 
 /**
  * Idempotent via upsert on the enforced singleton (Event.singleton is
@@ -36,7 +36,7 @@ import "dotenv/config"
  */
 export async function seedEvent(): Promise<void> {
   const startsAt = new Date(Date.now()); // +1 day
-  const endsAt = new Date(startsAt.getTime() + 100 * 60 * 60 * 1000); // +100 hours
+  const endsAt = new Date(startsAt.getTime() + 100 * 24 * 60 * 60 * 1000); // +100 days
 
   const event = await prisma.event.upsert({
     where: { singleton: 1 },
